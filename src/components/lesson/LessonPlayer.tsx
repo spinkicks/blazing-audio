@@ -3,10 +3,7 @@ import type { Lesson } from '@/content/types';
 import { grade, type AnswerValue, type GradeResult } from '@/content/grading';
 import { problemCount, getLesson } from '@/content/registry';
 import { buildCoursePath, recommendNext } from '@/content/course';
-import {
-  useProgressStore,
-  type CompletionSummary,
-} from '@/features/progress/progressStore';
+import { useProgressStore, type CompletionSummary } from '@/features/progress/progressStore';
 import { Button } from '@/components/ui/Button';
 import { InteractionView } from '@/components/interactions/InteractionView';
 import { isAnswerable } from '@/components/interactions/answerable';
@@ -20,9 +17,6 @@ interface LessonPlayerProps {
   onExit: () => void;
   onGoToLesson: (lessonId: string) => void;
 }
-
-/** Reveal the correct solution after this many wrong attempts on one problem. */
-const REVEAL_AFTER_ATTEMPTS = 2;
 
 export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps) {
   const startLesson = useProgressStore((s) => s.startLesson);
@@ -47,15 +41,12 @@ export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps
   const step = lesson.steps[index];
   const isLast = index === lesson.steps.length - 1;
 
-  const attempts = useProgressStore(
-    (s) => s.getProgress(lesson.id)?.stepStates[step.id]?.attempts ?? 0,
-  );
-
   useEffect(() => {
     startLesson(lesson.id);
   }, [lesson.id, startLesson]);
 
-  const revealSolution = (result?.correct ?? false) || attempts >= REVEAL_AFTER_ATTEMPTS;
+  // The answer is locked only after it has been confirmed correct. A wrong answer
+  // never advances and never reveals the solution - the learner must get it right.
   const locked = result?.correct ?? false;
 
   function handleCheck() {
@@ -126,20 +117,23 @@ export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps
       <main className="flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-10">
         <div className="mx-auto w-full max-w-5xl">
           {step.type === 'concept' ? (
-            <ConceptView step={step} />
+            <>
+              <ConceptView step={step} />
+              {/* Desktop: action sits right under the content, not pinned to the bottom. */}
+              <div className="mt-8 hidden max-w-md lg:block">{renderActions()}</div>
+            </>
           ) : (
             <div className="animate-fade-in lg:grid lg:grid-cols-2 lg:items-start lg:gap-10">
               <h2 className="text-xl font-bold leading-snug text-white lg:col-start-2 lg:row-start-1">
                 {step.prompt}
               </h2>
-              <div className="mt-5 lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:mt-0">
+              <div className="mt-5 lg:col-start-1 lg:row-start-1 lg:row-span-3 lg:mt-0">
                 <InteractionView
                   interaction={step.interaction}
                   value={answer}
                   onChange={setAnswer}
                   locked={locked}
                   result={result}
-                  revealSolution={revealSolution}
                 />
               </div>
               {result ? (
@@ -147,19 +141,21 @@ export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps
                   <FeedbackPanel result={result} />
                 </div>
               ) : null}
+              {/* Desktop: action under the prompt/feedback column. */}
+              <div className="mt-5 hidden lg:col-start-2 lg:row-start-3 lg:block">{renderActions()}</div>
             </div>
           )}
         </div>
       </main>
 
-      {/* Footer actions */}
-      <footer className="safe-bottom sticky bottom-0 border-t border-white/5 bg-ink-900/90 px-4 py-3 backdrop-blur">
-        <div className="mx-auto w-full max-w-md">{renderFooter()}</div>
+      {/* Mobile: sticky action bar at the bottom. */}
+      <footer className="safe-bottom sticky bottom-0 border-t border-white/5 bg-ink-900/90 px-4 py-3 backdrop-blur lg:hidden">
+        <div className="mx-auto w-full max-w-md">{renderActions()}</div>
       </footer>
     </div>
   );
 
-  function renderFooter() {
+  function renderActions() {
     if (step.type === 'concept') {
       return (
         <Button fullWidth onClick={goNext}>
@@ -184,20 +180,7 @@ export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps
       );
     }
 
-    // Wrong answer: retry, and offer "continue anyway" once the solution is revealed.
-    if (attempts >= REVEAL_AFTER_ATTEMPTS) {
-      return (
-        <div className="flex gap-3">
-          <Button variant="secondary" fullWidth onClick={handleTryAgain}>
-            Try again
-          </Button>
-          <Button fullWidth onClick={goNext}>
-            {isLast ? 'Finish' : 'Continue'}
-          </Button>
-        </div>
-      );
-    }
-
+    // Wrong answer: the only way forward is to try again and get it right.
     return (
       <Button fullWidth onClick={handleTryAgain}>
         Try again

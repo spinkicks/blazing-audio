@@ -4,7 +4,7 @@ import { SpeakerDiagram } from '@/components/visuals/SpeakerDiagram';
 import { cn } from '@/lib/cn';
 import type { InteractionProps } from './types';
 
-export function DragLabel({ interaction, onChange, locked, revealSolution }: InteractionProps) {
+export function DragLabel({ interaction, onChange, locked, result }: InteractionProps) {
   const dl = interaction as DragLabelInteraction;
   const [assignments, setAssignments] = useState<Record<string, string>>({});
 
@@ -12,10 +12,14 @@ export function DragLabel({ interaction, onChange, locked, revealSolution }: Int
     onChange(assignments);
   }, [assignments, onChange]);
 
+  const revealed = result !== null;
+  const allCorrect = result?.correct ?? false;
   const sortedMarkers = [...dl.markers].sort((a, b) => a.n - b.n);
 
+  // Only confirm the layout once every label is right; a wrong submission never
+  // reveals which marker is which.
   const markerTone = (markerId: string): 'default' | 'correct' | 'wrong' => {
-    if (!revealSolution) return 'default';
+    if (!allCorrect) return 'default';
     const label = dl.labels.find((l) => l.correctMarkerId === markerId);
     return label ? 'correct' : 'default';
   };
@@ -47,8 +51,8 @@ export function DragLabel({ interaction, onChange, locked, revealSolution }: Int
                 {sortedMarkers.map((marker) => {
                   const selected = chosen === marker.id;
                   let tone = 'bg-ink-700 text-slate-300';
-                  if (revealSolution && selected && isCorrect) tone = 'bg-emerald-400 text-ink-950';
-                  else if (revealSolution && selected && !isCorrect) tone = 'bg-clip-500 text-white';
+                  if (allCorrect && selected && isCorrect) tone = 'bg-emerald-400 text-ink-950';
+                  else if (revealed && selected && !isCorrect) tone = 'bg-clip-500 text-white';
                   else if (selected) tone = 'bg-wave-400 text-ink-950';
                   return (
                     <button

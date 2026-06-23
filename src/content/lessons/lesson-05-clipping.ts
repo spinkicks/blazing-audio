@@ -11,7 +11,7 @@ export const clippingLesson: Lesson = {
   order: 5,
   title: 'Clipping: When the Signal Breaks',
   subtitle: 'Gain, headroom, the clip light - and the real speaker killer',
-  estimatedMinutes: 6,
+  estimatedMinutes: 7,
   concepts: ['Volume vs gain & headroom', 'What the clip light means', 'Why clipping fries coils'],
   steps: [
     {
@@ -59,10 +59,18 @@ export const clippingLesson: Lesson = {
       },
     },
     {
+      id: 'cl-voltage',
+      type: 'concept',
+      title: 'Voltage, power, and the flat tops',
+      body: 'The signal driving the speaker is a voltage that rises and falls with the wave. Power follows voltage steeply: P = V\u00b2 / R, so a little more voltage is a lot more power.\n\nOn a clean sine the voltage only touches its peak for an instant. When the wave clips, the voltage is pinned at maximum across the entire flat top - so the speaker receives maximum power, held, on every cycle. The flattened peaks are exactly where the most watts are dumped.',
+      visual: { kind: 'clipWave', config: { gain: 1.6, frequency: 300, height: 200 } },
+    },
+    {
       id: 'cl-why-fries',
       type: 'concept',
       title: 'Why clipping kills speakers',
-      body: 'A clean sine spends most of its time away from the peaks. A clipped, flat-topped wave sits at full power far longer - so it delivers much more average (RMS) power, as heat, straight into the voice coil from Lesson 3.\n\nThose flat tops are also packed with extra high-frequency energy that pours into the tweeter. This is why clipping, not raw wattage, is the most common way speakers die.',
+      body: 'A clean sine keeps the cone moving smoothly. A clipped wave slams the cone to its extreme and HOLDS it there on every flat top - and the voice coil takes maximum sustained power the whole time it is pinned.\n\nWatch the coil below: held at the clipped peaks it heats up, and if the clipping goes on too long it melts or burns - up in smoke. The flat tops also carry extra high-frequency energy that pours into the tweeter. This is why clipping, not raw wattage, is the most common way speakers die.',
+      visual: { kind: 'clipCoil', config: { height: 280 } },
     },
     {
       id: 'cl-recover',

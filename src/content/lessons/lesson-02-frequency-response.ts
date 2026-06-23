@@ -23,19 +23,73 @@ const RESPONSE: CurvePoint[] = [
   { freq: 20000, db: -14 },
 ];
 
+// The human ear is far from flat: most sensitive in the mids (~2-4 kHz), and it
+// rolls off steeply toward both edges - 20 Hz is the absolute floor where you can
+// just tell sound is playing, and ~20 kHz is the ceiling.
+const HEARING_CURVE: CurvePoint[] = [
+  { freq: 20, db: -22 },
+  { freq: 30, db: -14 },
+  { freq: 60, db: -6 },
+  { freq: 200, db: -1 },
+  { freq: 1000, db: 0 },
+  { freq: 3000, db: 2 },
+  { freq: 4000, db: 1 },
+  { freq: 8000, db: -3 },
+  { freq: 12000, db: -8 },
+  { freq: 16000, db: -16 },
+  { freq: 20000, db: -24 },
+];
+
 export const frequencyResponseLesson: Lesson = {
   id: 'frequency-response',
   order: 2,
   title: 'Frequency Response',
   subtitle: 'Why a speaker is louder at some pitches than others',
-  estimatedMinutes: 4,
-  concepts: ['The audible range', 'Reading a response curve', 'Dips and roll-off'],
+  estimatedMinutes: 6,
+  concepts: ['Human hearing range', 'Reading a response curve', 'Dips, roll-off & EQ'],
   steps: [
     {
       id: 'fr-range',
       type: 'concept',
       title: 'Your ears have limits',
-      body: 'In Lesson 1 you set pitch with frequency. Humans can only hear roughly 20 Hz (the lowest rumble) up to 20,000 Hz (a high hiss).\n\nEverything in music lives between those two numbers. The catch: a speaker does not play every frequency equally loud.',
+      body: 'In Lesson 1 you set pitch with frequency. Humans can hear roughly 20 Hz (the lowest rumble you can just feel) up to about 20,000 Hz (a high hiss).\n\nThis is the generally accepted range, but it is not a hard wall - some people, especially when young, hear a little below 20 Hz or above 20 kHz. And as the curve shows, your ears are not equally sensitive across it: they peak in the mids (around 2-4 kHz, where speech lives) and roll off toward both edges.',
+      visual: { kind: 'responseCurve', config: { points: HEARING_CURVE, height: 240 } },
+    },
+    {
+      id: 'fr-hearing-range',
+      type: 'problem',
+      prompt: 'Which is the generally accepted range of human hearing?',
+      interaction: {
+        kind: 'multipleChoice',
+        options: [
+          { id: 'full', label: '20 Hz to 20,000 Hz' },
+          { id: 'narrow', label: '20 Hz to 2,000 Hz' },
+          { id: 'high', label: '200 Hz to 20,000 Hz' },
+          { id: 'huge', label: '1 Hz to 100,000 Hz' },
+        ],
+        correctOptionId: 'full',
+        shuffle: true,
+      },
+      feedback: {
+        correct: 'Right - about 20 Hz at the low end to 20,000 Hz at the top, with some people hearing a touch beyond either edge.',
+        incorrect: [
+          {
+            match: 'narrow',
+            text: 'Too small at the top. 2,000 Hz is only the lower treble - you can hear much higher, up to around 20,000 Hz.',
+          },
+          {
+            match: 'high',
+            text: 'The top is right, but the bottom is too high. You can hear well below 200 Hz - down to about 20 Hz, where bass turns into a feeling.',
+          },
+          {
+            match: 'huge',
+            text: 'Way too wide. 1 Hz and 100,000 Hz are far outside human hearing - the usual range is about 20 Hz to 20,000 Hz.',
+          },
+        ],
+        defaultIncorrect: 'The generally accepted range is about 20 Hz to 20,000 Hz.',
+        insight:
+          'Notice the curve sags at the very edges: at 20 Hz you can barely tell sound is there, and sensitivity falls off in the high treble too. The range is real, but the edges are soft, not flat.',
+      },
     },
     {
       id: 'fr-curve-concept',
@@ -136,6 +190,51 @@ export const frequencyResponseLesson: Lesson = {
         defaultIncorrect: 'Below the roll-off point, low notes get much quieter.',
         insight:
           'This is why small speakers sound thin on deep bass: their response rolls off before the lowest notes. A subwoofer exists to cover what they cannot.',
+      },
+    },
+    {
+      id: 'fr-eq-concept',
+      type: 'concept',
+      title: 'Reshaping the sound: the equalizer',
+      body: 'If a response has too much bass or not enough treble, an equalizer (EQ) lets you reshape it. It is a row of band controls - each one boosts or cuts a slice of the frequency range.\n\nYou have seen these everywhere: the sliders in a music app, the bars on a car stereo, a rack unit in a studio. Push a band up and those frequencies get louder; pull it down and they get quieter. That changes the "signature" of the sound without touching the recording.',
+    },
+    {
+      id: 'fr-eq',
+      type: 'problem',
+      prompt: 'Give this a warm, bass-forward signature: boost the lows and cut the highs.',
+      interaction: {
+        kind: 'equalizer',
+        bands: [
+          { id: 'b60', hz: 60, label: '60', goal: 'boost' },
+          { id: 'b250', hz: 250, label: '250', goal: 'any' },
+          { id: 'b1k', hz: 1000, label: '1k', goal: 'any' },
+          { id: 'b4k', hz: 4000, label: '4k', goal: 'cut' },
+          { id: 'b12k', hz: 12000, label: '12k', goal: 'cut' },
+        ],
+        threshold: 4,
+        minDb: -12,
+        maxDb: 12,
+        step: 1,
+      },
+      feedback: {
+        correct: 'That is a warm, bass-forward tilt - lifted lows, tamed highs. That is all an EQ does: boost or cut chosen bands.',
+        incorrect: [
+          {
+            match: 'boost',
+            text: 'The lows are not lifted enough yet - drag the 60 Hz fader further up.',
+          },
+          {
+            match: 'cut',
+            text: 'The highs are not cut enough - pull the 4k and 12k faders down.',
+          },
+          {
+            match: 'both',
+            text: 'Lows up and highs down: raise the 60 Hz fader and lower the 4k and 12k faders.',
+          },
+        ],
+        defaultIncorrect: 'Boost the low band and cut the high bands to make a bass-forward signature.',
+        insight:
+          'An equalizer is just a bank of these band controls. App or hardware, each slider boosts or cuts a slice of the frequency response - reshaping the sound without changing the source.',
       },
     },
     {

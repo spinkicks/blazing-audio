@@ -5,6 +5,10 @@ import { DragLabel } from './DragLabel';
 import { Reorder } from './Reorder';
 import { PowerMatch } from './PowerMatch';
 import { GainClip } from './GainClip';
+import { WaveInterference } from './WaveInterference';
+import { Equalizer } from './Equalizer';
+import { Wiring } from './Wiring';
+import { Excursion } from './Excursion';
 import type { InteractionProps } from './types';
 
 /**
@@ -27,6 +31,14 @@ export function InteractionView(props: InteractionProps) {
       return <PowerMatch {...props} />;
     case 'gainClip':
       return <GainClip {...props} />;
+    case 'waveInterference':
+      return <WaveInterference {...props} />;
+    case 'equalizer':
+      return <Equalizer {...props} />;
+    case 'wiring':
+      return <Wiring {...props} />;
+    case 'excursion':
+      return <Excursion {...props} />;
     default:
       return null;
   }

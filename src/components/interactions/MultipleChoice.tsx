@@ -16,14 +16,7 @@ function shuffled<T>(items: T[], seed: string): T[] {
   return arr;
 }
 
-export function MultipleChoice({
-  interaction,
-  value,
-  onChange,
-  locked,
-  result,
-  revealSolution,
-}: InteractionProps) {
+export function MultipleChoice({ interaction, value, onChange, locked, result }: InteractionProps) {
   const mc = interaction as MultipleChoiceInteraction;
   const selected = typeof value === 'string' ? value : null;
   const revealed = result !== null;
@@ -39,15 +32,13 @@ export function MultipleChoice({
         const isSelected = selected === option.id;
         const isCorrect = option.id === mc.correctOptionId;
 
-        // Reveal styling: show the chosen option's correctness, and surface the
-        // right answer only once the player decides to reveal the solution.
+        // Only the chosen option is colored. A wrong answer never reveals which
+        // option was correct - the learner has to find it themselves.
         let tone = 'border-white/10 bg-ink-700/60 hover:border-wave-400/40';
         if (revealed && isSelected && result?.correct) {
           tone = 'border-emerald-400/70 bg-emerald-400/10';
         } else if (revealed && isSelected && !result?.correct) {
           tone = 'border-clip-400/70 bg-clip-400/10';
-        } else if (revealSolution && isCorrect) {
-          tone = 'border-emerald-400/50 bg-emerald-400/5';
         } else if (isSelected) {
           tone = 'border-wave-400 bg-wave-400/10';
         }
@@ -72,7 +63,11 @@ export function MultipleChoice({
                 isSelected ? 'border-transparent bg-wave-400 text-ink-950' : 'border-white/30 text-slate-400',
               )}
             >
-              {revealSolution && isCorrect ? '✓' : revealed && isSelected && !isCorrect ? '✕' : ''}
+              {revealed && isSelected && isCorrect
+                ? '✓'
+                : revealed && isSelected && !isCorrect
+                  ? '✕'
+                  : ''}
             </span>
             <span className="leading-snug">{option.label}</span>
           </button>

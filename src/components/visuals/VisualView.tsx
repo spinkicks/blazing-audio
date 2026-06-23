@@ -3,6 +3,7 @@ import { WaveCanvas } from './WaveCanvas';
 import { ResponseCurve } from './ResponseCurve';
 import { SpeakerDiagram } from './SpeakerDiagram';
 import { SignalToCone } from './SignalToCone';
+import { ClipCoil } from './ClipCoil';
 
 function num(config: Record<string, unknown> | undefined, key: string, fallback: number): number {
   const value = config?.[key];
@@ -17,19 +18,19 @@ export function VisualView({ visual }: { visual: VisualSpec }) {
   switch (visual.kind) {
     case 'wave':
       return (
-        <div className="rounded-2xl border border-white/5 bg-ink-950/60 p-2">
+        <div className="border border-white/5 bg-ink-950/60 p-2">
           <WaveCanvas
             amplitude={num(visual.config, 'amplitude', 0.7)}
             frequency={num(visual.config, 'frequency', 220)}
-            height={num(visual.config, 'height', 160)}
+            height={num(visual.config, 'height', 240)}
           />
         </div>
       );
     case 'responseCurve': {
       const points = (visual.config?.points as CurvePoint[] | undefined) ?? [];
       return (
-        <div className="rounded-2xl border border-white/5 bg-ink-950/60 p-2">
-          <ResponseCurve points={points} height={num(visual.config, 'height', 180)} />
+        <div className="border border-white/5 bg-ink-950/60 p-2">
+          <ResponseCurve points={points} height={num(visual.config, 'height', 240)} />
         </div>
       );
     }
@@ -40,11 +41,9 @@ export function VisualView({ visual }: { visual: VisualSpec }) {
         </div>
       );
     case 'signalCone':
-      return (
-        <div className="border border-white/5 bg-ink-950/60 p-2">
-          <SignalToCone height={num(visual.config, 'height', 200)} />
-        </div>
-      );
+      return <SignalToCone height={num(visual.config, 'height', 300)} />;
+    case 'clipCoil':
+      return <ClipCoil height={num(visual.config, 'height', 280)} />;
     case 'clipWave':
       return (
         <div className="border border-white/5 bg-ink-950/60 p-2">

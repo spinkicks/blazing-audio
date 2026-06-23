@@ -58,7 +58,7 @@ export const soundWaveLesson: Lesson = {
       id: 'sw-frequency-concept',
       type: 'concept',
       title: 'Frequency is pitch',
-      body: 'Frequency is how many times the wave repeats each second, measured in hertz (Hz).\n\nMore cycles per second means a HIGHER pitch; fewer means lower. A bass drum is a low frequency, a whistle is a high one. Amplitude did not touch pitch - frequency is the knob that moves it.',
+      body: 'Frequency is how many times the wave repeats each second, measured in hertz (Hz). One cycle per second = 1 Hz.\n\nThe formula is just: f = 1 / T, where T is the period - the time for one full cycle. So a 100 Hz tone repeats 100 times every second, and each cycle takes 1/100 = 0.01 seconds. A 1,000 Hz tone packs 1,000 cycles into that same second.\n\nMore cycles per second means a HIGHER pitch; fewer means lower. A bass drum is a low frequency, a whistle is a high one. Amplitude did not touch pitch - frequency is the knob that moves it.',
       visual: { kind: 'wave', config: { amplitude: 0.6, frequency: 494 } },
     },
     {
@@ -124,6 +124,69 @@ export const soundWaveLesson: Lesson = {
       },
     },
     {
+      id: 'sw-interference-concept',
+      type: 'concept',
+      title: 'When two waves meet',
+      body: 'Sound waves add together. When two waves overlap, their heights sum point by point - this is interference.\n\nLine them up so their peaks match (in phase) and they reinforce: a bigger wave, LOUDER. This is constructive interference.\n\nShift one by half a cycle (180 degrees, out of phase) so one peak lands on the other trough, and they cancel out to near silence. This is destructive interference - exactly how noise-cancelling headphones work: they generate the opposite wave to erase unwanted sound.',
+      visual: { kind: 'wave', config: { amplitude: 0.7, frequency: 330 } },
+    },
+    {
+      id: 'sw-destructive',
+      type: 'problem',
+      prompt: 'Shift Wave B so the two waves CANCEL (destructive interference - the combined wave goes nearly silent).',
+      interaction: {
+        kind: 'waveInterference',
+        target: 'destructive',
+        initialPhaseDeg: 20,
+        toleranceDeg: 22,
+        frequency: 330,
+      },
+      feedback: {
+        correct: 'Silenced. Half a cycle apart (180 deg), every peak meets a trough and they erase each other - that is noise cancelling.',
+        incorrect: [
+          {
+            match: 'close',
+            text: 'Almost - the combined wave is shrinking but not gone. Keep sliding toward half a cycle (about 180 deg) until it flattens.',
+          },
+          {
+            match: 'far',
+            text: 'Not yet - right now the waves are still partly adding. To cancel, they must be opposite: slide the phase toward 180 deg.',
+          },
+        ],
+        defaultIncorrect: 'For cancellation the waves must be opposite - aim for about 180 degrees.',
+        insight:
+          'Destructive interference: opposite waves sum to nothing. Two speakers wired out of phase do this to each other and the bass disappears - we will see that later.',
+      },
+    },
+    {
+      id: 'sw-constructive',
+      type: 'problem',
+      prompt: 'Now line the waves up so they REINFORCE (constructive interference - the combined wave is at its loudest).',
+      interaction: {
+        kind: 'waveInterference',
+        target: 'constructive',
+        initialPhaseDeg: 150,
+        toleranceDeg: 22,
+        frequency: 330,
+      },
+      feedback: {
+        correct: 'Loudest possible. In phase (0 deg), peaks stack on peaks and the combined wave is twice as tall - twice the push of air.',
+        incorrect: [
+          {
+            match: 'close',
+            text: 'Getting louder - the waves are nearly aligned. Nudge the phase toward 0 (or a full 360) so the peaks land exactly together.',
+          },
+          {
+            match: 'far',
+            text: 'They are still fighting each other. For maximum loudness the peaks must coincide - slide toward 0 degrees.',
+          },
+        ],
+        defaultIncorrect: 'To reinforce, the peaks must line up - aim for 0 degrees (in phase).',
+        insight:
+          'Constructive interference: aligned waves add up. In phase, two equal speakers together are louder than either alone.',
+      },
+    },
+    {
       id: 'sw-recap',
       type: 'problem',
       prompt: 'Wave A is twice as TALL as Wave B. Wave B has more cycles packed in. Which is true?',
@@ -157,7 +220,7 @@ export const soundWaveLesson: Lesson = {
       id: 'sw-wrap',
       type: 'concept',
       title: 'You can read a sound wave',
-      body: 'You can now read any steady tone: its height is loudness (amplitude), and how tightly it cycles is pitch (frequency, in Hz).\n\nNext up: real speakers are not equally loud at every frequency. We will look across the whole range you can hear - the frequency response.',
+      body: 'You can now read any steady tone: its height is loudness (amplitude), how tightly it cycles is pitch (frequency, in Hz), and overlapping waves add - reinforcing in phase, cancelling out of phase.\n\nNext up: real speakers are not equally loud at every frequency. We will look across the whole range you can hear - the frequency response.',
     },
   ],
 };

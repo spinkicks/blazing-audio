@@ -1,12 +1,15 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 /**
- * Shows, in real time, how a speaker cone copies the sound wave: a playhead
- * sweeps a sine "signal" on the left, and the cone (a piston, right) sits at
- * exactly the wave's value at that instant - high wave = cone pushed out.
+ * Interactive: a scrolling sine "signal" drives a real speaker cross-section
+ * (cone + voice coil + magnet motor). The cone sits at the wave's value moment
+ * to moment; the frequency slider speeds up both the wave and the cone together.
  */
-export function SignalToCone({ height = 200, className }: { height?: number; className?: string }) {
+export function SignalToCone({ height = 300 }: { height?: number }) {
+  const [freq, setFreq] = useState(80);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const freqRef = useRef(freq);
+  freqRef.current = freq;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -15,7 +18,7 @@ export function SignalToCone({ height = 200, className }: { height?: number; cla
     if (!ctx) return;
     let raf = 0;
     let width = 0;
-    let head = 0; // 0..1 playhead progress
+    let phase = 0;
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -29,32 +32,29 @@ export function SignalToCone({ height = 200, className }: { height?: number; cla
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
 
-    const CYCLES = 2;
-
     const render = () => {
-      const yC = height / 2;
-      const amp = height * 0.34;
-      const gx0 = 16;
-      const gx1 = width * 0.58;
-      const barX0 = width * 0.72;
-      const barX1 = width * 0.95;
+      const f = freqRef.current;
+      const yC = height * 0.46;
+      const amp = height * 0.2;
+      const scopeL = 14;
+      const scopeR = width * 0.46;
+      const cycles = Math.max(1, f / 90);
 
       ctx.clearRect(0, 0, width, height);
 
-      // Baseline
+      // --- Signal scope (left) ---
       ctx.strokeStyle = 'rgba(255,255,255,0.08)';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(gx0, yC);
-      ctx.lineTo(gx1, yC);
+      ctx.moveTo(scopeL, yC);
+      ctx.lineTo(scopeR, yC);
       ctx.stroke();
 
-      // Sine "signal"
       ctx.beginPath();
-      for (let x = gx0; x <= gx1; x += 2) {
-        const t = (x - gx0) / Math.max(gx1 - gx0, 1);
-        const y = yC - amp * Math.sin(2 * Math.PI * CYCLES * t);
-        if (x === gx0) ctx.moveTo(x, y);
+      for (let x = scopeL; x <= scopeR; x += 2) {
+        const frac = (x - scopeL) / Math.max(scopeR - scopeL, 1);
+        const y = yC - amp * Math.sin(2 * Math.PI * cycles * frac + phase);
+        if (x === scopeL) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
       ctx.strokeStyle = '#38bdf8';
@@ -62,64 +62,71 @@ export function SignalToCone({ height = 200, className }: { height?: number; cla
       ctx.lineJoin = 'round';
       ctx.stroke();
 
-      // Playhead + value
-      const px = gx0 + head * (gx1 - gx0);
-      const value = Math.sin(2 * Math.PI * CYCLES * head);
+      // value at the right edge of the scope drives the cone
+      const value = Math.sin(2 * Math.PI * cycles + phase);
       const yDot = yC - amp * value;
-      ctx.strokeStyle = 'rgba(245,158,11,0.6)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.moveTo(px, 8);
-      ctx.lineTo(px, height - 8);
-      ctx.stroke();
       ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(px - 4, yDot - 4, 8, 8);
+      ctx.fillRect(scopeR - 4, yDot - 4, 8, 8);
 
-      // Guide line tying wave value to cone position (same height)
+      // --- Speaker (right): cone + voice coil + magnet motor ---
+      const exc = -value * (width * 0.045); // +value pushes cone out (left)
+      const coneApexX = width * 0.74 + exc;
+      const coneMouthX = width * 0.52 + exc;
+      const motorX = width * 0.8;
+
+      // dashed guide from the signal value to the cone
       ctx.strokeStyle = 'rgba(245,158,11,0.4)';
       ctx.setLineDash([5, 5]);
       ctx.beginPath();
-      ctx.moveTo(px, yDot);
-      ctx.lineTo(barX1, yDot);
+      ctx.moveTo(scopeR, yDot);
+      ctx.lineTo(coneMouthX, yC);
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Cone track rails
-      ctx.strokeStyle = 'rgba(255,255,255,0.12)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(barX0, yC - amp);
-      ctx.lineTo(barX0, yC + amp);
-      ctx.moveTo(barX1, yC - amp);
-      ctx.lineTo(barX1, yC + amp);
-      ctx.stroke();
+      // magnet motor (fixed)
+      ctx.fillStyle = '#1f2f4d';
+      ctx.fillRect(motorX, yC - 42, width * 0.14, 84);
+      ctx.fillStyle = '#16223a';
+      ctx.fillRect(motorX + width * 0.05, yC - 18, width * 0.06, 36); // pole piece
 
-      // Air ripples in front of the cone when it pushes "out" (value > 0)
-      if (value > 0.1) {
-        ctx.strokeStyle = `rgba(56,189,248,${0.15 + value * 0.3})`;
+      // air compression lines when the cone pushes out
+      if (value > 0.12) {
+        ctx.strokeStyle = `rgba(56,189,248,${0.15 + value * 0.35})`;
         ctx.lineWidth = 2;
         for (let i = 1; i <= 3; i += 1) {
+          const ax = coneMouthX - i * 10;
           ctx.beginPath();
-          ctx.moveTo(barX0 - i * 7, yDot - 10);
-          ctx.lineTo(barX0 - i * 7, yDot + 10);
+          ctx.moveTo(ax, yC - 30);
+          ctx.lineTo(ax, yC + 30);
           ctx.stroke();
         }
       }
 
-      // The cone (piston bar) at the wave's value
-      ctx.fillStyle = '#38bdf8';
-      ctx.fillRect(barX0, yDot - 5, barX1 - barX0, 10);
+      // cone (funnel opening left) + voice coil, moving with excursion
+      ctx.fillStyle = 'rgba(56,189,248,0.14)';
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(coneMouthX, yC - 54);
+      ctx.lineTo(coneApexX, yC - 14);
+      ctx.lineTo(coneApexX, yC + 14);
+      ctx.lineTo(coneMouthX, yC + 54);
+      ctx.stroke();
+      ctx.fill();
+      // voice coil former
+      ctx.fillStyle = '#f59e0b';
+      ctx.fillRect(coneApexX, yC - 14, width * 0.03, 28);
 
-      // Labels
+      // labels
       ctx.fillStyle = 'rgba(148,163,184,0.9)';
       ctx.font = '11px ui-monospace, monospace';
       ctx.textAlign = 'left';
-      ctx.fillText('the signal (over time)', gx0, height - 4);
+      ctx.fillText('the signal', scopeL, height - 6);
       ctx.textAlign = 'center';
-      ctx.fillText('cone', (barX0 + barX1) / 2, height - 4);
+      ctx.fillText('cone', coneMouthX, height - 6);
+      ctx.fillText('motor', motorX + width * 0.07, height - 6);
 
-      head += 0.004;
-      if (head > 1) head -= 1;
+      phase += 0.05 * (f / 80);
       raf = requestAnimationFrame(render);
     };
     raf = requestAnimationFrame(render);
@@ -131,11 +138,34 @@ export function SignalToCone({ height = 200, className }: { height?: number; cla
   }, [height]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      className={className}
-      style={{ width: '100%', height, display: 'block' }}
-      aria-hidden="true"
-    />
+    <div className="flex flex-col gap-3">
+      <div className="border border-white/5 bg-ink-950/60 p-2">
+        <canvas
+          ref={canvasRef}
+          style={{ width: '100%', height, display: 'block' }}
+          aria-hidden="true"
+        />
+      </div>
+      <div>
+        <div className="mb-1 flex items-baseline justify-between">
+          <span className="text-sm font-semibold text-slate-200">
+            Frequency <span className="font-normal text-slate-500">(drag to change the pitch)</span>
+          </span>
+          <span className="font-mono text-sm text-wave-400">{Math.round(freq)} Hz</span>
+        </div>
+        <input
+          type="range"
+          min={30}
+          max={300}
+          step={1}
+          value={freq}
+          onChange={(e) => setFreq(Number(e.target.value))}
+          aria-label="Frequency"
+        />
+        <p className="mt-1 text-xs text-slate-500">
+          Higher frequency = the wave cycles faster, so the cone moves in and out faster.
+        </p>
+      </div>
+    </div>
   );
 }

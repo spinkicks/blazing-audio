@@ -115,12 +115,13 @@ export function grade(
     }
     case 'powerMatch': {
       const watts = typeof answer === 'number' ? answer : interaction.initialW;
-      const low = interaction.safeLow * interaction.speakerRmsW;
-      const high = interaction.safeHigh * interaction.speakerRmsW;
-      if (watts >= low && watts <= high) {
+      const rms = interaction.speakerRmsW;
+      const peak = interaction.speakerPeakW;
+      // Safe continuous power is at or below RMS (and not trivially low).
+      if (watts >= 0.5 * rms && watts <= rms) {
         return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
       }
-      const matchKey = watts < low ? 'power-low' : 'power-high';
+      const matchKey = watts < 0.5 * rms ? 'low' : watts <= peak ? 'caution' : 'danger';
       const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
       return {
         correct: false,
@@ -148,6 +149,78 @@ export function grade(
         return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
       }
       const matched = feedback.incorrect?.find((entry) => entry.match === 'gain-high');
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'waveInterference': {
+      const phase = typeof answer === 'number' ? answer : interaction.initialPhaseDeg;
+      const targetDeg = interaction.target === 'destructive' ? 180 : 0;
+      const raw = Math.abs(phase - targetDeg) % 360;
+      const dist = raw > 180 ? 360 - raw : raw; // circular distance
+      if (dist <= interaction.toleranceDeg) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matchKey = dist <= 60 ? 'close' : 'far';
+      const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'equalizer': {
+      const gains =
+        typeof answer === 'object' && answer !== null && !Array.isArray(answer)
+          ? (answer as Record<string, number | string>)
+          : {};
+      const unmet = interaction.bands.filter((band) => {
+        const gain = Number(gains[band.id] ?? 0);
+        if (band.goal === 'boost') return gain < interaction.threshold;
+        if (band.goal === 'cut') return gain > -interaction.threshold;
+        return false;
+      });
+      if (unmet.length === 0) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const needBoost = unmet.some((b) => b.goal === 'boost');
+      const needCut = unmet.some((b) => b.goal === 'cut');
+      const matchKey = needBoost && needCut ? 'both' : needBoost ? 'boost' : 'cut';
+      const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'wiring': {
+      const conn =
+        typeof answer === 'object' && answer !== null && !Array.isArray(answer)
+          ? (answer as Record<string, number | string>)
+          : {};
+      const plus = String(conn['amp+'] ?? '');
+      const minus = String(conn['amp-'] ?? '');
+      if (plus === 'spk+' && minus === 'spk-') {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matchKey = plus === 'spk-' && minus === 'spk+' ? 'reversed' : 'incomplete';
+      const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'excursion': {
+      const watts = typeof answer === 'number' ? answer : interaction.initialW;
+      const tol = Math.max(interaction.step, interaction.xmaxAtW * 0.12);
+      if (Math.abs(watts - interaction.xmaxAtW) <= tol) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matchKey = watts < interaction.xmaxAtW ? 'below' : 'above';
+      const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
       return {
         correct: false,
         feedbackText: matched?.text ?? feedback.defaultIncorrect,

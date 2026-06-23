@@ -12,8 +12,8 @@ export interface InteractionProps {
   onChange: (value: AnswerValue) => void;
   /** True once the answer is correct/locked - controls become read-only. */
   locked: boolean;
-  /** Present after the learner checks an answer; drives reveal styling. */
+  /** Present after the learner checks an answer; drives reveal styling.
+   *  Components reveal the solution ONLY when result.correct is true - a wrong
+   *  answer never surfaces the correct one; the learner must find it. */
   result: GradeResult | null;
-  /** When true, the component may highlight the correct solution. */
-  revealSolution: boolean;
 }

@@ -15,8 +15,10 @@ function seededShuffle<T>(items: T[], seed: string): T[] {
   return arr;
 }
 
-export function Reorder({ interaction, onChange, locked, revealSolution }: InteractionProps) {
+export function Reorder({ interaction, onChange, locked, result }: InteractionProps) {
   const ro = interaction as ReorderInteraction;
+  const revealed = result !== null;
+  const allCorrect = result?.correct ?? false;
 
   // Start in a shuffled (but stable) order so there is something to reorder.
   const initial = useMemo(
@@ -45,8 +47,10 @@ export function Reorder({ interaction, onChange, locked, revealSolution }: Inter
   return (
     <ol className="flex flex-col gap-2">
       {order.map((id, index) => {
-        const correctHere = revealSolution && ro.correctOrder[index] === id;
-        const wrongHere = revealSolution && ro.correctOrder[index] !== id;
+        // Confirm green only when the whole order is right; otherwise flag the
+        // items that are out of place (without revealing the correct order).
+        const correctHere = allCorrect;
+        const wrongHere = revealed && !allCorrect && ro.correctOrder[index] !== id;
         return (
           <li
             key={id}

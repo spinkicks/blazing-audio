@@ -118,8 +118,6 @@ export interface PowerMatchInteraction {
   minW: number;
   maxW: number;
   step: number;
-  safeLow: number;
-  safeHigh: number;
 }
 
 /**
@@ -140,6 +138,63 @@ export interface GainClipInteraction {
 }
 
 /**
+ * "Wave interference": slide one wave's phase relative to another and watch them
+ * add. Target 'constructive' (in phase, 0 deg) or 'destructive' (out of phase,
+ * 180 deg). Graded by circular distance to the target phase.
+ */
+export interface WaveInterferenceInteraction {
+  kind: 'waveInterference';
+  target: 'constructive' | 'destructive';
+  initialPhaseDeg: number;
+  toleranceDeg: number;
+  frequency: number;
+}
+
+/**
+ * "Equalizer": drag per-band faders up/down to reshape the sound signature.
+ * Each band has a goal (boost / cut / any); the task is met when every band's
+ * fader satisfies its goal by at least `threshold` dB.
+ */
+export interface EqualizerBand {
+  id: string;
+  hz: number;
+  label: string;
+  goal: 'boost' | 'cut' | 'any';
+}
+export interface EqualizerInteraction {
+  kind: 'equalizer';
+  bands: EqualizerBand[];
+  threshold: number;
+  minDb: number;
+  maxDb: number;
+  step: number;
+}
+
+/**
+ * "Wiring": connect amplifier +/- terminals to the speaker +/- terminals.
+ * Correct = + to + and - to -. Reversed = recognized (out of phase).
+ */
+export interface WiringInteraction {
+  kind: 'wiring';
+}
+
+/**
+ * "Excursion / Xmax": raise the power and watch the cone travel grow. The cone
+ * reaches its mechanical limit (Xmax) BEFORE the RMS power rating - the task is
+ * to bring it right to that limit.
+ */
+export interface ExcursionInteraction {
+  kind: 'excursion';
+  rmsW: number;
+  xmaxAtW: number; // power at which the cone reaches Xmax (less than rmsW)
+  minW: number;
+  maxW: number;
+  step: number;
+  initialW: number;
+  frequency: number;
+}
+
+/**
  * Discriminated union of every interaction kind. Rich, subject-specific kinds
  * are appended here as lessons are designed.
  */
@@ -150,7 +205,11 @@ export type Interaction =
   | DragLabelInteraction
   | ReorderInteraction
   | PowerMatchInteraction
-  | GainClipInteraction;
+  | GainClipInteraction
+  | WaveInterferenceInteraction
+  | EqualizerInteraction
+  | WiringInteraction
+  | ExcursionInteraction;
 
 export type InteractionKind = Interaction['kind'];
 

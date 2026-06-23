@@ -75,8 +75,8 @@ export const speakerAnatomyLesson: Lesson = {
       id: 'sa-cone-traces-wave',
       type: 'concept',
       title: 'The cone copies the wave',
-      body: 'Here is the direct link back to Lesson 1. The signal is a wave, and the cone\u2019s position copies that wave moment by moment. When the wave is high, the cone is pushed all the way out; when it dips, the cone pulls back in.\n\nSo the shape on a scope is literally the path the cone travels: a bigger wave means the cone moves farther (louder), and a faster wave means it moves more quickly (higher pitch).',
-      visual: { kind: 'signalCone', config: { height: 200 } },
+      body: 'Here is the direct link back to Lesson 1. The signal is a wave, and the cone\u2019s position copies that wave moment by moment. When the wave is high, the cone is pushed all the way out; when it dips, the cone pulls back in.\n\nDrag the frequency slider and watch both speed up together: a faster wave makes the cone move in and out faster (higher pitch), while a bigger wave would make it travel farther (louder).',
+      visual: { kind: 'signalCone', config: { height: 300 } },
     },
     {
       id: 'sa-polarity',
