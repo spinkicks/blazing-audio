@@ -3,6 +3,8 @@ import { introLesson } from './lessons/intro';
 import { soundWaveLesson } from './lessons/lesson-01-sound-wave';
 import { frequencyResponseLesson } from './lessons/lesson-02-frequency-response';
 import { speakerAnatomyLesson } from './lessons/lesson-03-speaker-anatomy';
+import { poweringSafelyLesson } from './lessons/lesson-04-powering-safely';
+import { clippingLesson } from './lessons/lesson-05-clipping';
 
 /**
  * The ordered set of lessons that make up the course. Lessons are added here as
@@ -14,6 +16,8 @@ const lessons: Lesson[] = [
   soundWaveLesson,
   frequencyResponseLesson,
   speakerAnatomyLesson,
+  poweringSafelyLesson,
+  clippingLesson,
 ];
 
 export const allLessons: Lesson[] = [...lessons].sort((a, b) => a.order - b.order);

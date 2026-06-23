@@ -2,6 +2,18 @@
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
+    // Sharp, 90-degree edges everywhere - no rounded corners anywhere in the app.
+    borderRadius: {
+      none: '0',
+      sm: '0',
+      DEFAULT: '0',
+      md: '0',
+      lg: '0',
+      xl: '0',
+      '2xl': '0',
+      '3xl': '0',
+      full: '0',
+    },
     extend: {
       colors: {
         // Deep "rack gear" backdrop
@@ -44,17 +56,13 @@ export default {
         ],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
-      boxShadow: {
-        glow: '0 0 24px -4px rgba(56, 189, 248, 0.45)',
-        'glow-amp': '0 0 24px -4px rgba(245, 158, 11, 0.5)',
-      },
       keyframes: {
         'fade-in': {
           '0%': { opacity: '0', transform: 'translateY(6px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         'pop-in': {
-          '0%': { opacity: '0', transform: 'scale(0.96)' },
+          '0%': { opacity: '0', transform: 'scale(0.98)' },
           '100%': { opacity: '1', transform: 'scale(1)' },
         },
       },

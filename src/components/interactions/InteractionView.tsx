@@ -3,6 +3,8 @@ import { WaveMatch } from './WaveMatch';
 import { CurveProbe } from './CurveProbe';
 import { DragLabel } from './DragLabel';
 import { Reorder } from './Reorder';
+import { PowerMatch } from './PowerMatch';
+import { GainClip } from './GainClip';
 import type { InteractionProps } from './types';
 
 /**
@@ -21,6 +23,10 @@ export function InteractionView(props: InteractionProps) {
       return <DragLabel {...props} />;
     case 'reorder':
       return <Reorder {...props} />;
+    case 'powerMatch':
+      return <PowerMatch {...props} />;
+    case 'gainClip':
+      return <GainClip {...props} />;
     default:
       return null;
   }

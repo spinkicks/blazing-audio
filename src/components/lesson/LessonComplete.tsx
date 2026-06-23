@@ -21,14 +21,21 @@ export function LessonComplete({
 }: LessonCompleteProps) {
   const masteryPct = Math.round(summary.masteryScore * 100);
   const lowMastery = summary.masteryScore < REVIEW_THRESHOLD;
+  const milestone = streakMilestone(summary.streakCurrent);
 
   return (
     <div className="animate-pop-in flex h-full flex-col items-center justify-center px-6 text-center">
-      <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-400/15 text-4xl">
-        🎧
+      <div className="flex h-16 w-16 items-center justify-center bg-emerald-400 text-3xl font-black text-ink-950">
+        ✓
       </div>
       <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-white">Lesson complete</h1>
       <p className="mt-1 text-slate-400">{lessonTitle}</p>
+
+      {milestone ? (
+        <div className="mt-4 border border-amp-500/40 bg-amp-500/10 px-4 py-2 text-sm font-bold text-amp-400">
+          {summary.streakCurrent}-day streak - {milestone}
+        </div>
+      ) : null}
 
       <div className="mt-7 grid w-full max-w-sm grid-cols-3 gap-3">
         <Stat label="Mastery" value={`${masteryPct}%`} />
@@ -56,6 +63,13 @@ export function LessonComplete({
       </div>
     </div>
   );
+}
+
+function streakMilestone(streak: number): string | null {
+  if (streak === 3) return 'the habit is forming';
+  if (streak === 7) return 'a full week';
+  if (streak >= 14 && streak % 7 === 0) return 'keep it going';
+  return null;
 }
 
 function Stat({ label, value }: { label: string; value: ReactNode }) {

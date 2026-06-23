@@ -1,13 +1,21 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/authStore';
 import { flushNow, useProgressStore } from '@/features/progress/progressStore';
 import { FullScreenSpinner } from '@/components/ui/Spinner';
 import { AppShell } from '@/components/layout/AppShell';
 import { AuthScreen } from '@/screens/AuthScreen';
-import { HomeScreen } from '@/screens/HomeScreen';
-import { ProfileScreen } from '@/screens/ProfileScreen';
-import { LessonScreen } from '@/screens/LessonScreen';
+
+// Authed screens are code-split so the initial (auth) load stays small.
+const HomeScreen = lazy(() =>
+  import('@/screens/HomeScreen').then((m) => ({ default: m.HomeScreen })),
+);
+const ProfileScreen = lazy(() =>
+  import('@/screens/ProfileScreen').then((m) => ({ default: m.ProfileScreen })),
+);
+const LessonScreen = lazy(() =>
+  import('@/screens/LessonScreen').then((m) => ({ default: m.LessonScreen })),
+);
 
 export default function App() {
   const user = useAuthStore((s) => s.user);
@@ -46,13 +54,15 @@ export default function App() {
   if (!loaded) return <FullScreenSpinner label="Loading your progress..." />;
 
   return (
-    <Routes>
-      <Route element={<AppShell />}>
-        <Route path="/learn" element={<HomeScreen />} />
-        <Route path="/profile" element={<ProfileScreen />} />
-      </Route>
-      <Route path="/lesson/:lessonId" element={<LessonScreen />} />
-      <Route path="*" element={<Navigate to="/learn" replace />} />
-    </Routes>
+    <Suspense fallback={<FullScreenSpinner />}>
+      <Routes>
+        <Route element={<AppShell />}>
+          <Route path="/learn" element={<HomeScreen />} />
+          <Route path="/profile" element={<ProfileScreen />} />
+        </Route>
+        <Route path="/lesson/:lessonId" element={<LessonScreen />} />
+        <Route path="*" element={<Navigate to="/learn" replace />} />
+      </Routes>
+    </Suspense>
   );
 }

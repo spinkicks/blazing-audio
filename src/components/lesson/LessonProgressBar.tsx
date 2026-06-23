@@ -8,7 +8,7 @@ export function LessonProgressBar({ current, total }: LessonProgressBarProps) {
   return (
     <div className="h-2 w-full overflow-hidden rounded-full bg-ink-700">
       <div
-        className="h-full rounded-full bg-gradient-to-r from-wave-500 to-wave-400 transition-[width] duration-300 ease-out"
+        className="h-full bg-wave-400 transition-[width] duration-300 ease-out"
         style={{ width: `${pct}%` }}
         role="progressbar"
         aria-valuenow={current}

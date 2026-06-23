@@ -113,6 +113,47 @@ export function grade(
         insight: feedback.insight,
       };
     }
+    case 'powerMatch': {
+      const watts = typeof answer === 'number' ? answer : interaction.initialW;
+      const low = interaction.safeLow * interaction.speakerRmsW;
+      const high = interaction.safeHigh * interaction.speakerRmsW;
+      if (watts >= low && watts <= high) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matchKey = watts < low ? 'power-low' : 'power-high';
+      const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'gainClip': {
+      const gain = typeof answer === 'number' ? answer : interaction.initialGain;
+      const threshold = interaction.clipThreshold;
+      if (interaction.target === 'onset') {
+        if (gain >= threshold && gain <= threshold + interaction.tolerance) {
+          return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+        }
+        const matchKey = gain < threshold ? 'gain-low' : 'gain-high';
+        const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
+        return {
+          correct: false,
+          feedbackText: matched?.text ?? feedback.defaultIncorrect,
+          insight: feedback.insight,
+        };
+      }
+      // target: 'clean'
+      if (gain <= threshold) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matched = feedback.incorrect?.find((entry) => entry.match === 'gain-high');
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
     default: {
       // No grader registered for this interaction kind yet. Treat as incorrect with
       // the authored default copy. (Once `Interaction` has 2+ members, switch this to

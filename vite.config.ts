@@ -12,5 +12,15 @@ export default defineConfig({
   },
   build: {
     target: 'es2022',
+    rollupOptions: {
+      output: {
+        // Split big, rarely-changing vendor code so it caches separately and
+        // downloads in parallel (keeps the app chunk small and first paint fast).
+        manualChunks: {
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          react: ['react', 'react-dom', 'react-router-dom'],
+        },
+      },
+    },
   },
 });

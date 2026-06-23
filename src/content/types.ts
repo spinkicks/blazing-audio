@@ -107,6 +107,39 @@ export interface ReorderInteraction {
 }
 
 /**
+ * "Match the power": set an amplifier's wattage into the safe band for a given
+ * speaker's RMS rating (between safeLow x RMS and safeHigh x RMS).
+ */
+export interface PowerMatchInteraction {
+  kind: 'powerMatch';
+  speakerRmsW: number;
+  speakerPeakW: number;
+  initialW: number;
+  minW: number;
+  maxW: number;
+  step: number;
+  safeLow: number;
+  safeHigh: number;
+}
+
+/**
+ * "Gain & clipping": raise the gain on a live waveform until it just clips
+ * (the wave flat-tops and the CLIP light comes on), or back it off to clean.
+ */
+export interface GainClipInteraction {
+  kind: 'gainClip';
+  initialGain: number;
+  minGain: number;
+  maxGain: number;
+  /** Gain at/above which the wave clips (the canvas clips at amplitude >= 1). */
+  clipThreshold: number;
+  target: 'onset' | 'clean';
+  /** For 'onset': how far past the threshold still counts as "just clipping". */
+  tolerance: number;
+  frequency?: number;
+}
+
+/**
  * Discriminated union of every interaction kind. Rich, subject-specific kinds
  * are appended here as lessons are designed.
  */
@@ -115,7 +148,9 @@ export type Interaction =
   | WaveMatchInteraction
   | CurveProbeInteraction
   | DragLabelInteraction
-  | ReorderInteraction;
+  | ReorderInteraction
+  | PowerMatchInteraction
+  | GainClipInteraction;
 
 export type InteractionKind = Interaction['kind'];
 

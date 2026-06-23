@@ -6,9 +6,11 @@ interface WaveTarget {
 }
 
 interface WaveCanvasProps {
-  amplitude: number; // 0..1
+  amplitude: number; // 0..1 (may exceed 1 when `clip` is on, to show overdrive)
   frequency: number; // Hz
   target?: WaveTarget | null;
+  /** When true, the wave is flat-topped at the canvas edges (clipping). */
+  clip?: boolean;
   height?: number;
   animate?: boolean;
   className?: string;
@@ -28,17 +30,19 @@ export function WaveCanvas({
   amplitude,
   frequency,
   target = null,
+  clip = false,
   height = 180,
   animate = true,
   className,
 }: WaveCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const live = useRef<{ amplitude: number; frequency: number; target: WaveTarget | null }>({
-    amplitude,
-    frequency,
-    target,
-  });
-  live.current = { amplitude, frequency, target };
+  const live = useRef<{
+    amplitude: number;
+    frequency: number;
+    target: WaveTarget | null;
+    clip: boolean;
+  }>({ amplitude, frequency, target, clip });
+  live.current = { amplitude, frequency, target, clip };
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -62,14 +66,23 @@ export function WaveCanvas({
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
 
-    const drawWave = (amp: number, hz: number, color: string, lineWidth: number, ghost: boolean) => {
+    const drawWave = (
+      amp: number,
+      hz: number,
+      color: string,
+      lineWidth: number,
+      ghost: boolean,
+      clipWave: boolean,
+    ) => {
       const cycles = cyclesFor(hz);
       const mid = height / 2;
-      const peak = (height / 2) * 0.9 * amp;
+      const maxPeak = (height / 2) * 0.9;
+      const peak = maxPeak * amp;
       ctx.beginPath();
       for (let x = 0; x <= width; x += 2) {
         const t = x / Math.max(width, 1);
-        const y = mid - peak * Math.sin(2 * Math.PI * cycles * t + phase);
+        let y = mid - peak * Math.sin(2 * Math.PI * cycles * t + phase);
+        if (clipWave) y = Math.max(mid - maxPeak, Math.min(mid + maxPeak, y));
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
@@ -93,9 +106,10 @@ export function WaveCanvas({
       ctx.lineTo(width, height / 2);
       ctx.stroke();
 
-      const { amplitude: a, frequency: f, target: tgt } = live.current;
-      if (tgt) drawWave(tgt.amplitude, tgt.frequency, '#94a3b8', 2.5, true);
-      drawWave(a, f, '#38bdf8', 3, false);
+      const { amplitude: a, frequency: f, target: tgt, clip: clipOn } = live.current;
+      const isClipping = clipOn && a >= 1;
+      if (tgt) drawWave(tgt.amplitude, tgt.frequency, '#94a3b8', 2.5, true, false);
+      drawWave(a, f, isClipping ? '#f87171' : '#38bdf8', 3, false, clipOn);
 
       if (animate) phase += 0.045;
       raf = requestAnimationFrame(render);

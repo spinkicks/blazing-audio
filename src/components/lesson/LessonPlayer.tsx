@@ -102,33 +102,37 @@ export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps
   return (
     <div className="flex h-full flex-col">
       {/* Header: exit + progress */}
-      <header className="safe-top sticky top-0 z-10 border-b border-white/5 bg-ink-900/90 px-4 pb-3 pt-3 backdrop-blur">
-        <div className="mb-2 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onExit}
-            aria-label="Exit lesson"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-ink-700 text-slate-300 active:scale-95"
-          >
-            ✕
-          </button>
-          <p className="truncate text-sm font-semibold text-slate-300">{lesson.title}</p>
-          <span className="ml-auto text-xs text-slate-500">
-            {index + 1}/{lesson.steps.length}
-          </span>
+      <header className="safe-top sticky top-0 z-10 border-b border-white/5 bg-ink-900/90 px-4 pb-3 pt-3 backdrop-blur md:px-8">
+        <div className="mx-auto w-full max-w-5xl">
+          <div className="mb-2 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onExit}
+              aria-label="Exit lesson"
+              className="flex h-9 w-9 items-center justify-center bg-ink-700 text-slate-300 active:scale-95"
+            >
+              ✕
+            </button>
+            <p className="truncate text-sm font-semibold text-slate-300">{lesson.title}</p>
+            <span className="ml-auto text-xs text-slate-500">
+              {index + 1}/{lesson.steps.length}
+            </span>
+          </div>
+          <LessonProgressBar current={index + 1} total={lesson.steps.length} />
         </div>
-        <LessonProgressBar current={index + 1} total={lesson.steps.length} />
       </header>
 
       {/* Body */}
-      <main className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="mx-auto w-full max-w-md">
+      <main className="flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-10">
+        <div className="mx-auto w-full max-w-5xl">
           {step.type === 'concept' ? (
             <ConceptView step={step} />
           ) : (
-            <div className="animate-fade-in">
-              <h2 className="text-xl font-bold leading-snug text-white">{step.prompt}</h2>
-              <div className="mt-5">
+            <div className="animate-fade-in lg:grid lg:grid-cols-2 lg:items-start lg:gap-10">
+              <h2 className="text-xl font-bold leading-snug text-white lg:col-start-2 lg:row-start-1">
+                {step.prompt}
+              </h2>
+              <div className="mt-5 lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:mt-0">
                 <InteractionView
                   interaction={step.interaction}
                   value={answer}
@@ -139,7 +143,7 @@ export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps
                 />
               </div>
               {result ? (
-                <div className="mt-5">
+                <div className="mt-5 lg:col-start-2 lg:row-start-2 lg:mt-4">
                   <FeedbackPanel result={result} />
                 </div>
               ) : null}

@@ -53,7 +53,7 @@ export function AuthScreen() {
       <div className="mx-auto w-full max-w-sm">
         {/* Brand */}
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-ink-800 shadow-glow">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center border border-white/10 bg-ink-800">
             <WaveMark className="h-9 w-9" />
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white">Blazing Audio</h1>

@@ -36,7 +36,7 @@ export function HomeScreen() {
 
       {/* Continue CTA */}
       {recommended ? (
-        <Card className="border-amp-500/20 bg-gradient-to-br from-ink-800 to-ink-700">
+        <Card className="border-amp-500/30 bg-ink-800">
           <p className="text-xs font-semibold uppercase tracking-wide text-amp-400">
             {recommended.needsReview
               ? 'Recommended review'
@@ -63,7 +63,7 @@ export function HomeScreen() {
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
           Your course
         </h3>
-        <ol className="flex flex-col gap-3">
+        <ol className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {nodes.map((node) => (
             <LessonRow
               key={node.summary.id}
@@ -127,10 +127,10 @@ function StatusBadge({
   locked: boolean;
   order: number;
 }) {
-  let content: ReactNode = order === 0 ? '★' : order;
+  let content: ReactNode = order === 0 ? '\u2605' : order;
   let tone = 'bg-ink-700 text-slate-300';
   if (locked) {
-    content = '🔒';
+    content = <LockIcon className="h-4 w-4" />;
     tone = 'bg-ink-700 text-slate-500';
   } else if (status === 'completed') {
     content = '✓';
@@ -147,5 +147,14 @@ function StatusBadge({
     >
       {content}
     </span>
+  );
+}
+
+function LockIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+      <rect x="5" y="11" width="14" height="9" />
+      <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+    </svg>
   );
 }

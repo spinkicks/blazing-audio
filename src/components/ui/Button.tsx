@@ -17,7 +17,7 @@ const base =
   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wave-400/70';
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-amp-500 text-ink-950 shadow-glow-amp hover:bg-amp-400',
+  primary: 'bg-amp-500 text-ink-950 hover:bg-amp-400',
   secondary: 'bg-ink-700 text-slate-100 hover:bg-ink-600',
   ghost: 'bg-transparent text-slate-300 hover:bg-ink-700',
   danger: 'bg-clip-500 text-white hover:bg-clip-400',
