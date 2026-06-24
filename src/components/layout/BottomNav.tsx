@@ -3,6 +3,7 @@ import { cn } from '@/lib/cn';
 
 const items = [
   { to: '/learn', label: 'Learn', icon: BookIcon },
+  { to: '/review', label: 'Review', icon: ReviewIcon },
   { to: '/profile', label: 'Profile', icon: UserIcon },
 ];
 
@@ -35,6 +36,17 @@ function BookIcon({ className }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
       <path d="M4 5a2 2 0 0 1 2-2h12v16H6a2 2 0 0 0-2 2V5Z" />
       <path d="M18 17H6" />
+    </svg>
+  );
+}
+
+function ReviewIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+      <path d="M4 5h16" />
+      <path d="M4 12h10" />
+      <path d="M4 19h7" />
+      <path d="M17 14l2 2 4-4" />
     </svg>
   );
 }

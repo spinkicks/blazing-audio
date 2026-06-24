@@ -22,7 +22,7 @@ export function VisualView({ visual }: { visual: VisualSpec }) {
           <WaveCanvas
             amplitude={num(visual.config, 'amplitude', 0.7)}
             frequency={num(visual.config, 'frequency', 220)}
-            height={num(visual.config, 'height', 240)}
+            height={num(visual.config, 'height', 360)}
           />
         </div>
       );
@@ -30,20 +30,20 @@ export function VisualView({ visual }: { visual: VisualSpec }) {
       const points = (visual.config?.points as CurvePoint[] | undefined) ?? [];
       return (
         <div className="border border-white/5 bg-ink-950/60 p-2">
-          <ResponseCurve points={points} height={num(visual.config, 'height', 240)} />
+          <ResponseCurve points={points} height={num(visual.config, 'height', 360)} />
         </div>
       );
     }
     case 'speaker':
       return (
         <div className="border border-white/5 bg-ink-950/60 p-2">
-          <SpeakerDiagram animate labels height={num(visual.config, 'height', 210)} />
+          <SpeakerDiagram animate labels height={num(visual.config, 'height', 315)} />
         </div>
       );
     case 'signalCone':
-      return <SignalToCone height={num(visual.config, 'height', 300)} />;
+      return <SignalToCone height={num(visual.config, 'height', 450)} />;
     case 'clipCoil':
-      return <ClipCoil height={num(visual.config, 'height', 280)} />;
+      return <ClipCoil height={num(visual.config, 'height', 420)} />;
     case 'clipWave':
       return (
         <div className="border border-white/5 bg-ink-950/60 p-2">
@@ -51,7 +51,7 @@ export function VisualView({ visual }: { visual: VisualSpec }) {
             amplitude={num(visual.config, 'gain', 1.5)}
             frequency={num(visual.config, 'frequency', 330)}
             clip
-            height={num(visual.config, 'height', 170)}
+            height={num(visual.config, 'height', 255)}
           />
         </div>
       );

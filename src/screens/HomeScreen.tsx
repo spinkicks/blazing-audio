@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProgressStore } from '@/features/progress/progressStore';
 import { buildCoursePath, recommendNext, type CourseNode } from '@/content/course';
+import { collectReviewTopics } from '@/content/review';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StreakBadge } from '@/components/ui/StreakBadge';
@@ -14,6 +15,7 @@ export function HomeScreen() {
 
   const nodes = buildCoursePath(progress);
   const recommended = recommendNext(nodes);
+  const reviewTopics = collectReviewTopics(progress);
   const firstName = profile?.displayName?.split(' ')[0] ?? 'there';
 
   return (
@@ -57,6 +59,22 @@ export function HomeScreen() {
           </p>
         </Card>
       )}
+
+      {reviewTopics.length > 0 ? (
+        <Card className="border-wave-400/30 bg-ink-800">
+          <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
+            Focused practice
+          </p>
+          <h2 className="mt-1 text-lg font-bold text-white">Review difficult topics</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            {reviewTopics.length} question{reviewTopics.length === 1 ? '' : 's'} to revisit from
+            your missed or repeated attempts.
+          </p>
+          <Button className="mt-4" variant="secondary" onClick={() => navigate('/review')}>
+            Review all difficult topics
+          </Button>
+        </Card>
+      ) : null}
 
       {/* Course path */}
       <section>

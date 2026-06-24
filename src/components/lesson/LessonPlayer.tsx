@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Lesson } from '@/content/types';
 import { grade, type AnswerValue, type GradeResult } from '@/content/grading';
-import { problemCount, getLesson } from '@/content/registry';
-import { buildCoursePath, recommendNext } from '@/content/course';
+import { problemCount, getNextLesson } from '@/content/registry';
 import { useProgressStore, type CompletionSummary } from '@/features/progress/progressStore';
 import { Button } from '@/components/ui/Button';
 import { InteractionView } from '@/components/interactions/InteractionView';
@@ -75,10 +74,8 @@ export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps
   }
 
   if (completion) {
-    const nodes = buildCoursePath(useProgressStore.getState().progress);
-    const rec = recommendNext(nodes);
-    const recIsOther = rec && rec.summary.id !== lesson.id;
-    const nextLesson = recIsOther ? getLesson(rec.summary.id) : undefined;
+    // Always point to the lesson that actually follows this one in order.
+    const nextLesson = getNextLesson(lesson.id);
     return (
       <LessonComplete
         lessonTitle={lesson.title}
@@ -94,7 +91,7 @@ export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps
     <div className="flex h-full flex-col">
       {/* Header: exit + progress */}
       <header className="safe-top sticky top-0 z-10 border-b border-white/5 bg-ink-900/90 px-4 pb-3 pt-3 backdrop-blur md:px-8">
-        <div className="mx-auto w-full max-w-5xl">
+        <div className="mx-auto w-full max-w-7xl">
           <div className="mb-2 flex items-center gap-3">
             <button
               type="button"
@@ -115,19 +112,15 @@ export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps
 
       {/* Body */}
       <main className="flex-1 overflow-y-auto px-4 py-6 md:px-8 md:py-10">
-        <div className="mx-auto w-full max-w-5xl">
+        <div className="mx-auto w-full max-w-7xl">
           {step.type === 'concept' ? (
-            <>
-              <ConceptView step={step} />
-              {/* Desktop: action sits right under the content, not pinned to the bottom. */}
-              <div className="mt-8 hidden max-w-md lg:block">{renderActions()}</div>
-            </>
+            <ConceptView step={step} />
           ) : (
-            <div className="animate-fade-in lg:grid lg:grid-cols-2 lg:items-start lg:gap-10">
-              <h2 className="text-xl font-bold leading-snug text-white lg:col-start-2 lg:row-start-1">
+            <div className="animate-fade-in lg:grid lg:grid-cols-2 lg:items-start lg:gap-14">
+              <h2 className="text-xl font-bold leading-snug text-white lg:col-start-2 lg:row-start-1 lg:text-3xl">
                 {step.prompt}
               </h2>
-              <div className="mt-5 lg:col-start-1 lg:row-start-1 lg:row-span-3 lg:mt-0">
+              <div className="mt-5 lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:mt-0">
                 <InteractionView
                   interaction={step.interaction}
                   value={answer}
@@ -141,10 +134,12 @@ export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps
                   <FeedbackPanel result={result} />
                 </div>
               ) : null}
-              {/* Desktop: action under the prompt/feedback column. */}
-              <div className="mt-5 hidden lg:col-start-2 lg:row-start-3 lg:block">{renderActions()}</div>
             </div>
           )}
+          {/* Desktop: a single, centered action below everything. */}
+          <div className="mt-10 hidden justify-center lg:flex">
+            <div className="w-full max-w-sm">{renderActions()}</div>
+          </div>
         </div>
       </main>
 

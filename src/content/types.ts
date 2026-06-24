@@ -195,6 +195,22 @@ export interface ExcursionInteraction {
 }
 
 /**
+ * "Subwoofer placement": place one sub in a simple room. Score is based on
+ * distance to the nearest valid corner; perfect corner placement = 100%.
+ */
+export interface SubPlacementInteraction {
+  kind: 'subPlacement';
+  initialX: number; // 0..1
+  initialY: number; // 0..1
+  /** Valid room-gain corners in normalized coordinates. */
+  corners: Array<{ x: number; y: number }>;
+  /** Distance from a corner that falls to 0% score. */
+  maxDistance: number;
+  /** Minimum score needed to pass. */
+  passScore: number;
+}
+
+/**
  * Discriminated union of every interaction kind. Rich, subject-specific kinds
  * are appended here as lessons are designed.
  */
@@ -209,7 +225,8 @@ export type Interaction =
   | WaveInterferenceInteraction
   | EqualizerInteraction
   | WiringInteraction
-  | ExcursionInteraction;
+  | ExcursionInteraction
+  | SubPlacementInteraction;
 
 export type InteractionKind = Interaction['kind'];
 

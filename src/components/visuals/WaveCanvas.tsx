@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 
 interface WaveTarget {
   amplitude: number;
@@ -53,13 +53,15 @@ export function WaveCanvas({
     let raf = 0;
     let phase = 0;
     let width = 0;
+    let h = height;
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const rect = canvas.getBoundingClientRect();
       width = rect.width;
+      h = rect.height;
       canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
+      canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
@@ -75,8 +77,8 @@ export function WaveCanvas({
       clipWave: boolean,
     ) => {
       const cycles = cyclesFor(hz);
-      const mid = height / 2;
-      const maxPeak = (height / 2) * 0.9;
+      const mid = h / 2;
+      const maxPeak = (h / 2) * 0.9;
       const peak = maxPeak * amp;
       ctx.beginPath();
       for (let x = 0; x <= width; x += 2) {
@@ -97,13 +99,13 @@ export function WaveCanvas({
     };
 
     const render = () => {
-      ctx.clearRect(0, 0, width, height);
+      ctx.clearRect(0, 0, width, h);
       // baseline
       ctx.strokeStyle = 'rgba(255,255,255,0.08)';
       ctx.lineWidth = 1;
       ctx.beginPath();
-      ctx.moveTo(0, height / 2);
-      ctx.lineTo(width, height / 2);
+      ctx.moveTo(0, h / 2);
+      ctx.lineTo(width, h / 2);
       ctx.stroke();
 
       const { amplitude: a, frequency: f, target: tgt, clip: clipOn } = live.current;
@@ -125,8 +127,8 @@ export function WaveCanvas({
   return (
     <canvas
       ref={canvasRef}
-      className={className}
-      style={{ width: '100%', height, display: 'block' }}
+      className={`viz-canvas ${className ?? ''}`}
+      style={{ '--viz-h': `${height}px` } as CSSProperties}
       aria-hidden="true"
     />
   );

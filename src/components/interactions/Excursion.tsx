@@ -22,7 +22,7 @@ export function Excursion({ interaction, onChange, locked }: InteractionProps) {
     let raf = 0;
     let width = 0;
     let phase = 0;
-    const height = 220;
+    const height = 330;
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -36,58 +36,102 @@ export function Excursion({ interaction, onChange, locked }: InteractionProps) {
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
 
-    const render = () => {
-      const w = live.current.watts;
-      const yC = height / 2;
-      const maxTravel = width * 0.16;
-      const peak = (w / ex.maxW) * maxTravel;
-      const xmaxOffset = (ex.xmaxAtW / ex.maxW) * maxTravel;
-      const restX = width * 0.52;
-      const past = peak > xmaxOffset;
+    const drawDriver = ({
+      cx,
+      cy,
+      label,
+      box,
+      ratio,
+      color,
+    }: {
+      cx: number;
+      cy: number;
+      label: string;
+      box: boolean;
+      ratio: number;
+      color: string;
+    }) => {
+      const maxTravel = width * 0.055;
+      const travel = Math.min(1.55, ratio) * maxTravel;
+      const offset = Math.sin(phase) * travel;
+      const xmax = maxTravel;
+      const past = ratio > 1;
 
-      ctx.clearRect(0, 0, width, height);
+      if (box) {
+        ctx.strokeStyle = 'rgba(148,163,184,0.7)';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(cx - 92, cy - 84, 184, 168);
+        ctx.fillStyle = 'rgba(14,165,233,0.08)';
+        ctx.fillRect(cx - 90, cy - 82, 180, 164);
+        ctx.fillStyle = 'rgba(148,163,184,0.9)';
+        ctx.font = '10px ui-monospace, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('sealed air spring', cx, cy + 101);
+      }
 
-      // Xmax limit lines (max safe cone-face positions)
-      ctx.strokeStyle = 'rgba(245,158,11,0.7)';
+      // Xmax lines.
+      ctx.strokeStyle = 'rgba(245,158,11,0.75)';
       ctx.setLineDash([5, 5]);
-      ctx.lineWidth = 2;
-      for (const lx of [restX - xmaxOffset, restX + xmaxOffset]) {
+      for (const x of [cx - xmax, cx + xmax]) {
         ctx.beginPath();
-        ctx.moveTo(lx, yC - 60);
-        ctx.lineTo(lx, yC + 60);
+        ctx.moveTo(x, cy - 62);
+        ctx.lineTo(x, cy + 62);
         ctx.stroke();
       }
       ctx.setLineDash([]);
-      ctx.fillStyle = 'rgba(245,158,11,0.8)';
-      ctx.font = '10px ui-monospace, monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText('Xmax', restX - xmaxOffset, yC - 66);
-      ctx.fillText('Xmax', restX + xmaxOffset, yC - 66);
 
-      // motor (fixed, right)
-      const motorX = width * 0.78;
+      // Motor.
       ctx.fillStyle = '#1f2f4d';
-      ctx.fillRect(motorX, yC - 38, width * 0.16, 76);
+      ctx.fillRect(cx + 54, cy - 44, 54, 88);
       ctx.fillStyle = '#16223a';
-      ctx.fillRect(motorX + width * 0.06, yC - 16, width * 0.06, 32);
+      ctx.fillRect(cx + 73, cy - 18, 24, 36);
 
-      // cone (oscillating); turns red when its travel exceeds Xmax
-      const offset = Math.sin(phase) * peak;
-      const mouthX = restX + offset;
-      const apexX = motorX;
-      const color = past ? '#f87171' : '#38bdf8';
-      ctx.fillStyle = past ? 'rgba(248,113,113,0.18)' : 'rgba(56,189,248,0.16)';
-      ctx.strokeStyle = color;
+      // Cone.
+      const mouth = cx - 40 + offset;
+      const apex = cx + 55;
+      ctx.fillStyle = past ? 'rgba(248,113,113,0.18)' : 'rgba(56,189,248,0.15)';
+      ctx.strokeStyle = past ? '#f87171' : color;
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(mouthX, yC - 50);
-      ctx.lineTo(apexX, yC - 14);
-      ctx.lineTo(apexX, yC + 14);
-      ctx.lineTo(mouthX, yC + 50);
+      ctx.moveTo(mouth, cy - 54);
+      ctx.lineTo(apex, cy - 15);
+      ctx.lineTo(apex, cy + 15);
+      ctx.lineTo(mouth, cy + 54);
+      ctx.closePath();
       ctx.stroke();
       ctx.fill();
       ctx.fillStyle = '#f59e0b';
-      ctx.fillRect(apexX - 4, yC - 14, 8, 28);
+      ctx.fillRect(apex - 4, cy - 16, 10, 32);
+
+      ctx.fillStyle = past ? '#f87171' : color;
+      ctx.font = '12px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, cx, cy - 102);
+      ctx.fillText(`${Math.round(ratio * 100)}% Xmax`, cx, cy + 82);
+    };
+
+    const render = () => {
+      const w = live.current.watts;
+      const freeRatio = w / ex.xmaxAtW;
+      const boxedRatio = freeRatio * 0.58;
+
+      ctx.clearRect(0, 0, width, height);
+      drawDriver({
+        cx: width * 0.28,
+        cy: height * 0.48,
+        label: 'free air',
+        box: false,
+        ratio: freeRatio,
+        color: '#f87171',
+      });
+      drawDriver({
+        cx: width * 0.72,
+        cy: height * 0.48,
+        label: 'sealed box',
+        box: true,
+        ratio: boxedRatio,
+        color: '#38bdf8',
+      });
 
       phase += 0.06 * (ex.frequency / 40);
       raf = requestAnimationFrame(render);
@@ -98,25 +142,35 @@ export function Excursion({ interaction, onChange, locked }: InteractionProps) {
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [ex.maxW, ex.xmaxAtW, ex.frequency]);
+  }, [ex.frequency, ex.xmaxAtW]);
 
-  const past = watts / ex.maxW > ex.xmaxAtW / ex.maxW;
-  const atLimit = !past && watts >= ex.xmaxAtW * 0.88;
-  const status = past
-    ? { text: 'PAST Xmax - the cone is slamming its limit (mechanical damage)', tone: 'text-clip-400' }
-    : atLimit
-      ? { text: 'Right at the Xmax limit', tone: 'text-amp-400' }
-      : { text: 'Within Xmax', tone: 'text-emerald-300' };
+  const freeRatio = watts / ex.xmaxAtW;
+  const boxedRatio = freeRatio * 0.58;
+  const freePast = freeRatio > 1;
+  const boxedSafe = boxedRatio < 1;
+  const atTarget = freePast && boxedSafe;
+  const status = atTarget
+    ? {
+        text: 'Same watts: free-air is past Xmax, sealed box is still controlled',
+        tone: 'border-amp-500/40 bg-amp-500/10 text-amp-400',
+      }
+    : freePast
+      ? {
+          text: 'Free-air is past Xmax; the box is helping, but push carefully',
+          tone: 'border-clip-400/40 bg-clip-500/10 text-clip-300',
+        }
+      : {
+          text: 'Both are still within Xmax - raise power to see the difference',
+          tone: 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300',
+        };
 
   return (
     <div className="flex flex-col gap-4">
       <div className="border border-white/5 bg-ink-950/60 p-2">
-        <canvas ref={canvasRef} style={{ width: '100%', height: 220, display: 'block' }} aria-hidden="true" />
+        <canvas ref={canvasRef} style={{ width: '100%', height: 330, display: 'block' }} aria-hidden="true" />
       </div>
 
-      <div className={cn('border px-3 py-2 text-sm font-semibold', past ? 'border-clip-400/40 bg-clip-500/10' : atLimit ? 'border-amp-500/40 bg-amp-500/10' : 'border-emerald-400/40 bg-emerald-500/10', status.tone)}>
-        {status.text}
-      </div>
+      <div className={cn('border px-3 py-2 text-sm font-semibold', status.tone)}>{status.text}</div>
 
       <div>
         <div className="mb-1 flex items-baseline justify-between">
@@ -135,8 +189,10 @@ export function Excursion({ interaction, onChange, locked }: InteractionProps) {
           onChange={(e) => setWatts(Number(e.target.value))}
           aria-label="Amplifier power in watts"
         />
-        <p className="mt-1 text-xs text-slate-500">
-          Same frequency throughout - only the power changes. Watch the cone hit Xmax well before {ex.rmsW} W RMS.
+        <p className="mt-1 text-xs leading-relaxed text-slate-500">
+          Same frequency and same watts. Free-air movement is larger because there is no trapped air spring.
+          In the sealed box the cone moves less, but it makes more usable bass because the box prevents
+          front/back cancellation and lets pressure build in the room.
         </p>
       </div>
     </div>

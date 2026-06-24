@@ -9,6 +9,7 @@ import { WaveInterference } from './WaveInterference';
 import { Equalizer } from './Equalizer';
 import { Wiring } from './Wiring';
 import { Excursion } from './Excursion';
+import { SubPlacement } from './SubPlacement';
 import type { InteractionProps } from './types';
 
 /**
@@ -39,6 +40,8 @@ export function InteractionView(props: InteractionProps) {
       return <Wiring {...props} />;
     case 'excursion':
       return <Excursion {...props} />;
+    case 'subPlacement':
+      return <SubPlacement {...props} />;
     default:
       return null;
   }

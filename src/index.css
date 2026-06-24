@@ -12,6 +12,19 @@
   border-radius: 0 !important;
 }
 
+/* Lesson visuals: a base height on mobile, scaled up ~1.5x on desktop. The
+   numeric height is passed in via the --viz-h custom property. */
+.viz-canvas {
+  display: block;
+  width: 100%;
+  height: var(--viz-h, 240px);
+}
+@media (min-width: 1024px) {
+  .viz-canvas {
+    height: calc(var(--viz-h, 240px) * 1.5);
+  }
+}
+
 @layer base {
   :root {
     color-scheme: dark;

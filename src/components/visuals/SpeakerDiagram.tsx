@@ -1,3 +1,4 @@
+import { type CSSProperties } from 'react';
 import { cn } from '@/lib/cn';
 
 interface MarkerSpec {
@@ -38,8 +39,8 @@ export function SpeakerDiagram({
   return (
     <svg
       viewBox="0 0 340 200"
-      className={cn('w-full', className)}
-      style={{ height }}
+      className={cn('viz-canvas', className)}
+      style={{ '--viz-h': `${height}px` } as CSSProperties}
       role="img"
       aria-label="Cross-section of a loudspeaker"
     >

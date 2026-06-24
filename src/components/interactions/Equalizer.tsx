@@ -4,11 +4,9 @@ import { ResponseCurve } from '@/components/visuals/ResponseCurve';
 import { cn } from '@/lib/cn';
 import type { InteractionProps } from './types';
 
-const FADER_HEIGHT = 150;
-const HANDLE = 14;
+const FADER_HEIGHT = 225;
+const HANDLE = 18;
 
-/** A custom vertical fader (built from divs so it isn't affected by the global
- *  range-input styling). Drag the handle up to boost, down to cut. */
 function Fader({
   value,
   min,
@@ -32,13 +30,13 @@ function Fader({
     const el = trackRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const rel = (clientY - rect.top) / rect.height; // 0 at top, 1 at bottom
+    const rel = (clientY - rect.top) / rect.height;
     const raw = max - rel * (max - min);
     const snapped = Math.round(raw / step) * step;
     onChange(Math.max(min, Math.min(max, snapped)));
   };
 
-  const frac = (value - min) / (max - min); // 0..1, 1 = top
+  const frac = (value - min) / (max - min);
   const handleTop = (1 - frac) * (FADER_HEIGHT - HANDLE);
   const zeroTop = (1 - (0 - min) / (max - min)) * (FADER_HEIGHT - HANDLE) + HANDLE / 2;
 
@@ -50,7 +48,7 @@ function Fader({
       </span>
       <div
         ref={trackRef}
-        className="relative w-9 touch-none"
+        className="relative w-10 touch-none"
         style={{ height: FADER_HEIGHT }}
         onPointerDown={(e) => {
           if (disabled) return;
@@ -62,14 +60,11 @@ function Fader({
           setFromClientY(e.clientY);
         }}
       >
-        {/* track groove */}
         <div className="absolute left-1/2 top-0 h-full w-1.5 -translate-x-1/2 bg-ink-700" />
-        {/* 0 dB reference */}
         <div className="absolute left-0 w-full border-t border-dashed border-white/20" style={{ top: zeroTop }} />
-        {/* handle */}
         <div
           className={cn(
-            'absolute left-1/2 w-7 -translate-x-1/2 border',
+            'absolute left-1/2 w-8 -translate-x-1/2 border',
             disabled ? 'border-slate-500 bg-ink-600' : 'border-wave-400 bg-wave-500',
           )}
           style={{ top: handleTop, height: HANDLE }}
@@ -102,10 +97,10 @@ export function Equalizer({ interaction, onChange, locked }: InteractionProps) {
         <p className="px-1 pb-1 text-[11px] uppercase tracking-wide text-slate-500">
           Sound signature
         </p>
-        <ResponseCurve points={points} height={170} />
+        <ResponseCurve points={points} height={255} />
       </div>
 
-      <div className="border border-white/5 bg-ink-800 p-3">
+      <div className="border border-white/5 bg-ink-800 p-4">
         <div className="flex items-end justify-between gap-1">
           {eq.bands.map((band) => (
             <Fader
@@ -120,7 +115,7 @@ export function Equalizer({ interaction, onChange, locked }: InteractionProps) {
             />
           ))}
         </div>
-        <p className="mt-2 text-center text-[11px] text-slate-500">
+        <p className="mt-3 text-center text-xs text-slate-500">
           Drag a fader up to boost that frequency, down to cut it.
         </p>
       </div>

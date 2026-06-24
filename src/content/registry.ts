@@ -5,6 +5,7 @@ import { frequencyResponseLesson } from './lessons/lesson-02-frequency-response'
 import { speakerAnatomyLesson } from './lessons/lesson-03-speaker-anatomy';
 import { poweringSafelyLesson } from './lessons/lesson-04-powering-safely';
 import { clippingLesson } from './lessons/lesson-05-clipping';
+import { subwooferPlacementLesson } from './lessons/lesson-06-subwoofer-placement';
 
 /**
  * The ordered set of lessons that make up the course. Lessons are added here as
@@ -18,12 +19,20 @@ const lessons: Lesson[] = [
   speakerAnatomyLesson,
   poweringSafelyLesson,
   clippingLesson,
+  subwooferPlacementLesson,
 ];
 
 export const allLessons: Lesson[] = [...lessons].sort((a, b) => a.order - b.order);
 
 export function getLesson(id: string): Lesson | undefined {
   return allLessons.find((lesson) => lesson.id === id);
+}
+
+/** The lesson that comes immediately after this one in course order, if any. */
+export function getNextLesson(currentId: string): Lesson | undefined {
+  const current = getLesson(currentId);
+  if (!current) return undefined;
+  return allLessons.find((lesson) => lesson.order > current.order);
 }
 
 export function problemCount(lesson: Lesson): number {

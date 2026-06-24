@@ -49,7 +49,11 @@ export function ProfileScreen() {
       <div className="grid grid-cols-3 gap-3">
         <Stat label="Lessons" value={profile?.stats.lessonsCompleted ?? 0} />
         <Stat label="Problems" value={profile?.stats.problemsSolved ?? 0} />
-        <Stat label="XP" value={profile?.stats.xp ?? 0} />
+        <Stat
+          label="XP"
+          value={profile?.stats.xp ?? 0}
+          help="XP = 10 points for each problem solved for the first time, plus 50 points the first time you complete a lesson. Reviewing does not double-count XP."
+        />
       </div>
 
       <Button variant="danger" fullWidth disabled={busy} onClick={handleSignOut}>
@@ -59,11 +63,16 @@ export function ProfileScreen() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value, help }: { label: string; value: number; help?: string }) {
   return (
-    <div className="rounded-2xl bg-ink-800 p-4 text-center">
+    <div className="group relative bg-ink-800 p-4 text-center" tabIndex={help ? 0 : undefined}>
       <div className="text-2xl font-extrabold text-white">{value}</div>
       <div className="mt-1 text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
+      {help ? (
+        <div className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-72 -translate-x-1/2 border border-white/10 bg-ink-950 p-3 text-left text-xs leading-relaxed text-slate-300 shadow-lg group-hover:block group-focus:block">
+          {help}
+        </div>
+      ) : null}
     </div>
   );
 }

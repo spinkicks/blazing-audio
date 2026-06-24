@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type CSSProperties } from 'react';
 import type { CurvePoint } from '@/content/types';
 import { dbAtFreq, freqToT, tToFreq } from '@/lib/freqMath';
 
@@ -8,8 +8,8 @@ const DB_MAX = 8;
 function freqToX(freq: number, width: number): number {
   return freqToT(freq) * width;
 }
-function dbToY(db: number, height: number): number {
-  return height - ((db - DB_MIN) / (DB_MAX - DB_MIN)) * height;
+function dbToY(db: number, h: number): number {
+  return h - ((db - DB_MIN) / (DB_MAX - DB_MIN)) * h;
 }
 
 const GRID_FREQS = [20, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000];
@@ -36,13 +36,15 @@ export function ResponseCurve({ points, probeFreq = null, height = 200, classNam
     if (!ctx) return;
     let raf = 0;
     let width = 0;
+    let h = height;
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const rect = canvas.getBoundingClientRect();
       width = rect.width;
+      h = rect.height;
       canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
+      canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
@@ -51,9 +53,8 @@ export function ResponseCurve({ points, probeFreq = null, height = 200, classNam
 
     const render = () => {
       const { points: pts, probeFreq: probe } = live.current;
-      ctx.clearRect(0, 0, width, height);
+      ctx.clearRect(0, 0, width, h);
 
-      // Grid + frequency labels
       ctx.font = '10px ui-monospace, monospace';
       ctx.textAlign = 'center';
       for (const f of GRID_FREQS) {
@@ -62,13 +63,13 @@ export function ResponseCurve({ points, probeFreq = null, height = 200, classNam
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, height - 14);
+        ctx.lineTo(x, h - 14);
         ctx.stroke();
         ctx.fillStyle = 'rgba(148,163,184,0.7)';
-        ctx.fillText(freqLabel(f), x, height - 2);
+        ctx.fillText(freqLabel(f), x, h - 2);
       }
-      // 0 dB reference line
-      const yZero = dbToY(0, height);
+
+      const yZero = dbToY(0, h);
       ctx.strokeStyle = 'rgba(255,255,255,0.12)';
       ctx.setLineDash([4, 4]);
       ctx.beginPath();
@@ -77,11 +78,10 @@ export function ResponseCurve({ points, probeFreq = null, height = 200, classNam
       ctx.stroke();
       ctx.setLineDash([]);
 
-      // Curve
       ctx.beginPath();
       for (let x = 0; x <= width; x += 2) {
         const f = tToFreq(x / Math.max(width, 1));
-        const y = dbToY(dbAtFreq(pts, f), height);
+        const y = dbToY(dbAtFreq(pts, f), h);
         if (x === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
@@ -90,15 +90,14 @@ export function ResponseCurve({ points, probeFreq = null, height = 200, classNam
       ctx.lineJoin = 'round';
       ctx.stroke();
 
-      // Probe
       if (probe != null) {
         const x = freqToX(probe, width);
-        const y = dbToY(dbAtFreq(pts, probe), height);
+        const y = dbToY(dbAtFreq(pts, probe), h);
         ctx.strokeStyle = 'rgba(245,158,11,0.8)';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, height - 14);
+        ctx.lineTo(x, h - 14);
         ctx.stroke();
         ctx.fillStyle = '#f59e0b';
         ctx.beginPath();
@@ -119,8 +118,8 @@ export function ResponseCurve({ points, probeFreq = null, height = 200, classNam
   return (
     <canvas
       ref={canvasRef}
-      className={className}
-      style={{ width: '100%', height, display: 'block' }}
+      className={`viz-canvas ${className ?? ''}`}
+      style={{ '--viz-h': `${height}px` } as CSSProperties}
       aria-hidden="true"
     />
   );

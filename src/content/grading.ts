@@ -215,11 +215,34 @@ export function grade(
     }
     case 'excursion': {
       const watts = typeof answer === 'number' ? answer : interaction.initialW;
-      const tol = Math.max(interaction.step, interaction.xmaxAtW * 0.12);
-      if (Math.abs(watts - interaction.xmaxAtW) <= tol) {
+      const freeAirPastXmax = watts >= interaction.xmaxAtW;
+      const boxedStillSafe = watts * 0.58 < interaction.xmaxAtW;
+      if (freeAirPastXmax && boxedStillSafe) {
         return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
       }
       const matchKey = watts < interaction.xmaxAtW ? 'below' : 'above';
+      const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'subPlacement': {
+      const point =
+        typeof answer === 'object' && answer !== null && !Array.isArray(answer)
+          ? (answer as Record<string, number | string>)
+          : {};
+      const x = Number(point.x ?? interaction.initialX);
+      const y = Number(point.y ?? interaction.initialY);
+      const nearest = Math.min(
+        ...interaction.corners.map((corner) => Math.hypot(x - corner.x, y - corner.y)),
+      );
+      const score = Math.max(0, Math.round((1 - nearest / interaction.maxDistance) * 100));
+      if (score >= interaction.passScore) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matchKey = score >= 60 ? 'close' : 'far';
       const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
       return {
         correct: false,

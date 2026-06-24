@@ -34,7 +34,7 @@ export function WaveMatch({ interaction, onChange, locked }: InteractionProps) {
   return (
     <div className="flex flex-col gap-4">
       <div className="border border-white/5 bg-ink-950/60 p-2">
-        <WaveCanvas amplitude={amplitude} frequency={frequency} target={target} height={260} />
+        <WaveCanvas amplitude={amplitude} frequency={frequency} target={target} height={390} />
         {showTarget ? (
           <div className="flex items-center justify-center gap-5 pb-1 pt-1 text-xs text-slate-400">
             <Legend color="#94a3b8" dashed label="Target" />

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 
 /**
  * Interactive: a scrolling sine "signal" drives a real speaker cross-section
@@ -19,13 +19,15 @@ export function SignalToCone({ height = 300 }: { height?: number }) {
     let raf = 0;
     let width = 0;
     let phase = 0;
+    let h = height;
 
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       const rect = canvas.getBoundingClientRect();
       width = rect.width;
+      h = rect.height;
       canvas.width = Math.round(width * dpr);
-      canvas.height = Math.round(height * dpr);
+      canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
@@ -34,8 +36,8 @@ export function SignalToCone({ height = 300 }: { height?: number }) {
 
     const render = () => {
       const f = freqRef.current;
-      const yC = height * 0.46;
-      const amp = height * 0.2;
+      const yC = h * 0.46;
+      const amp = h * 0.2;
       const scopeL = 14;
       const scopeR = width * 0.46;
       const cycles = Math.max(1, f / 90);
@@ -121,10 +123,10 @@ export function SignalToCone({ height = 300 }: { height?: number }) {
       ctx.fillStyle = 'rgba(148,163,184,0.9)';
       ctx.font = '11px ui-monospace, monospace';
       ctx.textAlign = 'left';
-      ctx.fillText('the signal', scopeL, height - 6);
+      ctx.fillText('the signal', scopeL, h - 6);
       ctx.textAlign = 'center';
-      ctx.fillText('cone', coneMouthX, height - 6);
-      ctx.fillText('motor', motorX + width * 0.07, height - 6);
+      ctx.fillText('cone', coneMouthX, h - 6);
+      ctx.fillText('motor', motorX + width * 0.07, h - 6);
 
       phase += 0.05 * (f / 80);
       raf = requestAnimationFrame(render);
@@ -142,7 +144,8 @@ export function SignalToCone({ height = 300 }: { height?: number }) {
       <div className="border border-white/5 bg-ink-950/60 p-2">
         <canvas
           ref={canvasRef}
-          style={{ width: '100%', height, display: 'block' }}
+          className="viz-canvas"
+          style={{ '--viz-h': `${height}px` } as CSSProperties}
           aria-hidden="true"
         />
       </div>

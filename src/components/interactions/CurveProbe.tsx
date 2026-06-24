@@ -31,7 +31,7 @@ export function CurveProbe({ interaction, onChange, locked }: InteractionProps) 
   return (
     <div className="flex flex-col gap-4">
       <div className="border border-white/5 bg-ink-950/60 p-2">
-        <ResponseCurve points={cp.points} probeFreq={freq} height={300} />
+        <ResponseCurve points={cp.points} probeFreq={freq} height={450} />
       </div>
 
       <div className="flex items-center justify-between rounded-2xl bg-ink-800 px-4 py-2 text-sm">

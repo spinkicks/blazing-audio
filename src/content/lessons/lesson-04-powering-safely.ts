@@ -126,7 +126,8 @@ export const poweringSafelyLesson: Lesson = {
     {
       id: 'ps-xmax',
       type: 'problem',
-      prompt: 'Raise the power until the cone just reaches its Xmax limit. Notice how little power that takes.',
+      prompt:
+        'Raise the power until the free-air driver goes past Xmax while the sealed-box driver is still controlled.',
       interaction: {
         kind: 'excursion',
         rmsW: 50,
@@ -138,27 +139,29 @@ export const poweringSafelyLesson: Lesson = {
         frequency: 35,
       },
       feedback: {
-        correct: 'Right at Xmax - and you got there at well under the 50 W RMS rating. Any more and the cone slams past its mechanical limit.',
+        correct:
+          'Exactly. Same frequency, same watts: the free-air driver is already past Xmax, while the sealed-box driver is still controlled by the trapped-air spring.',
         incorrect: [
           {
             match: 'below',
-            text: 'Not at the limit yet - the cone still has room before the Xmax lines. Add a little more power.',
+            text: 'Not at the comparison point yet - both drivers are still within Xmax. Add power until the free-air cone crosses the limit.',
           },
           {
             match: 'above',
-            text: 'You pushed the cone PAST Xmax - and notice you are still under the RMS rating. The watts look safe, but the cone is bottoming out. Ease back to the Xmax limit.',
+            text: 'Too far - now even the boxed driver is nearing or passing its limit. Back down until free-air is past Xmax but the sealed box is still controlled.',
           },
         ],
-        defaultIncorrect: 'Bring the cone right up to the Xmax limit lines, and no further.',
+        defaultIncorrect:
+          'Find the range where free-air is past Xmax but the sealed-box version is still controlled.',
         insight:
-          'Xmax can be reached before the thermal (RMS) limit, especially on subwoofers. "Within RMS" does not mean safe - you have to watch excursion too.',
+          'The sealed box does two useful things: it prevents front/back cancellation (more usable bass output), and the trapped air acts like a spring that reduces cone travel. Free air loses bass and lets the cone over-travel.',
       },
     },
     {
       id: 'ps-box',
       type: 'concept',
       title: 'Why the box matters',
-      body: 'One more subwoofer rule: never run a driver out in the open (outside its box) unless you really know what you are doing.\n\nInside a sealed box, the trapped air acts like a spring - it pushes back on the cone and helps keep it within Xmax. Take the driver out of the box and that spring is gone, so the same power now throws the cone far past Xmax and can destroy it.\n\n(We are sticking to sealed boxes here; vented/ported designs behave differently and are out of scope for now.)',
+      body: 'One more subwoofer rule: never run a driver out in the open (outside its box) unless you really know what you are doing.\n\nInside a sealed box, the trapped air acts like a spring - it pushes back on the cone and helps keep it within Xmax. The box also makes the bass more useful: the rear wave is trapped, so it cannot wrap around and cancel the front wave. That means less cone movement can create more usable bass output in the room.\n\nTake the driver out of the box and both advantages vanish: no air spring, and front/back cancellation. The same power now moves the cone farther, sounds weaker, and can destroy the driver.\n\n(We are sticking to sealed boxes here; vented/ported designs behave differently and are out of scope for now.)',
     },
     {
       id: 'ps-wrap',
