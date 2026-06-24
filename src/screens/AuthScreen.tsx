@@ -58,7 +58,7 @@ export function AuthScreen() {
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight text-white">Blazing Audio</h1>
           <p className="mt-1 text-sm text-slate-400">
-            Learn how audio really works - one hands-on lesson at a time.
+            Learn how audio really works, one hands-on lesson at a time.
           </p>
         </div>
 

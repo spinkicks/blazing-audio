@@ -52,7 +52,7 @@ export function WaveMatch({ interaction, onChange, locked }: InteractionProps) {
             enabled ? 'bg-wave-400/20 text-wave-400' : 'bg-ink-700 text-slate-300',
           )}
         >
-          {enabled ? 'Sound on - drag to hear it change' : 'Tap to hear it'}
+          {enabled ? 'Sound on. Drag to hear it change' : 'Tap to hear it'}
         </button>
       ) : null}
 

@@ -120,7 +120,7 @@ export const balancedUnbalancedLesson: Lesson = {
             text: 'Speaker wire must enter the converter input first. The RCA output is the converted low-level signal for the powered sub.',
           },
         ],
-        defaultIncorrect: 'Connect speaker +/− into the converter, then RCA out to the powered sub input.',
+        defaultIncorrect: 'Connect speaker +/- into the converter, then RCA out to the powered sub input.',
         insight:
           'A line-level converter bridges two signal worlds: high-power speaker output on one side, low-level RCA signal on the other.',
       },

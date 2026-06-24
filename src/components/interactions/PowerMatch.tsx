@@ -23,7 +23,7 @@ export function PowerMatch({ interaction, onChange, locked }: InteractionProps) 
     zone === 'red'
       ? { text: 'Coil: OVERHEATING', tone: 'text-clip-400' }
       : zone === 'yellow'
-        ? { text: 'Coil: warm - okay for brief peaks only', tone: 'text-amp-400' }
+        ? { text: 'Coil: warm, okay for brief peaks only', tone: 'text-amp-400' }
         : { text: 'Coil: safe for continuous power', tone: 'text-emerald-300' };
 
   return (

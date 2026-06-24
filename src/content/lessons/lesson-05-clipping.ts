@@ -10,7 +10,7 @@ export const clippingLesson: Lesson = {
   id: 'clipping',
   order: 5,
   title: 'Clipping: When the Signal Breaks',
-  subtitle: 'Gain, headroom, the clip light - and the real speaker killer',
+  subtitle: 'Gain, headroom, the clip light, and the real speaker killer',
   estimatedMinutes: 7,
   concepts: ['Volume vs gain & headroom', 'What the clip light means', 'Why clipping fries coils'],
   steps: [
@@ -18,19 +18,19 @@ export const clippingLesson: Lesson = {
       id: 'cl-gain',
       type: 'concept',
       title: 'Volume vs gain',
-      body: 'They feel the same but they are not. Volume is how loud the final output is. Gain is how hard you drive the signal into the amp before it is amplified.\n\nAn amplifier can only swing so high - limited by its power supply. That ceiling is called headroom. Ask for more than the headroom allows and something has to give.',
+      body: 'They feel the same but they are not. Volume is how loud the final output is. Gain is how hard you drive the signal into the amp before it is amplified.\n\nAn amplifier can only swing so high, limited by its power supply. That ceiling is called headroom. Ask for more than the headroom allows and something has to give.',
     },
     {
       id: 'cl-cliplight',
       type: 'concept',
       title: 'The clip light',
-      body: 'When the signal demands more than the amp can deliver, the amp cannot make the peaks any taller - so it chops them off flat. That is clipping, and the CLIP light is the amp telling you it is happening.\n\nWatch the wave from Lesson 1: as gain rises it grows, then its rounded peaks flatten into a near-square shape.',
+      body: 'When the signal demands more than the amp can deliver, the amp cannot make the peaks any taller, so it chops them off flat. That is clipping, and the CLIP light is the amp telling you it is happening.\n\nWatch the wave from Lesson 1: as gain rises it grows, then its rounded peaks flatten into a near-square shape.',
       visual: { kind: 'clipWave', config: { gain: 1.5, frequency: 330 } },
     },
     {
       id: 'cl-find-onset',
       type: 'problem',
-      prompt: 'Turn the gain up until the CLIP light JUST comes on - the edge of clipping, no further.',
+      prompt: 'Turn the gain up until the CLIP light JUST comes on: the edge of clipping, no further.',
       interaction: {
         kind: 'gainClip',
         initialGain: 0.5,
@@ -42,15 +42,15 @@ export const clippingLesson: Lesson = {
         frequency: 330,
       },
       feedback: {
-        correct: 'Right at the edge - the peaks just flattened and the light lit. That is the most you can push before distortion.',
+        correct: 'Right at the edge. The peaks just flattened and the light lit. That is the most you can push before distortion.',
         incorrect: [
           {
             match: 'gain-low',
-            text: 'Not clipping yet - the peaks are still rounded and the light is off. Bring the gain up a bit more.',
+            text: 'Not clipping yet. The peaks are still rounded and the light is off. Bring the gain up a bit more.',
           },
           {
             match: 'gain-high',
-            text: 'Now it is clipping hard - the peaks are badly flattened. Ease the gain back until the light just barely comes on.',
+            text: 'Now it is clipping hard. The peaks are badly flattened. Ease the gain back until the light just barely comes on.',
           },
         ],
         defaultIncorrect: 'Find the point where the peaks just start to flatten and the light flicks on.',
@@ -62,14 +62,14 @@ export const clippingLesson: Lesson = {
       id: 'cl-voltage',
       type: 'concept',
       title: 'Voltage, power, and the flat tops',
-      body: 'The signal driving the speaker is a voltage that rises and falls with the wave. Power follows voltage steeply: P = V\u00b2 / R, so a little more voltage is a lot more power.\n\nOn a clean sine the voltage only touches its peak for an instant. When the wave clips, the voltage is pinned at maximum across the entire flat top - so the speaker receives maximum power, held, on every cycle. The flattened peaks are exactly where the most watts are dumped.',
+      body: 'The signal driving the speaker is a voltage that rises and falls with the wave. Power follows voltage steeply: P = V\u00b2 / R, so a little more voltage is a lot more power.\n\nOn a clean sine the voltage only touches its peak for an instant. When the wave clips, the voltage is pinned at maximum across the entire flat top, so the speaker receives maximum power, held, on every cycle. The flattened peaks are exactly where the most watts are dumped.',
       visual: { kind: 'clipWave', config: { gain: 1.6, frequency: 300, height: 200 } },
     },
     {
       id: 'cl-why-fries',
       type: 'concept',
       title: 'Why clipping kills speakers',
-      body: 'A clean sine keeps the cone moving smoothly. A clipped wave slams the cone to its extreme and HOLDS it there on every flat top - and the voice coil takes maximum sustained power the whole time it is pinned.\n\nWatch the coil below: held at the clipped peaks it heats up, and if the clipping goes on too long it melts or burns - up in smoke. The flat tops also carry extra high-frequency energy that pours into the tweeter. This is why clipping, not raw wattage, is the most common way speakers die.',
+      body: 'A clean sine keeps the cone moving smoothly. A clipped wave slams the cone to its extreme and HOLDS it there on every flat top, and the voice coil takes maximum sustained power the whole time it is pinned.\n\nWatch the coil below: held at the clipped peaks it heats up, and if the clipping goes on too long it melts or burns, up in smoke. The flat tops also carry extra high-frequency energy that pours into the tweeter. This is why clipping, not raw wattage, is the most common way speakers die.',
       visual: { kind: 'clipCoil', config: { height: 280 } },
     },
     {
@@ -87,11 +87,11 @@ export const clippingLesson: Lesson = {
         frequency: 330,
       },
       feedback: {
-        correct: 'Clean again - rounded peaks, light off. That is the signal the speaker is built to reproduce.',
+        correct: 'Clean again: rounded peaks, light off. That is the signal the speaker is built to reproduce.',
         incorrect: [
           {
             match: 'gain-high',
-            text: 'Still clipping - the peaks are flat and the light is on. Keep bringing the gain down until the light goes off.',
+            text: 'Still clipping. The peaks are flat and the light is on. Keep bringing the gain down until the light goes off.',
           },
         ],
         defaultIncorrect: 'Bring the gain down until the peaks are round again and the CLIP light is off.',
@@ -110,13 +110,13 @@ export const clippingLesson: Lesson = {
             id: 'clip',
             label: 'Pushed for volume it clips, and the flattened wave dumps extra sustained energy as heat into the coil',
           },
-          { id: 'weak', label: 'It cannot - an underpowered amp is always safe' },
+          { id: 'weak', label: 'It cannot: an underpowered amp is always safe' },
           { id: 'cold', label: 'It freezes the voice coil' },
         ],
         correctOptionId: 'clip',
       },
       feedback: {
-        correct: 'Exactly. Reaching for volume it does not have, the small amp clips, and that energy-dense signal cooks the coil - tweeters especially.',
+        correct: 'Exactly. Reaching for volume it does not have, the small amp clips, and that energy-dense signal cooks the coil, tweeters especially.',
         incorrect: [
           {
             match: 'weak',
@@ -124,19 +124,19 @@ export const clippingLesson: Lesson = {
           },
           {
             match: 'cold',
-            text: 'Not cold - heat. Clipping adds sustained energy that overheats the coil.',
+            text: 'Not cold. Heat. Clipping adds sustained energy that overheats the coil.',
           },
         ],
         defaultIncorrect: 'It clips: a small amp pushed hard flattens the wave, and that extra energy becomes heat in the coil.',
         insight:
-          'The punchline of the course: the wave (Lesson 1), made by the coil (Lesson 3), powered by the amp (Lesson 4) - and clipping (Lesson 5) is what destroys it. Give the amp headroom and never run it into clipping.',
+          'The punchline of the course: the wave (Lesson 1), made by the coil (Lesson 3), powered by the amp (Lesson 4), and clipping (Lesson 5) is what destroys it. Give the amp headroom and never run it into clipping.',
       },
     },
     {
       id: 'cl-wrap',
       type: 'concept',
       title: 'You closed the loop',
-      body: 'Look how far you came: a sound is a wave (amplitude = loudness, frequency = pitch), a speaker is louder at some frequencies than others, a voice coil and cone physically make that wave, an amplifier powers it, and clipping is what destroys it.\n\nYou started knowing a few words. Now you understand the whole chain - and how to keep your gear alive.',
+      body: 'Look how far you came: a sound is a wave (amplitude = loudness, frequency = pitch), a speaker is louder at some frequencies than others, a voice coil and cone physically make that wave, an amplifier powers it, and clipping is what destroys it.\n\nYou started knowing a few words. Now you understand the whole chain, and how to keep your gear alive.',
     },
   ],
 };

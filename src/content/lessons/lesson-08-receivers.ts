@@ -277,7 +277,7 @@ export const receiversLesson: Lesson = {
       id: 'rx-51',
       type: 'concept',
       title: 'What “5.1” means',
-      body: 'In a 5.1 system, the “5” means five full-range speaker channels: front left, front right, center, surround left, and surround right.\n\nThe “.1” means the low-frequency effects channel - the subwoofer/LFE channel. Many home-theater subs are active/powered, so the receiver does NOT send amplified speaker power to the sub. It sends a low-level RCA signal from the “subwoofer pre-out” or “LFE out,” and the subwoofer’s own amplifier does the power work.',
+      body: 'In a 5.1 system, the “5” means five full-range speaker channels: front left, front right, center, surround left, and surround right.\n\nThe “.1” means the low-frequency effects channel: the subwoofer/LFE channel. Many home-theater subs are active/powered, so the receiver does NOT send amplified speaker power to the sub. It sends a low-level RCA signal from the “subwoofer pre-out” or “LFE out,” and the subwoofer’s own amplifier does the power work.',
     },
     {
       id: 'rx-wire-51',

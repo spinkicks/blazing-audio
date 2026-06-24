@@ -25,7 +25,7 @@ export const subwooferPlacementLesson: Lesson = {
       id: 'sp-boundaries',
       type: 'concept',
       title: 'Boundaries reinforce bass',
-      body: 'A subwoofer in open space radiates in many directions. Put it near a wall and the wall reflects bass back into the room. Put it near two walls - a corner - and you load it into more boundaries.\n\nThat extra boundary support is why corner placement often gives the most output. It is not always the smoothest response in every real room, but for this first placement rule, more boundaries usually means more room gain.',
+      body: 'A subwoofer in open space radiates in many directions. Put it near a wall and the wall reflects bass back into the room. Put it near two walls (a corner), and you load it into more boundaries.\n\nThat extra boundary support is why corner placement often gives the most output. It is not always the smoothest response in every real room, but for this first placement rule, more boundaries usually means more room gain.',
     },
     {
       id: 'sp-boundary-q',
@@ -75,7 +75,7 @@ export const subwooferPlacementLesson: Lesson = {
         incorrect: [
           {
             match: 'close',
-            text: 'Close - you are getting some boundary support. Move tighter toward a room corner for maximum room gain.',
+            text: 'Close. You are getting some boundary support. Move tighter toward a room corner for maximum room gain.',
           },
           {
             match: 'far',

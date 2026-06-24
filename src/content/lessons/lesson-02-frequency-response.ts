@@ -52,7 +52,7 @@ export const frequencyResponseLesson: Lesson = {
       id: 'fr-range',
       type: 'concept',
       title: 'Your ears have limits',
-      body: 'In Lesson 1 you set pitch with frequency. Humans can hear roughly 20 Hz (the lowest rumble you can just feel) up to about 20,000 Hz (a high hiss).\n\nThis is the generally accepted range, but it is not a hard wall - some people, especially when young, hear a little below 20 Hz or above 20 kHz. And as the curve shows, your ears are not equally sensitive across it: they peak in the mids (around 2-4 kHz, where speech lives) and roll off toward both edges.',
+      body: 'In Lesson 1 you set pitch with frequency. Humans can hear roughly 20 Hz (the lowest rumble you can just feel) up to about 20,000 Hz (a high hiss).\n\nThis is the generally accepted range, but it is not a hard wall; some people, especially when young, hear a little below 20 Hz or above 20 kHz. And as the curve shows, your ears are not equally sensitive across it: they peak in the mids (around 2-4 kHz, where speech lives) and roll off toward both edges.',
       visual: { kind: 'responseCurve', config: { points: HEARING_CURVE, height: 240 } },
     },
     {
@@ -71,19 +71,19 @@ export const frequencyResponseLesson: Lesson = {
         shuffle: true,
       },
       feedback: {
-        correct: 'Right - about 20 Hz at the low end to 20,000 Hz at the top, with some people hearing a touch beyond either edge.',
+        correct: 'Right. About 20 Hz at the low end to 20,000 Hz at the top, with some people hearing a touch beyond either edge.',
         incorrect: [
           {
             match: 'narrow',
-            text: 'Too small at the top. 2,000 Hz is only the lower treble - you can hear much higher, up to around 20,000 Hz.',
+            text: 'Too small at the top. 2,000 Hz is only the lower treble. You can hear much higher, up to around 20,000 Hz.',
           },
           {
             match: 'high',
-            text: 'The top is right, but the bottom is too high. You can hear well below 200 Hz - down to about 20 Hz, where bass turns into a feeling.',
+            text: 'The top is right, but the bottom is too high. You can hear well below 200 Hz, down to about 20 Hz, where bass turns into a feeling.',
           },
           {
             match: 'huge',
-            text: 'Way too wide. 1 Hz and 100,000 Hz are far outside human hearing - the usual range is about 20 Hz to 20,000 Hz.',
+            text: 'Way too wide. 1 Hz and 100,000 Hz are far outside human hearing. The usual range is about 20 Hz to 20,000 Hz.',
           },
         ],
         defaultIncorrect: 'The generally accepted range is about 20 Hz to 20,000 Hz.',
@@ -124,19 +124,19 @@ export const frequencyResponseLesson: Lesson = {
         ],
         defaultIncorrect: 'Look for the single highest point on the curve and put the probe there.',
         insight:
-          'A peak means that range plays louder than the rest. Here the bass gets a boost, which can sound full - or boomy if it is too much.',
+          'A peak means that range plays louder than the rest. Here the bass gets a boost, which can sound full, or boomy if it is too much.',
       },
     },
     {
       id: 'fr-dip-concept',
       type: 'concept',
       title: 'Dips and roll-off',
-      body: 'A dip is a frequency where the speaker is weaker - often where two drivers hand off to each other, or where sound waves cancel.\n\nAt the far edges the curve falls off a cliff: that is roll-off, the speaker simply running out of reach.',
+      body: 'A dip is a frequency where the speaker is weaker, often where two drivers hand off to each other, or where sound waves cancel.\n\nAt the far edges the curve falls off a cliff: that is roll-off, the speaker simply running out of reach.',
     },
     {
       id: 'fr-find-dip',
       type: 'problem',
-      prompt: 'Now find the big DIP - the frequency where this speaker is weakest in the middle of its range. Turn sound on to hear it drop.',
+      prompt: 'Now find the big DIP: the frequency where this speaker is weakest in the middle of its range. Turn sound on to hear it drop.',
       interaction: {
         kind: 'curveProbe',
         points: RESPONSE,
@@ -154,12 +154,12 @@ export const frequencyResponseLesson: Lesson = {
           },
           {
             match: 'freq-high',
-            text: 'You overshot it - come back down a little to the lowest point of the notch.',
+            text: 'You overshot it. Come back down a little to the lowest point of the notch.',
           },
         ],
         defaultIncorrect: 'Find the lowest point in the middle of the curve (not the far edges).',
         insight:
-          'A dip means those notes are reproduced more quietly. Move the probe and the test tone literally gets softer in the dip - your ears confirm the chart.',
+          'A dip means those notes are reproduced more quietly. Move the probe and the test tone literally gets softer in the dip; your ears confirm the chart.',
       },
     },
     {
@@ -169,7 +169,7 @@ export const frequencyResponseLesson: Lesson = {
       interaction: {
         kind: 'multipleChoice',
         options: [
-          { id: 'quiet', label: 'It is much quieter - you barely hear or feel it' },
+          { id: 'quiet', label: 'It is much quieter: you barely hear or feel it' },
           { id: 'full', label: 'It plays at full volume like everything else' },
           { id: 'louder', label: 'It plays louder than the rest' },
         ],
@@ -184,7 +184,7 @@ export const frequencyResponseLesson: Lesson = {
           },
           {
             match: 'louder',
-            text: 'Opposite - roll-off makes those low notes quieter, not louder.',
+            text: 'Opposite. Roll-off makes those low notes quieter, not louder.',
           },
         ],
         defaultIncorrect: 'Below the roll-off point, low notes get much quieter.',
@@ -196,7 +196,7 @@ export const frequencyResponseLesson: Lesson = {
       id: 'fr-eq-concept',
       type: 'concept',
       title: 'Reshaping the sound: the equalizer',
-      body: 'If a response has too much bass or not enough treble, an equalizer (EQ) lets you reshape it. It is a row of band controls - each one boosts or cuts a slice of the frequency range.\n\nYou have seen these everywhere: the sliders in a music app, the bars on a car stereo, a rack unit in a studio. Push a band up and those frequencies get louder; pull it down and they get quieter. That changes the "signature" of the sound without touching the recording.',
+      body: 'If a response has too much bass or not enough treble, an equalizer (EQ) lets you reshape it. It is a row of band controls: each one boosts or cuts a slice of the frequency range.\n\nYou have seen these everywhere: the sliders in a music app, the bars on a car stereo, a rack unit in a studio. Push a band up and those frequencies get louder; pull it down and they get quieter. That changes the "signature" of the sound without touching the recording.',
     },
     {
       id: 'fr-eq',
@@ -217,15 +217,15 @@ export const frequencyResponseLesson: Lesson = {
         step: 1,
       },
       feedback: {
-        correct: 'That is a warm, bass-forward tilt - lifted lows, tamed highs. That is all an EQ does: boost or cut chosen bands.',
+        correct: 'That is a warm, bass-forward tilt: lifted lows, tamed highs. That is all an EQ does: boost or cut chosen bands.',
         incorrect: [
           {
             match: 'boost',
-            text: 'The lows are not lifted enough yet - drag the 60 Hz fader further up.',
+            text: 'The lows are not lifted enough yet. Drag the 60 Hz fader further up.',
           },
           {
             match: 'cut',
-            text: 'The highs are not cut enough - pull the 4k and 12k faders down.',
+            text: 'The highs are not cut enough. Pull the 4k and 12k faders down.',
           },
           {
             match: 'both',
@@ -234,14 +234,14 @@ export const frequencyResponseLesson: Lesson = {
         ],
         defaultIncorrect: 'Boost the low band and cut the high bands to make a bass-forward signature.',
         insight:
-          'An equalizer is just a bank of these band controls. App or hardware, each slider boosts or cuts a slice of the frequency response - reshaping the sound without changing the source.',
+          'An equalizer is just a bank of these band controls. App or hardware, each slider boosts or cuts a slice of the frequency response, reshaping the sound without changing the source.',
       },
     },
     {
       id: 'fr-wrap',
       type: 'concept',
       title: 'You can read a speaker',
-      body: 'You can now read a response curve: peaks are louder ranges, dips are weaker ones, and roll-off is where the speaker gives up at the extremes.\n\nNext: how a speaker physically turns an electrical signal into these waves - the cone, the coil, and the magnet.',
+      body: 'You can now read a response curve: peaks are louder ranges, dips are weaker ones, and roll-off is where the speaker gives up at the extremes.\n\nNext: how a speaker physically turns an electrical signal into these waves: the cone, the coil, and the magnet.',
     },
   ],
 };

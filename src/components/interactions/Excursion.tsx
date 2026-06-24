@@ -160,7 +160,7 @@ export function Excursion({ interaction, onChange, locked }: InteractionProps) {
           tone: 'border-clip-400/40 bg-clip-500/10 text-clip-300',
         }
       : {
-          text: 'Both are still within Xmax - raise power to see the difference',
+          text: 'Both are still within Xmax. Raise power to see the difference',
           tone: 'border-emerald-400/40 bg-emerald-500/10 text-emerald-300',
         };
 

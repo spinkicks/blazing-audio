@@ -33,7 +33,7 @@ export function LessonComplete({
 
       {milestone ? (
         <div className="mt-4 border border-amp-500/40 bg-amp-500/10 px-4 py-2 text-sm font-bold text-amp-400">
-          {summary.streakCurrent}-day streak - {milestone}
+          {summary.streakCurrent}-day streak. {milestone}
         </div>
       ) : null}
 
@@ -45,7 +45,7 @@ export function LessonComplete({
 
       {lowMastery ? (
         <p className="mt-5 max-w-sm text-sm text-amp-400">
-          A few of these tripped you up - a quick review later will lock it in.
+          A few of these tripped you up. A quick review later will lock it in.
         </p>
       ) : (
         <p className="mt-5 max-w-sm text-sm text-emerald-300">Nicely done. That idea is yours now.</p>

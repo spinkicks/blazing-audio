@@ -19,7 +19,7 @@ export const introLesson: Lesson = {
       id: 'intro-welcome',
       type: 'concept',
       title: 'Welcome to Blazing Audio',
-      body: "You're going to learn how audio actually works - from the shape of a sound wave to safely powering a speaker.\n\nThere are no long videos here. You learn by doing: every lesson is a short set of small problems you solve with your fingers.",
+      body: "You're going to learn how audio actually works: from the shape of a sound wave to safely powering a speaker.\n\nThere are no long videos here. You learn by doing: every lesson is a short set of small problems you solve with your fingers.",
     },
     {
       id: 'intro-how',
@@ -28,7 +28,7 @@ export const introLesson: Lesson = {
       interaction: {
         kind: 'multipleChoice',
         options: [
-          { id: 'doing', label: 'By doing - small hands-on problems' },
+          { id: 'doing', label: 'By doing: small hands-on problems' },
           { id: 'videos', label: 'By watching long videos' },
           { id: 'reading', label: 'By reading a wall of text' },
         ],
@@ -39,14 +39,14 @@ export const introLesson: Lesson = {
         incorrect: [
           {
             match: 'videos',
-            text: "Nope - there are no long videos. You'll be tapping, dragging, and adjusting things instead.",
+            text: "Nope. There are no long videos. You'll be tapping, dragging, and adjusting things instead.",
           },
           {
             match: 'reading',
-            text: 'Not quite - text is kept short. The real learning happens when you interact.',
+            text: 'Not quite. Text is kept short. The real learning happens when you interact.',
           },
         ],
-        defaultIncorrect: 'Not quite - this app is built around small, hands-on problems.',
+        defaultIncorrect: 'Not quite. This app is built around small, hands-on problems.',
         insight:
           'People remember what they do far better than what they watch. Every lesson here is built around an action.',
       },
@@ -65,7 +65,7 @@ export const introLesson: Lesson = {
         kind: 'multipleChoice',
         options: [
           { id: 'explain', label: 'You get a specific explanation, then try again' },
-          { id: 'nothing', label: 'Nothing - you just move on' },
+          { id: 'nothing', label: 'Nothing; you just move on' },
           { id: 'locked', label: 'You get locked out of the lesson' },
         ],
         correctOptionId: 'explain',
@@ -75,14 +75,14 @@ export const introLesson: Lesson = {
         incorrect: [
           {
             match: 'nothing',
-            text: 'Actually you always get feedback - a wrong answer is a chance to learn, not a dead end.',
+            text: 'Actually you always get feedback: a wrong answer is a chance to learn, not a dead end.',
           },
           {
             match: 'locked',
-            text: "Don't worry - you're never locked out. A miss just means more help and another try.",
+            text: "Don't worry. You're never locked out. A miss just means more help and another try.",
           },
         ],
-        defaultIncorrect: 'Not quite - every wrong answer comes with a specific explanation and another try.',
+        defaultIncorrect: 'Not quite. Every wrong answer comes with a specific explanation and another try.',
         insight: 'Feedback that targets your exact mistake is what turns an error into understanding.',
       },
     },
@@ -90,7 +90,7 @@ export const introLesson: Lesson = {
       id: 'intro-ready',
       type: 'concept',
       title: "You're set",
-      body: 'Your progress and streak save automatically, so you can leave any time and pick up right where you left off - even on another device.\n\nNext up: your first real lesson on the sound wave.',
+      body: 'Your progress and streak save automatically, so you can leave any time and pick up right where you left off, even on another device.\n\nNext up: your first real lesson on the sound wave.',
     },
   ],
 };

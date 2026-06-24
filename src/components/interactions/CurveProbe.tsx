@@ -48,7 +48,7 @@ export function CurveProbe({ interaction, onChange, locked }: InteractionProps) 
             enabled ? 'bg-wave-400/20 text-wave-400' : 'bg-ink-700 text-slate-300',
           )}
         >
-          {enabled ? 'Sound on - sweep to hear the dips' : 'Tap to hear the sweep'}
+          {enabled ? 'Sound on. Sweep to hear the dips' : 'Tap to hear the sweep'}
         </button>
       ) : null}
 

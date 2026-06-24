@@ -1,7 +1,7 @@
-# Blazing Audio - Product Requirements Document
+# Blazing Audio. Product Requirements Document
 
 > A Brilliant-style, mobile-first interactive learning app that teaches home-audio
-> fundamentals through one deep, building course thread - from the shape of a sound
+> fundamentals through one deep, building course thread: from the shape of a sound
 > wave to safely powering a speaker. Built on Vite + React + TypeScript with Firebase
 > (Auth, Firestore, Hosting). Zero AI in the MVP: every problem, visual, and piece of
 > feedback is hand-built.
@@ -24,7 +24,7 @@ exists to support that and to make people come back tomorrow.
 ### Goals
 - Teach a real, ordered slice of audio knowledge where each lesson builds on the last.
 - Ship at least one rich, hand-built interactive lesson that genuinely teaches.
-- Make feedback instant (< 100 ms) and specific - never just a red X.
+- Make feedback instant (< 100 ms) and specific; never just a red X.
 - Persist progress, streaks, and history across sessions and devices.
 - Work great on a phone with touch input.
 - Be deployed and public.
@@ -32,8 +32,8 @@ exists to support that and to make people come back tomorrow.
 ### Non-goals (MVP)
 - No AI / model calls / chatbot tutor of any kind.
 - No social features (comments, leaderboards, sharing).
-- No full breadth of audio topics - depth over breadth.
-- No native mobile apps - responsive web only.
+- No full breadth of audio topics: depth over breadth.
+- No native mobile apps: responsive web only.
 
 ## 3. Target user persona
 
@@ -41,7 +41,7 @@ exists to support that and to make people come back tomorrow.
 
 - Just bought, or is about to buy, a pair of passive bookshelf speakers and an
   amplifier/receiver for a home setup.
-- Knows the words - "amplifier," "watts," "frequency" - but not what they mean or how the
+- Knows the words ("amplifier," "watts," "frequency") but not what they mean or how the
   pieces connect.
 - Real fear: wiring something wrong, mismatching power, and **frying gear they paid for.**
 - Learns in short bursts on a **phone**, usually evenings and weekends.
@@ -49,11 +49,11 @@ exists to support that and to make people come back tomorrow.
   will not break expensive equipment.
 
 Every screen, example, and line of feedback is written for Sam: concrete, reassuring, and
-framed around real home audio - not an electrical-engineering textbook.
+framed around real home audio: not an electrical-engineering textbook.
 
 ## 4. The subject, stated clearly
 
-**Sound & Speakers - how audio actually works, from the shape of a sound wave to safely
+**Sound & Speakers: how audio actually works, from the shape of a sound wave to safely
 powering a speaker in your home.**
 
 ## 5. The course (depth over breadth)
@@ -81,20 +81,20 @@ parameters) can slot in without re-architecting.
 
 A lesson is a short (a few minutes) sequence of **steps**. Each step is one of:
 
-- **Concept** - a short, plain-language idea, optionally with an explorable (ungraded)
+- **Concept:** a short, plain-language idea, optionally with an explorable (ungraded)
   visual the learner can poke at.
-- **Problem** - a prompt plus one interaction the learner manipulates, plus hand-written
+- **Problem:** a prompt plus one interaction the learner manipulates, plus hand-written
   feedback.
 
 Every answer gets **instant, specific feedback**. A wrong answer gets a hint or an
-explanation matched to *what* the learner did wrong, then the "idea behind this" - never a
+explanation matched to *what* the learner did wrong, then the "idea behind this": never a
 bare red X. Lessons are kept short so finishing one feels good.
 
 ### Interaction types
 The MVP includes the baseline plus rich, subject-specific interactions (the exact set per
 lesson is confirmed during design):
 
-- `multipleChoice` - baseline, single or multi-select.
+- `multipleChoice`: baseline, single or multi-select.
 - Direct-manipulation types such as a slider/knob that drives a live waveform, a draggable
   diagram, tap-to-wire polarity, reorder-the-steps, and a power/headroom meter.
 
@@ -122,20 +122,20 @@ calls and no latency.
 
 ```mermaid
 flowchart TD
-  subgraph client [React SPA - Vite]
+  subgraph client [React SPA: Vite]
     Router[Router / Screens]
     Renderer[Lesson Step Renderer]
-    Engine[Feedback + Mastery Engine - pure, client-side]
-    Visuals[Canvas / SVG Interactive Visuals - rAF 60fps]
-    Store[Local State - Zustand]
+    Engine[Feedback + Mastery Engine: pure, client-side]
+    Visuals[Canvas / SVG Interactive Visuals: rAF 60fps]
+    Store[Local State: Zustand]
   end
   subgraph content [Versioned Content Model]
     Lessons[Typed lesson JSON in repo]
   end
   subgraph fb [Firebase]
     Auth[Firebase Auth]
-    FS[Firestore - users / progress / streaks]
-    Host[Firebase Hosting - Blaze]
+    FS[Firestore: users / progress / streaks]
+    Host[Firebase Hosting: Blaze]
   end
 
   Lessons --> Renderer

@@ -23,7 +23,7 @@ export const amplifierClassesLesson: Lesson = {
       id: 'ac-output-devices',
       type: 'concept',
       title: 'The output devices are controlled power valves',
-      body: 'The music signal entering a power amplifier is small. It is a control signal, not the main source of speaker power. The heavy energy comes from the amplifier power supply.\n\nThe output devices - usually power transistors or MOSFETs in modern amps, sometimes tubes in older or boutique designs - act like controllable valves between the power supply and the speaker. A small input change tells a much larger current how to flow.',
+      body: 'The music signal entering a power amplifier is small. It is a control signal, not the main source of speaker power. The heavy energy comes from the amplifier power supply.\n\nThe output devices, usually power transistors or MOSFETs in modern amps, sometimes tubes in older or boutique designs, act like controllable valves between the power supply and the speaker. A small input change tells a much larger current how to flow.',
     },
     {
       id: 'ac-valves-not-copies',
@@ -316,7 +316,7 @@ export const amplifierClassesLesson: Lesson = {
       feedback: {
         correct: 'Correct. Class D is the natural choice for compact, efficient high-power subwoofer amps.',
         incorrect: [
-          { match: 'A', text: 'Class A is clean but extremely inefficient and hot - the opposite of this goal.' },
+          { match: 'A', text: 'Class A is clean but extremely inefficient and hot: the opposite of this goal.' },
           { match: 'B', text: 'Class B is efficient, but pure Class B crossover distortion makes it less common for finished hi-fi audio amps.' },
           { match: 'AB', text: 'Class AB can work, but it is still larger and hotter than Class D for this compact high-power job.' },
         ],

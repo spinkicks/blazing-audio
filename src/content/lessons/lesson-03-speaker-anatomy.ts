@@ -17,7 +17,7 @@ export const speakerAnatomyLesson: Lesson = {
       id: 'sa-intro',
       type: 'concept',
       title: 'From signal to sound',
-      body: 'A speaker turns an electrical signal into the moving air you learned about in Lesson 1.\n\nThe electrical wave comes in, a coil of wire moves inside a magnet, and that pushes a cone back and forth. The cone shoves the air - and that is your sound wave.',
+      body: 'A speaker turns an electrical signal into the moving air you learned about in Lesson 1.\n\nThe electrical wave comes in, a coil of wire moves inside a magnet, and that pushes a cone back and forth. The cone shoves the air, and that is your sound wave.',
       visual: { kind: 'speaker', config: { height: 200 } },
     },
     {
@@ -45,11 +45,11 @@ export const speakerAnatomyLesson: Lesson = {
         incorrect: [
           {
             match: 'l-cone',
-            text: 'The cone is the big flared surface that moves the air - the wide part, not the small bits at the back.',
+            text: 'The cone is the big flared surface that moves the air: the wide part, not the small bits at the back.',
           },
           {
             match: 'l-coil',
-            text: 'The voice coil is the small cylinder down in the gap, wrapped in wire - it sits inside the magnet.',
+            text: 'The voice coil is the small cylinder down in the gap, wrapped in wire. It sits inside the magnet.',
           },
           {
             match: 'l-magnet',
@@ -60,7 +60,7 @@ export const speakerAnatomyLesson: Lesson = {
             text: 'The terminals are the two posts (+ and -) at the back where the speaker wire connects.',
           },
         ],
-        defaultIncorrect: 'Not quite - look at the shape and position of each part, then try again.',
+        defaultIncorrect: 'Not quite. Look at the shape and position of each part, then try again.',
         insight:
           'Signal in at the terminals, current through the voice coil, the coil drives the cone inside the magnet, the cone moves the air. That moving air is the wave from Lesson 1.',
       },
@@ -69,7 +69,7 @@ export const speakerAnatomyLesson: Lesson = {
       id: 'sa-motor-concept',
       type: 'concept',
       title: 'The motor: a coil in a magnet',
-      body: 'Run current through the voice coil and it becomes a temporary magnet. Sitting inside the permanent magnet, it gets pushed or pulled - that is the "motor".\n\nReverse the current and the push becomes a pull. Wiggle the current like your sine wave and the cone wiggles to match: how FAR it moves is loudness, how FAST is pitch.',
+      body: 'Run current through the voice coil and it becomes a temporary magnet. Sitting inside the permanent magnet, it gets pushed or pulled; that is the "motor".\n\nReverse the current and the push becomes a pull. Wiggle the current like your sine wave and the cone wiggles to match: how FAR it moves is loudness, how FAST is pitch.',
     },
     {
       id: 'sa-cone-traces-wave',
@@ -100,12 +100,12 @@ export const speakerAnatomyLesson: Lesson = {
           },
           {
             match: 'none',
-            text: 'It moves right away - current through the coil makes force instantly. It is the back-and-forth that makes sound.',
+            text: 'It moves right away. Current through the coil makes force instantly. It is the back-and-forth that makes sound.',
           },
         ],
         defaultIncorrect: 'Positive voltage on the + terminal pushes the cone outward first.',
         insight:
-          'Swap the two wires and "out" becomes "in" - that is polarity. One speaker wired backwards fights the other and the bass cancels, which is why + and - matter.',
+          'Swap the two wires and "out" becomes "in": that is polarity. One speaker wired backwards fights the other and the bass cancels, which is why + and - matter.',
       },
     },
     {
@@ -126,15 +126,15 @@ export const speakerAnatomyLesson: Lesson = {
       feedback: {
         correct: 'That is the whole chain: amp, terminals, coil, cone, air.',
         incorrect: [
-          { match: 'amp', text: 'It starts at the amplifier - that is the source of the signal.' },
+          { match: 'amp', text: 'It starts at the amplifier: that is the source of the signal.' },
           { match: 'terminals', text: 'After the amp, the signal enters through the terminals.' },
           { match: 'coil', text: 'Once inside, current runs through the voice coil.' },
           { match: 'cone', text: 'The moving coil drives the cone next.' },
-          { match: 'air', text: 'Last, the cone pushes the air - that is the sound.' },
+          { match: 'air', text: 'Last, the cone pushes the air: that is the sound.' },
         ],
         defaultIncorrect: 'Trace it from the amplifier all the way out to the air.',
         insight:
-          'Every link matters. Weak anywhere - a bad amp, thin wire, a blown coil - and the air never moves right. Next we power this chain safely.',
+          'Every link matters. Weak anywhere (a bad amp, thin wire, a blown coil), and the air never moves right. Next we power this chain safely.',
       },
     },
     {
