@@ -202,12 +202,52 @@ export interface SubPlacementInteraction {
   kind: 'subPlacement';
   initialX: number; // 0..1
   initialY: number; // 0..1
-  /** Valid room-gain corners in normalized coordinates. */
+  target: 'corner' | 'wallNearCorner';
+  /** Room corners in normalized coordinates. */
   corners: Array<{ x: number; y: number }>;
+  /** Corners blocked by plants/furniture; cannot be used directly. */
+  occupiedCorners?: Array<{ x: number; y: number; label: string }>;
   /** Distance from a corner that falls to 0% score. */
   maxDistance: number;
   /** Minimum score needed to pass. */
   passScore: number;
+}
+
+export interface PatchPort {
+  id: string;
+  label: string;
+  x: number; // normalized inside the SVG
+  y: number;
+  color?: 'red' | 'white' | 'black' | 'blue' | 'gray';
+}
+
+export interface PatchBox {
+  id: string;
+  label: string;
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  ports: PatchPort[];
+}
+
+export interface PatchConnection {
+  from: string;
+  to: string;
+}
+
+export interface PatchBayInteraction {
+  kind: 'patchBay';
+  boxes: PatchBox[];
+  correctConnections: PatchConnection[];
+  /** Optional final challenge: sub must also be placed for maximum SPL. */
+  subPlacement?: {
+    initialX: number;
+    initialY: number;
+    corners: Array<{ x: number; y: number }>;
+    maxDistance: number;
+    passScore: number;
+  };
 }
 
 /**
@@ -226,7 +266,8 @@ export type Interaction =
   | EqualizerInteraction
   | WiringInteraction
   | ExcursionInteraction
-  | SubPlacementInteraction;
+  | SubPlacementInteraction
+  | PatchBayInteraction;
 
 export type InteractionKind = Interaction['kind'];
 

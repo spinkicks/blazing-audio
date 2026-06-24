@@ -6,13 +6,13 @@ export interface ReviewTopic {
   lessonTitle: string;
   stepId: string;
   prompt: string;
-  attempts: number;
+  wrongAttempts: number;
 }
 
 /**
- * A "difficult topic" is any problem the learner needed more than one attempt to
- * solve, or a problem they attempted but have not solved yet. The review screen
- * collects those across every lesson so the learner can attack them in one place.
+ * Review is wrong-answer based: a topic appears only if the learner has submitted
+ * at least one wrong answer and the step is still marked as needing review. A
+ * correct answer while opened from review clears the flag.
  */
 export function collectReviewTopics(progress: Record<string, LessonProgress>): ReviewTopic[] {
   const topics: ReviewTopic[] = [];
@@ -25,14 +25,16 @@ export function collectReviewTopics(progress: Record<string, LessonProgress>): R
       if (step.type !== 'problem') continue;
       const state = lessonProgress.stepStates[step.id];
       if (!state) continue;
-      if (state.attempts <= 1 && state.correct) continue;
+
+      const wrongAttempts = state.wrongAttempts ?? Math.max(0, state.attempts - (state.correct ? 1 : 0));
+      if (!state.needsReview || wrongAttempts < 1) continue;
 
       topics.push({
         lessonId: lesson.id,
         lessonTitle: lesson.title,
         stepId: step.id,
         prompt: step.prompt,
-        attempts: state.attempts,
+        wrongAttempts,
       });
     }
   }

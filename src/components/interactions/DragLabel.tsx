@@ -7,6 +7,7 @@ import type { InteractionProps } from './types';
 export function DragLabel({ interaction, onChange, locked, result }: InteractionProps) {
   const dl = interaction as DragLabelInteraction;
   const [assignments, setAssignments] = useState<Record<string, string>>({});
+  const [draggingLabelId, setDraggingLabelId] = useState<string | null>(null);
 
   useEffect(() => {
     onChange(assignments);
@@ -35,7 +36,9 @@ export function DragLabel({ interaction, onChange, locked, result }: Interaction
         <SpeakerDiagram markers={dl.markers.map((m) => ({ ...m, tone: markerTone(m.id) }))} />
       </div>
 
-      <p className="text-sm text-slate-400">Match each part to its number on the diagram.</p>
+      <p className="text-sm text-slate-400">
+        Drag a component name onto a number, or tap a number as a fallback.
+      </p>
 
       <div className="flex flex-col gap-2">
         {dl.labels.map((label) => {
@@ -46,7 +49,20 @@ export function DragLabel({ interaction, onChange, locked, result }: Interaction
               key={label.id}
               className="flex items-center justify-between gap-3 rounded-2xl bg-ink-800 p-3"
             >
-              <span className="text-sm font-semibold text-slate-100">{label.text}</span>
+              <span
+                draggable={!locked}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData('text/plain', label.id);
+                  setDraggingLabelId(label.id);
+                }}
+                onDragEnd={() => setDraggingLabelId(null)}
+                className={cn(
+                  'cursor-grab border border-white/10 bg-ink-700 px-3 py-2 text-sm font-semibold text-slate-100 active:cursor-grabbing',
+                  draggingLabelId === label.id && 'border-wave-400 text-wave-400',
+                )}
+              >
+                {label.text}
+              </span>
               <div className="flex gap-1.5">
                 {sortedMarkers.map((marker) => {
                   const selected = chosen === marker.id;
@@ -60,6 +76,13 @@ export function DragLabel({ interaction, onChange, locked, result }: Interaction
                       type="button"
                       disabled={locked}
                       onClick={() => assign(label.id, marker.id)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const droppedLabelId = e.dataTransfer.getData('text/plain');
+                        if (droppedLabelId) assign(droppedLabelId, marker.id);
+                        setDraggingLabelId(null);
+                      }}
                       className={cn(
                         'h-9 w-9 rounded-full text-sm font-bold transition active:scale-95',
                         tone,

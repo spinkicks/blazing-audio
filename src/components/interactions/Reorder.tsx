@@ -26,6 +26,7 @@ export function Reorder({ interaction, onChange, locked, result }: InteractionPr
     [ro.items, ro.correctOrder],
   );
   const [order, setOrder] = useState<string[]>(initial);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   useEffect(() => {
     onChange(order);
@@ -44,6 +45,16 @@ export function Reorder({ interaction, onChange, locked, result }: InteractionPr
     });
   }
 
+  function moveTo(dragId: string, targetId: string) {
+    if (locked || dragId === targetId) return;
+    setOrder((prev) => {
+      const next = prev.filter((id) => id !== dragId);
+      const targetIndex = next.indexOf(targetId);
+      next.splice(targetIndex, 0, dragId);
+      return next;
+    });
+  }
+
   return (
     <ol className="flex flex-col gap-2">
       {order.map((id, index) => {
@@ -54,8 +65,22 @@ export function Reorder({ interaction, onChange, locked, result }: InteractionPr
         return (
           <li
             key={id}
+            draggable={!locked}
+            onDragStart={(e) => {
+              e.dataTransfer.setData('text/plain', id);
+              setDraggingId(id);
+            }}
+            onDragEnd={() => setDraggingId(null)}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={(e) => {
+              e.preventDefault();
+              const dragId = e.dataTransfer.getData('text/plain');
+              if (dragId) moveTo(dragId, id);
+              setDraggingId(null);
+            }}
             className={cn(
-              'flex items-center gap-3 rounded-2xl border p-3',
+              'flex cursor-grab items-center gap-3 rounded-2xl border p-3 active:cursor-grabbing',
+              draggingId === id && 'border-wave-400 text-wave-400',
               correctHere
                 ? 'border-emerald-400/50 bg-emerald-400/10'
                 : wrongHere

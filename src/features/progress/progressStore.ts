@@ -112,7 +112,12 @@ interface ProgressState {
   getProgress: (lessonId: string) => LessonProgress | undefined;
   startLesson: (lessonId: string) => void;
   setCurrentStep: (lessonId: string, index: number) => void;
-  recordAnswer: (lessonId: string, stepId: string, correct: boolean) => void;
+  recordAnswer: (
+    lessonId: string,
+    stepId: string,
+    correct: boolean,
+    options?: { reviewing?: boolean },
+  ) => void;
   completeLesson: (lessonId: string, totalProblems: number) => CompletionSummary;
 }
 
@@ -184,19 +189,24 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
     scheduleSync();
   },
 
-  recordAnswer: (lessonId, stepId, correct) => {
+  recordAnswer: (lessonId, stepId, correct, options) => {
     const state = get();
     const current = state.progress[lessonId] ?? emptyProgress(lessonId);
     const prev: StepState = current.stepStates[stepId] ?? {
       answered: false,
       correct: false,
       attempts: 0,
+      wrongAttempts: 0,
+      needsReview: false,
     };
     const firstSolve = correct && !prev.correct;
+    const wrongAttempts = (prev.wrongAttempts ?? 0) + (correct ? 0 : 1);
     const stepState: StepState = {
       answered: true,
       correct: prev.correct || correct,
       attempts: prev.attempts + 1,
+      wrongAttempts,
+      needsReview: correct && options?.reviewing ? false : (prev.needsReview ?? false) || !correct,
     };
     const nextProgress: LessonProgress = {
       ...current,

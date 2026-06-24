@@ -238,11 +238,54 @@ export function grade(
       const nearest = Math.min(
         ...interaction.corners.map((corner) => Math.hypot(x - corner.x, y - corner.y)),
       );
-      const score = Math.max(0, Math.round((1 - nearest / interaction.maxDistance) * 100));
+      const score =
+        interaction.target === 'corner'
+          ? Math.max(0, Math.round((1 - nearest / interaction.maxDistance) * 100))
+          : wallNearCornerScore(x, y, interaction);
       if (score >= interaction.passScore) {
         return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
       }
       const matchKey = score >= 60 ? 'close' : 'far';
+      const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'patchBay': {
+      const value =
+        typeof answer === 'object' && answer !== null && !Array.isArray(answer)
+          ? (answer as Record<string, number | string>)
+          : {};
+      const connectionsRaw = String(value.connections ?? '');
+      const connections = new Set(connectionsRaw.split('|').filter(Boolean));
+      const expected = new Set(
+        interaction.correctConnections.map((connection) =>
+          canonicalConnection(connection.from, connection.to),
+        ),
+      );
+      const wiringCorrect =
+        connections.size === expected.size && [...expected].every((connection) => connections.has(connection));
+
+      let subCorrect = true;
+      if (interaction.subPlacement) {
+        const x = Number(value.subX ?? interaction.subPlacement.initialX);
+        const y = Number(value.subY ?? interaction.subPlacement.initialY);
+        const nearest = Math.min(
+          ...interaction.subPlacement.corners.map((corner) => Math.hypot(x - corner.x, y - corner.y)),
+        );
+        const score = Math.max(
+          0,
+          Math.round((1 - nearest / interaction.subPlacement.maxDistance) * 100),
+        );
+        subCorrect = score >= interaction.subPlacement.passScore;
+      }
+
+      if (wiringCorrect && subCorrect) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matchKey = !wiringCorrect ? 'wiring' : 'placement';
       const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
       return {
         correct: false,
@@ -261,4 +304,28 @@ export function grade(
       };
     }
   }
+}
+
+function canonicalConnection(a: string, b: string): string {
+  return [a, b].sort().join('<->');
+}
+
+function wallNearCornerScore(
+  x: number,
+  y: number,
+  interaction: Extract<Interaction, { kind: 'subPlacement' }>,
+): number {
+  const nearestCorner = Math.min(
+    ...interaction.corners.map((corner) => Math.hypot(x - corner.x, y - corner.y)),
+  );
+  const nearestWall = Math.min(x, y, 1 - x, 1 - y);
+  const nearestOccupied = Math.min(
+    ...(interaction.occupiedCorners ?? []).map((corner) => Math.hypot(x - corner.x, y - corner.y)),
+    1,
+  );
+
+  const wallScore = Math.max(0, 1 - nearestWall / 0.16);
+  const cornerScore = Math.max(0, 1 - nearestCorner / 0.42);
+  const avoidOccupiedScore = Math.min(1, nearestOccupied / 0.18);
+  return Math.round(Math.min(wallScore, cornerScore, avoidOccupiedScore) * 100);
 }

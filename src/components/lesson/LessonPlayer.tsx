@@ -13,11 +13,13 @@ import { LessonComplete } from './LessonComplete';
 
 interface LessonPlayerProps {
   lesson: Lesson;
+  initialStepId?: string;
+  reviewStepId?: string;
   onExit: () => void;
   onGoToLesson: (lessonId: string) => void;
 }
 
-export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps) {
+export function LessonPlayer({ lesson, initialStepId, reviewStepId, onExit, onGoToLesson }: LessonPlayerProps) {
   const startLesson = useProgressStore((s) => s.startLesson);
   const setCurrentStep = useProgressStore((s) => s.setCurrentStep);
   const recordAnswer = useProgressStore((s) => s.recordAnswer);
@@ -26,6 +28,10 @@ export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps
   // Resume where the learner left off (skip if the lesson is already completed).
   const initialIndex = useRef<number>(
     (() => {
+      if (initialStepId) {
+        const requested = lesson.steps.findIndex((step) => step.id === initialStepId);
+        if (requested >= 0) return requested;
+      }
       const p = useProgressStore.getState().getProgress(lesson.id);
       if (!p || p.status === 'completed') return 0;
       return Math.min(Math.max(p.currentStepIndex, 0), lesson.steps.length - 1);
@@ -52,7 +58,7 @@ export function LessonPlayer({ lesson, onExit, onGoToLesson }: LessonPlayerProps
     if (step.type !== 'problem' || answer === null) return;
     const graded = grade(step.interaction, step.feedback, answer);
     setResult(graded); // synchronous -> instant feedback
-    recordAnswer(lesson.id, step.id, graded.correct);
+    recordAnswer(lesson.id, step.id, graded.correct, { reviewing: step.id === reviewStepId });
   }
 
   function handleTryAgain() {

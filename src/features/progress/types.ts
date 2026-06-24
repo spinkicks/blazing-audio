@@ -4,6 +4,10 @@ export interface StepState {
   answered: boolean;
   correct: boolean;
   attempts: number;
+  /** Number of actually wrong submissions. This drives the review queue. */
+  wrongAttempts?: number;
+  /** 1/0-style review flag: true means it should appear on the review page. */
+  needsReview?: boolean;
 }
 
 export interface LessonProgress {

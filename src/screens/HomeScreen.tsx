@@ -68,7 +68,7 @@ export function HomeScreen() {
           <h2 className="mt-1 text-lg font-bold text-white">Review difficult topics</h2>
           <p className="mt-1 text-sm text-slate-400">
             {reviewTopics.length} question{reviewTopics.length === 1 ? '' : 's'} to revisit from
-            your missed or repeated attempts.
+            your wrong answers.
           </p>
           <Button className="mt-4" variant="secondary" onClick={() => navigate('/review')}>
             Review all difficult topics

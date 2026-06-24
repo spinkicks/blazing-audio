@@ -6,6 +6,7 @@ import { speakerAnatomyLesson } from './lessons/lesson-03-speaker-anatomy';
 import { poweringSafelyLesson } from './lessons/lesson-04-powering-safely';
 import { clippingLesson } from './lessons/lesson-05-clipping';
 import { subwooferPlacementLesson } from './lessons/lesson-06-subwoofer-placement';
+import { signalChainWiringLesson } from './lessons/lesson-07-signal-chain-wiring';
 
 /**
  * The ordered set of lessons that make up the course. Lessons are added here as
@@ -20,6 +21,7 @@ const lessons: Lesson[] = [
   poweringSafelyLesson,
   clippingLesson,
   subwooferPlacementLesson,
+  signalChainWiringLesson,
 ];
 
 export const allLessons: Lesson[] = [...lessons].sort((a, b) => a.order - b.order);

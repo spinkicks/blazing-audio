@@ -10,6 +10,7 @@ import { Equalizer } from './Equalizer';
 import { Wiring } from './Wiring';
 import { Excursion } from './Excursion';
 import { SubPlacement } from './SubPlacement';
+import { PatchBay } from './PatchBay';
 import type { InteractionProps } from './types';
 
 /**
@@ -42,6 +43,8 @@ export function InteractionView(props: InteractionProps) {
       return <Excursion {...props} />;
     case 'subPlacement':
       return <SubPlacement {...props} />;
+    case 'patchBay':
+      return <PatchBay {...props} />;
     default:
       return null;
   }
