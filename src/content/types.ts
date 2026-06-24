@@ -250,6 +250,36 @@ export interface PatchBayInteraction {
   };
 }
 
+export interface DualSubPhaseInteraction {
+  kind: 'dualSubPhase';
+  initialA: { x: number; y: number };
+  initialB: { x: number; y: number };
+  listener: { x: number; y: number };
+  /** Score threshold for constructive alignment at the listener. */
+  passScore: number;
+}
+
+export interface VoltageMatchInteraction {
+  kind: 'voltageMatch';
+  amplifiers: Array<{
+    id: string;
+    label: string;
+    accepts: Array<'120' | '240'>;
+  }>;
+  outlets: Array<{
+    id: '120' | '240';
+    label: string;
+    volts: number;
+    amps: number;
+  }>;
+}
+
+export interface AmpClassSelectInteraction {
+  kind: 'ampClassSelect';
+  scenario: string;
+  target: 'A' | 'B' | 'AB' | 'D';
+}
+
 /**
  * Discriminated union of every interaction kind. Rich, subject-specific kinds
  * are appended here as lessons are designed.
@@ -267,7 +297,10 @@ export type Interaction =
   | WiringInteraction
   | ExcursionInteraction
   | SubPlacementInteraction
-  | PatchBayInteraction;
+  | PatchBayInteraction
+  | DualSubPhaseInteraction
+  | VoltageMatchInteraction
+  | AmpClassSelectInteraction;
 
 export type InteractionKind = Interaction['kind'];
 

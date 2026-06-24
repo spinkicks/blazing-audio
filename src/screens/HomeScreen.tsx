@@ -81,6 +81,7 @@ export function HomeScreen() {
         <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
           Your course
         </h3>
+        <CoursePathRail nodes={nodes} />
         <ol className="grid grid-cols-1 gap-3 md:grid-cols-2">
           {nodes.map((node) => (
             <LessonRow
@@ -91,6 +92,66 @@ export function HomeScreen() {
           ))}
         </ol>
       </section>
+    </div>
+  );
+}
+
+function CoursePathRail({ nodes }: { nodes: CourseNode[] }) {
+  const width = Math.max(320, nodes.length * 92);
+  const points = nodes.map((_, i) => {
+    const x = 38 + i * 92;
+    const y = i % 2 === 0 ? 36 : 74;
+    return { x, y };
+  });
+  const path = points
+    .map((point, i) => {
+      if (i === 0) return `M ${point.x} ${point.y}`;
+      const prev = points[i - 1];
+      const c1x = prev.x + 38;
+      const c2x = point.x - 38;
+      return `C ${c1x} ${prev.y}, ${c2x} ${point.y}, ${point.x} ${point.y}`;
+    })
+    .join(' ');
+
+  return (
+    <div className="no-scrollbar mb-4 overflow-x-auto border border-white/5 bg-ink-950/40 p-3">
+      <svg viewBox={`0 0 ${width} 112`} className="min-w-full" style={{ width }}>
+        <path d={path} fill="none" stroke="rgba(56,189,248,0.45)" strokeWidth="3" />
+        {points.map((point, i) => {
+          const node = nodes[i];
+          const active = !node.locked && node.status !== 'notStarted';
+          const done = node.status === 'completed';
+          return (
+            <g key={node.summary.id}>
+              <rect
+                x={point.x - 16}
+                y={point.y - 16}
+                width="32"
+                height="32"
+                fill={done ? '#34d399' : active ? '#38bdf8' : '#16223a'}
+                stroke={node.locked ? 'rgba(148,163,184,0.35)' : '#38bdf8'}
+                strokeWidth="2"
+              />
+              <text
+                x={point.x}
+                y={point.y + 5}
+                textAnchor="middle"
+                className="fill-ink-950 text-[13px] font-black"
+              >
+                {done ? '✓' : node.summary.order}
+              </text>
+              <text
+                x={point.x}
+                y={point.y + 31}
+                textAnchor="middle"
+                className="fill-slate-400 text-[9px] font-semibold"
+              >
+                {node.summary.title.split(' ').slice(0, 2).join(' ')}
+              </text>
+            </g>
+          );
+        })}
+      </svg>
     </div>
   );
 }

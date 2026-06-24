@@ -7,6 +7,11 @@ import { poweringSafelyLesson } from './lessons/lesson-04-powering-safely';
 import { clippingLesson } from './lessons/lesson-05-clipping';
 import { subwooferPlacementLesson } from './lessons/lesson-06-subwoofer-placement';
 import { signalChainWiringLesson } from './lessons/lesson-07-signal-chain-wiring';
+import { receiversLesson } from './lessons/lesson-08-receivers';
+import { balancedUnbalancedLesson } from './lessons/lesson-09-balanced-unbalanced';
+import { phaseAlignmentLesson } from './lessons/lesson-10-phase-alignment';
+import { wattsDecibelsLesson } from './lessons/lesson-11-watts-decibels';
+import { amplifierClassesLesson } from './lessons/lesson-12-amplifier-classes';
 
 /**
  * The ordered set of lessons that make up the course. Lessons are added here as
@@ -22,6 +27,11 @@ const lessons: Lesson[] = [
   clippingLesson,
   subwooferPlacementLesson,
   signalChainWiringLesson,
+  receiversLesson,
+  balancedUnbalancedLesson,
+  phaseAlignmentLesson,
+  wattsDecibelsLesson,
+  amplifierClassesLesson,
 ];
 
 export const allLessons: Lesson[] = [...lessons].sort((a, b) => a.order - b.order);

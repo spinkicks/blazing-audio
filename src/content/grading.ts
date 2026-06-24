@@ -293,6 +293,57 @@ export function grade(
         insight: feedback.insight,
       };
     }
+    case 'dualSubPhase': {
+      const value =
+        typeof answer === 'object' && answer !== null && !Array.isArray(answer)
+          ? (answer as Record<string, number | string>)
+          : {};
+      const ax = Number(value.ax ?? interaction.initialA.x);
+      const ay = Number(value.ay ?? interaction.initialA.y);
+      const bx = Number(value.bx ?? interaction.initialB.x);
+      const by = Number(value.by ?? interaction.initialB.y);
+      const score = dualSubScore(ax, ay, bx, by, interaction.listener.x, interaction.listener.y);
+      if (score >= interaction.passScore) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matched = feedback.incorrect?.find((entry) => entry.match === (score >= 60 ? 'close' : 'far'));
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'voltageMatch': {
+      const value =
+        typeof answer === 'object' && answer !== null && !Array.isArray(answer)
+          ? (answer as Record<string, number | string>)
+          : {};
+      const correct = interaction.amplifiers.every((amp) => {
+        const chosen = String(value[amp.id] ?? '');
+        return amp.accepts.includes(chosen as '120' | '240');
+      });
+      if (correct) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matched = feedback.incorrect?.find((entry) => entry.match === 'voltage');
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'ampClassSelect': {
+      const selected = String(answer);
+      if (selected === interaction.target) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matched = feedback.incorrect?.find((entry) => entry.match === selected);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
     default: {
       // No grader registered for this interaction kind yet. Treat as incorrect with
       // the authored default copy. (Once `Interaction` has 2+ members, switch this to
@@ -304,6 +355,15 @@ export function grade(
       };
     }
   }
+}
+
+function dualSubScore(ax: number, ay: number, bx: number, by: number, lx: number, ly: number): number {
+  const da = Math.hypot(ax - lx, ay - ly);
+  const db = Math.hypot(bx - lx, by - ly);
+  const distanceMatch = Math.max(0, 1 - Math.abs(da - db) / 0.35);
+  const sameSidePenalty = ax < 0.5 && bx < 0.5 ? 0.75 : ax > 0.5 && bx > 0.5 ? 0.75 : 1;
+  const notOpposite = Math.abs(ax - bx) < 0.72 || Math.abs(ay - by) < 0.72 ? 1 : 0.45;
+  return Math.round(distanceMatch * sameSidePenalty * notOpposite * 100);
 }
 
 function canonicalConnection(a: string, b: string): string {

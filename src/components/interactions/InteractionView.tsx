@@ -11,6 +11,9 @@ import { Wiring } from './Wiring';
 import { Excursion } from './Excursion';
 import { SubPlacement } from './SubPlacement';
 import { PatchBay } from './PatchBay';
+import { DualSubPhase } from './DualSubPhase';
+import { VoltageMatch } from './VoltageMatch';
+import { AmpClassSelect } from './AmpClassSelect';
 import type { InteractionProps } from './types';
 
 /**
@@ -45,6 +48,12 @@ export function InteractionView(props: InteractionProps) {
       return <SubPlacement {...props} />;
     case 'patchBay':
       return <PatchBay {...props} />;
+    case 'dualSubPhase':
+      return <DualSubPhase {...props} />;
+    case 'voltageMatch':
+      return <VoltageMatch {...props} />;
+    case 'ampClassSelect':
+      return <AmpClassSelect {...props} />;
     default:
       return null;
   }
