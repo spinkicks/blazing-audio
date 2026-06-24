@@ -4,6 +4,7 @@ import { ResponseCurve } from './ResponseCurve';
 import { SpeakerDiagram } from './SpeakerDiagram';
 import { SignalToCone } from './SignalToCone';
 import { ClipCoil } from './ClipCoil';
+import { AmpClassDiagram } from './AmpClassDiagram';
 
 function num(config: Record<string, unknown> | undefined, key: string, fallback: number): number {
   const value = config?.[key];
@@ -54,6 +55,13 @@ export function VisualView({ visual }: { visual: VisualSpec }) {
             height={num(visual.config, 'height', 255)}
           />
         </div>
+      );
+    case 'ampClassDiagram':
+      return (
+        <AmpClassDiagram
+          variant={String(visual.config?.variant ?? 'overview')}
+          height={num(visual.config, 'height', 420)}
+        />
       );
     default:
       return null;

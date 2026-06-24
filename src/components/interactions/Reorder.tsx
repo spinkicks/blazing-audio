@@ -79,7 +79,7 @@ export function Reorder({ interaction, onChange, locked, result }: InteractionPr
               setDraggingId(null);
             }}
             className={cn(
-              'flex cursor-grab items-center gap-3 rounded-2xl border p-3 active:cursor-grabbing',
+              'flex cursor-grab items-center gap-3 border p-3 active:cursor-grabbing',
               draggingId === id && 'border-wave-400 text-wave-400',
               correctHere
                 ? 'border-emerald-400/50 bg-emerald-400/10'
@@ -88,7 +88,7 @@ export function Reorder({ interaction, onChange, locked, result }: InteractionPr
                   : 'border-white/10 bg-ink-800',
             )}
           >
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-ink-700 text-xs font-bold text-slate-300">
+            <span className="flex h-7 w-7 shrink-0 items-center justify-center bg-ink-700 text-xs font-bold text-slate-300">
               {index + 1}
             </span>
             <span className="flex-1 text-sm text-slate-100">{textFor(id)}</span>
@@ -98,7 +98,7 @@ export function Reorder({ interaction, onChange, locked, result }: InteractionPr
                 disabled={locked || index === 0}
                 onClick={() => move(index, -1)}
                 aria-label="Move up"
-                className="flex h-7 w-7 items-center justify-center rounded-lg bg-ink-700 text-slate-200 disabled:opacity-30 active:scale-95"
+                className="flex h-7 w-7 items-center justify-center bg-ink-700 text-slate-200 disabled:opacity-30 active:scale-95"
               >
                 ↑
               </button>
@@ -107,7 +107,7 @@ export function Reorder({ interaction, onChange, locked, result }: InteractionPr
                 disabled={locked || index === order.length - 1}
                 onClick={() => move(index, 1)}
                 aria-label="Move down"
-                className="flex h-7 w-7 items-center justify-center rounded-lg bg-ink-700 text-slate-200 disabled:opacity-30 active:scale-95"
+                className="flex h-7 w-7 items-center justify-center bg-ink-700 text-slate-200 disabled:opacity-30 active:scale-95"
               >
                 ↓
               </button>

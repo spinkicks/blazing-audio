@@ -34,7 +34,7 @@ export function CurveProbe({ interaction, onChange, locked }: InteractionProps) 
         <ResponseCurve points={cp.points} probeFreq={freq} height={450} />
       </div>
 
-      <div className="flex items-center justify-between rounded-2xl bg-ink-800 px-4 py-2 text-sm">
+      <div className="flex items-center justify-between bg-ink-800 px-4 py-2 text-sm">
         <span className="font-mono text-amp-400">{freqDisplay(freq)}</span>
         <span className="font-mono text-slate-400">{db >= 0 ? '+' : ''}{db.toFixed(1)} dB</span>
       </div>
@@ -44,7 +44,7 @@ export function CurveProbe({ interaction, onChange, locked }: InteractionProps) 
           type="button"
           onClick={() => (enabled ? disable() : void enable())}
           className={cn(
-            'self-start rounded-full px-3 py-1.5 text-xs font-semibold transition',
+            'self-start px-3 py-1.5 text-xs font-semibold transition',
             enabled ? 'bg-wave-400/20 text-wave-400' : 'bg-ink-700 text-slate-300',
           )}
         >
@@ -66,7 +66,7 @@ export function CurveProbe({ interaction, onChange, locked }: InteractionProps) 
           value={freqToT(freq)}
           disabled={locked}
           onChange={(e) => setFreq(tToFreq(Number(e.target.value)))}
-          className="h-2 w-full cursor-pointer touch-none appearance-none rounded-full bg-ink-700 accent-amp-500 disabled:opacity-50"
+          className="h-2 w-full cursor-pointer touch-none appearance-none bg-ink-700 accent-amp-500 disabled:opacity-50"
           aria-label="Frequency probe"
         />
       </div>

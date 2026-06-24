@@ -11,7 +11,7 @@ export function StreakBadge({ count, className }: StreakBadgeProps) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-sm font-bold',
+        'inline-flex items-center gap-1 px-2.5 py-1 text-sm font-bold',
         active ? 'bg-amp-500/15 text-amp-400' : 'bg-ink-700 text-slate-400',
         className,
       )}

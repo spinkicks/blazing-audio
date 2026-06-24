@@ -5,20 +5,85 @@ export const wattsDecibelsLesson: Lesson = {
   order: 11,
   title: 'Watts, Decibels, and Wall Power',
   subtitle: 'Why loudness rises slowly while electrical demand rises fast',
-  estimatedMinutes: 9,
-  concepts: ['Speaker sensitivity', 'Watts vs dB', 'Outlet limits and voltage'],
+  estimatedMinutes: 17,
+  concepts: ['Speaker sensitivity', 'Logarithmic decibels', 'Amplifier power', 'Outlet voltage'],
   steps: [
     {
       id: 'wd-sensitive',
       type: 'concept',
       title: 'Sensitive speakers need fewer watts',
-      body: 'Speaker sensitivity tells you how loud a speaker gets from a small amount of power, usually 1 watt at 1 meter. A 95 dB sensitive speaker is already loud with 1 watt. A less sensitive speaker may need much more power for the same level.\n\nThis is why “big watts” are not always necessary. A sensitive speaker can play loudly with surprisingly little amplifier power.',
+      body: 'Speaker sensitivity tells you how loud a speaker gets from a small amount of power, usually 1 watt measured at 1 meter. A 95 dB sensitive speaker produces 95 dB from 1 watt. A 90 dB sensitive speaker produces 90 dB from the same watt.\n\nThat 5 dB difference matters. To reach the same SPL, the lower-sensitivity speaker needs more amplifier power before it catches up.',
+    },
+    {
+      id: 'wd-sensitivity-target',
+      type: 'problem',
+      prompt: 'Set each amplifier so both speakers hit 100 dB SPL. Watch how the 90 dB speaker needs more watts.',
+      interaction: {
+        kind: 'sensitivityPowerTarget',
+        targetDb: 100,
+        toleranceDb: 0.4,
+        speakers: [
+          {
+            id: 's95',
+            label: '95 dB sensitive driver',
+            sensitivityDb: 95,
+            initialW: 1,
+            minW: 1,
+            maxW: 40,
+            stepW: 0.1,
+          },
+          {
+            id: 's90',
+            label: '90 dB sensitive driver',
+            sensitivityDb: 90,
+            initialW: 1,
+            minW: 1,
+            maxW: 40,
+            stepW: 0.1,
+          },
+        ],
+      },
+      feedback: {
+        correct: 'Correct. The 95 dB speaker lands near 100 dB with about 3.2 W, while the 90 dB speaker needs about 10 W.',
+        incorrect: [
+          { match: 'low', text: 'At least one driver is still under 100 dB. Add power to the graph that is below the target line.' },
+          { match: 'high', text: 'At least one driver is above the target. Back off until both graphs sit on 100 dB.' },
+        ],
+        defaultIncorrect: 'Use the two graphs independently; each driver needs its own wattage to reach 100 dB.',
+        insight:
+          'Sensitivity saves watts. A 5 dB sensitivity advantage is large enough that the less sensitive driver needs roughly three times the power for the same SPL.',
+      },
     },
     {
       id: 'wd-db',
       type: 'concept',
       title: 'Decibels are logarithmic',
-      body: 'Watts and loudness do not move in a straight line. Every +3 dB needs about double the amplifier power. Every +10 dB sounds roughly twice as loud to many listeners, but needs about ten times the power.\n\nSo going from 10 W to 20 W is +3 dB. Going from 10 W to 100 W is +10 dB. Loudness climbs slowly; electrical demand climbs fast.',
+      body: 'Watts and decibels do not move in a straight line. Every +3 dB needs about double the amplifier power. Every +10 dB needs ten times the amplifier power.\n\nThat is why a 100 W amplifier is not ten times louder than a 10 W amplifier. It is about 10 dB higher before the speaker or amp runs out of clean output.',
+    },
+    {
+      id: 'wd-log-graph',
+      type: 'problem',
+      prompt: 'Move the wattage slider until the speaker is +10 dB louder than it was at 1 watt.',
+      interaction: {
+        kind: 'wattsDbCurve',
+        sensitivityDb: 90,
+        minW: 1,
+        maxW: 100,
+        stepW: 0.1,
+        initialW: 2,
+        targetW: 10,
+        toleranceRatio: 0.045,
+      },
+      feedback: {
+        correct: 'Correct. Ten times the power, from 1 W to 10 W, gives about +10 dB.',
+        incorrect: [
+          { match: 'low', text: 'Not enough power yet. +10 dB is a full 10x power jump from 1 W.' },
+          { match: 'high', text: 'That is past +10 dB. Bring the slider back toward 10 W.' },
+        ],
+        defaultIncorrect: '+10 dB needs 10x power, so start from 1 W and find 10 W.',
+        insight:
+          'The graph bends because the scale is logarithmic. Equal jumps in dB require multiplying watts, not adding the same number of watts each time.',
+      },
     },
     {
       id: 'wd-power-q',
@@ -45,21 +110,27 @@ export const wattsDecibelsLesson: Lesson = {
       },
     },
     {
+      id: 'wd-headroom',
+      type: 'concept',
+      title: 'Headroom costs real power',
+      body: 'Small SPL increases can demand large electrical increases. If a speaker is already using 100 W, another +3 dB asks for about 200 W. Another +3 dB after that asks for about 400 W.\n\nThis is why clean headroom gets expensive quickly. The amplifier, speaker voice coil, and wall circuit all have to support the power, not just the number printed on a volume knob.',
+    },
+    {
       id: 'wd-wall',
       type: 'concept',
       title: 'The wall outlet has a limit',
-      body: 'Electrical power is watts = volts × amps. In North America, a common outlet is 120 VAC. A 15 amp circuit can theoretically supply about 120 × 15 = 1,800 W. A 20 amp circuit is about 2,400 W.\n\nDo not plan to run everything at the theoretical maximum continuously. If a rack of amplifiers and subs can pull near the circuit limit, the breaker can trip. At that point, call an electrician for a dedicated circuit instead of guessing.',
+      body: 'Electrical power is watts = volts x amps. A common North American branch circuit is 120 VAC. A 15 amp circuit can theoretically supply about 120 x 15 = 1,800 W, and a 20 amp circuit is about 2,400 W.\n\nSome installs also use 240 VAC circuits. At the same current, 240 VAC can deliver twice the electrical power of 120 VAC. That does not mean every amplifier can use it; the amplifier label has to match the outlet voltage.\n\nDo not plan to run everything at the theoretical maximum continuously. If a rack of amplifiers and subs can pull near the circuit limit, the breaker can trip. At that point, call an electrician for a dedicated circuit instead of guessing.',
     },
     {
       id: 'wd-voltage',
       type: 'problem',
-      prompt: 'Match each amplifier to an outlet voltage it can safely use.',
+      prompt: 'Select every outlet voltage each amplifier can safely use.',
       interaction: {
         kind: 'voltageMatch',
         amplifiers: [
-          { id: 'auto', label: 'Auto-ranging amplifier (100-240 VAC)', accepts: ['120', '240'] },
-          { id: 'fixed120', label: 'Fixed 120 VAC amplifier', accepts: ['120'] },
-          { id: 'fixed240', label: 'Fixed 240 VAC amplifier', accepts: ['240'] },
+          { id: 'auto', label: 'Universal amplifier label: 100-240 VAC, 50/60 Hz', accepts: ['120', '240'] },
+          { id: 'fixed120', label: 'Fixed-voltage amplifier label: 120 VAC only', accepts: ['120'] },
+          { id: 'fixed240', label: 'Fixed-voltage amplifier label: 240 VAC only', accepts: ['240'] },
         ],
         outlets: [
           { id: '120', label: '120 VAC outlet', volts: 120, amps: 15 },
@@ -67,17 +138,23 @@ export const wattsDecibelsLesson: Lesson = {
         ],
       },
       feedback: {
-        correct: 'Correct. Auto-ranging gear can use either, fixed-voltage gear must match the label.',
+        correct: 'Correct. The universal 100-240 VAC amp can use both 120 VAC and 240 VAC; each fixed-voltage amp must match exactly one outlet.',
         incorrect: [
           {
             match: 'voltage',
-            text: 'Check the voltage label. Auto-ranging 100-240 V gear can use either outlet; fixed-voltage amplifiers must match exactly or they can be damaged.',
+            text: 'Check the voltage label. The universal 100-240 VAC amp needs both safe choices selected. Fixed-voltage amplifiers must match exactly one outlet.',
           },
         ],
-        defaultIncorrect: 'Match fixed-voltage amplifiers to their exact outlet voltage.',
+        defaultIncorrect: 'Select both voltages for universal 100-240 VAC gear, and only the matching voltage for fixed-voltage gear.',
         insight:
-          'Some amplifiers have universal power supplies; others do not. Plugging fixed 120 V gear into 240 V can fry it, and fixed 240 V gear on 120 V may not operate correctly.',
+          'Variable-voltage amplifiers use wide-input switch-mode power supplies, often labeled 100-240 VAC. Fixed-voltage amplifiers do not auto-adapt: 120 V gear on 240 V can be destroyed, and 240 V gear on 120 V may not operate correctly.',
       },
+    },
+    {
+      id: 'wd-wrap',
+      type: 'concept',
+      title: 'Read the whole power chain',
+      body: 'Watts at the speaker, decibels in the room, and watts from the wall are related, but they are not the same number.\n\nSensitivity tells you how efficiently the speaker turns watts into SPL. The decibel scale explains why each louder step costs multiplying power. The wall outlet sets the electrical ceiling, and the amplifier voltage label decides which outlets are safe.',
     },
   ],
 };

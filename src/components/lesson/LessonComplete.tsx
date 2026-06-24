@@ -74,7 +74,7 @@ function streakMilestone(streak: number): string | null {
 
 function Stat({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="rounded-2xl bg-ink-800 p-3">
+    <div className="bg-ink-800 p-3">
       <div className="flex h-7 items-center justify-center text-lg font-bold text-white">{value}</div>
       <div className="mt-1 text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
     </div>

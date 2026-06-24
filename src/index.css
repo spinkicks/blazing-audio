@@ -104,6 +104,17 @@
     }
   }
 
+  @keyframes loading-meter {
+    from {
+      transform: scaleY(0.35);
+      opacity: 0.55;
+    }
+    to {
+      transform: scaleY(1);
+      opacity: 1;
+    }
+  }
+
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }

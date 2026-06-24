@@ -42,3 +42,6 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Cursor private skills (may contain company-specific workflow / product info)
+.cursor/skills/

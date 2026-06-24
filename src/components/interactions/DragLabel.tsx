@@ -32,7 +32,7 @@ export function DragLabel({ interaction, onChange, locked, result }: Interaction
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="rounded-2xl border border-white/5 bg-ink-950/60 p-2">
+      <div className="border border-white/5 bg-ink-950/60 p-2">
         <SpeakerDiagram markers={dl.markers.map((m) => ({ ...m, tone: markerTone(m.id) }))} />
       </div>
 
@@ -47,7 +47,7 @@ export function DragLabel({ interaction, onChange, locked, result }: Interaction
           return (
             <div
               key={label.id}
-              className="flex items-center justify-between gap-3 rounded-2xl bg-ink-800 p-3"
+              className="flex items-center justify-between gap-3 bg-ink-800 p-3"
             >
               <span
                 draggable={!locked}
@@ -84,7 +84,7 @@ export function DragLabel({ interaction, onChange, locked, result }: Interaction
                         setDraggingLabelId(null);
                       }}
                       className={cn(
-                        'h-9 w-9 rounded-full text-sm font-bold transition active:scale-95',
+                        'h-9 w-9 text-sm font-bold transition active:scale-95',
                         tone,
                       )}
                       aria-label={`Assign ${label.text} to marker ${marker.n}`}

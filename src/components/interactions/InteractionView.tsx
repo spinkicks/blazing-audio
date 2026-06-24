@@ -12,8 +12,16 @@ import { Excursion } from './Excursion';
 import { SubPlacement } from './SubPlacement';
 import { PatchBay } from './PatchBay';
 import { DualSubPhase } from './DualSubPhase';
+import { CombFilterAlign } from './CombFilterAlign';
+import { WavelengthPhase } from './WavelengthPhase';
+import { SensitivityPowerTarget } from './SensitivityPowerTarget';
+import { WattsDbCurve } from './WattsDbCurve';
 import { VoltageMatch } from './VoltageMatch';
 import { AmpClassSelect } from './AmpClassSelect';
+import { AmpClassMeter } from './AmpClassMeter';
+import { AmpBias } from './AmpBias';
+import { ClassDSignalPath } from './ClassDSignalPath';
+import { AmpApplicationMatch } from './AmpApplicationMatch';
 import type { InteractionProps } from './types';
 
 /**
@@ -50,10 +58,26 @@ export function InteractionView(props: InteractionProps) {
       return <PatchBay {...props} />;
     case 'dualSubPhase':
       return <DualSubPhase {...props} />;
+    case 'combFilterAlign':
+      return <CombFilterAlign {...props} />;
+    case 'wavelengthPhase':
+      return <WavelengthPhase {...props} />;
+    case 'sensitivityPowerTarget':
+      return <SensitivityPowerTarget {...props} />;
+    case 'wattsDbCurve':
+      return <WattsDbCurve {...props} />;
     case 'voltageMatch':
       return <VoltageMatch {...props} />;
     case 'ampClassSelect':
       return <AmpClassSelect {...props} />;
+    case 'ampClassMeter':
+      return <AmpClassMeter {...props} />;
+    case 'ampBias':
+      return <AmpBias {...props} />;
+    case 'classDSignalPath':
+      return <ClassDSignalPath {...props} />;
+    case 'ampApplicationMatch':
+      return <AmpApplicationMatch {...props} />;
     default:
       return null;
   }

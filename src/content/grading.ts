@@ -313,14 +313,96 @@ export function grade(
         insight: feedback.insight,
       };
     }
+    case 'combFilterAlign': {
+      const value =
+        typeof answer === 'object' && answer !== null && !Array.isArray(answer)
+          ? (answer as Record<string, number | string>)
+          : {};
+      const delayMs = Number(value.delayMs ?? interaction.initialDelayMs);
+      const polarity = String(value.polarity ?? interaction.initialPolarity);
+      const delayCorrect = Math.abs(delayMs - interaction.targetDelayMs) <= interaction.toleranceMs;
+      const polarityCorrect = polarity === interaction.targetPolarity;
+      if (delayCorrect && polarityCorrect) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matchKey = !polarityCorrect ? 'polarity' : Math.abs(delayMs - interaction.targetDelayMs) <= 2 ? 'close' : 'far';
+      const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'wavelengthPhase': {
+      const pathDiffM = typeof answer === 'number' ? answer : interaction.initialPathDiffM;
+      if (Math.abs(pathDiffM - interaction.targetPathDiffM) <= interaction.toleranceM) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const wavelength = interaction.speedMps / interaction.frequencyHz;
+      const halfWave = wavelength / 2;
+      const matchKey =
+        Math.abs(pathDiffM - halfWave) <= interaction.toleranceM * 2
+          ? 'half'
+          : pathDiffM < interaction.targetPathDiffM
+            ? 'low'
+            : 'high';
+      const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'sensitivityPowerTarget': {
+      const value =
+        typeof answer === 'object' && answer !== null && !Array.isArray(answer)
+          ? (answer as Record<string, number | string>)
+          : {};
+      const offsets = interaction.speakers.map((speaker) => {
+        const watts = Number(value[speaker.id] ?? speaker.initialW);
+        const db = speaker.sensitivityDb + 10 * Math.log10(Math.max(watts, 0.001));
+        return { id: speaker.id, offset: db - interaction.targetDb };
+      });
+      const wrong = offsets.filter((entry) => Math.abs(entry.offset) > interaction.toleranceDb);
+      if (wrong.length === 0) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      wrong.sort((a, b) => Math.abs(b.offset) - Math.abs(a.offset));
+      const matchKey = wrong[0].offset < 0 ? 'low' : 'high';
+      const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'wattsDbCurve': {
+      const watts = typeof answer === 'number' ? answer : interaction.initialW;
+      const ratio = watts / interaction.targetW;
+      const correct = Math.abs(Math.log10(Math.max(ratio, 0.001))) <= interaction.toleranceRatio;
+      if (correct) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matchKey = watts < interaction.targetW ? 'low' : 'high';
+      const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
     case 'voltageMatch': {
       const value =
         typeof answer === 'object' && answer !== null && !Array.isArray(answer)
           ? (answer as Record<string, number | string>)
           : {};
       const correct = interaction.amplifiers.every((amp) => {
-        const chosen = String(value[amp.id] ?? '');
-        return amp.accepts.includes(chosen as '120' | '240');
+        const chosen = String(value[amp.id] ?? '')
+          .split('|')
+          .filter(Boolean)
+          .sort();
+        const expected = [...amp.accepts].sort();
+        return chosen.length === expected.length && expected.every((voltage, i) => chosen[i] === voltage);
       });
       if (correct) {
         return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
@@ -344,10 +426,68 @@ export function grade(
         insight: feedback.insight,
       };
     }
+    case 'ampClassMeter': {
+      const selected = String(answer);
+      if (selected === interaction.target) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matched = feedback.incorrect?.find((entry) => entry.match === selected);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'ampBias': {
+      const bias = typeof answer === 'number' ? answer : interaction.initialBias;
+      if (bias >= interaction.targetMin && bias <= interaction.targetMax) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matchKey = bias < interaction.targetMin ? 'bias-low' : 'bias-high';
+      const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'classDSignalPath': {
+      const order = Array.isArray(answer) ? answer : [];
+      const correct =
+        order.length === interaction.correctOrder.length &&
+        order.every((id, i) => id === interaction.correctOrder[i]);
+      if (correct) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const firstWrong = interaction.correctOrder.find((id, i) => order[i] !== id);
+      const matched = feedback.incorrect?.find((entry) => entry.match === firstWrong);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
+    case 'ampApplicationMatch': {
+      const choices =
+        typeof answer === 'object' && answer !== null && !Array.isArray(answer)
+          ? (answer as Record<string, number | string>)
+          : {};
+      const wrong = interaction.applications.filter(
+        (app) => String(choices[app.id] ?? '') !== app.correctClass,
+      );
+      if (wrong.length === 0) {
+        return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
+      }
+      const matched = feedback.incorrect?.find((entry) => entry.match === wrong[0].id);
+      return {
+        correct: false,
+        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        insight: feedback.insight,
+      };
+    }
     default: {
-      // No grader registered for this interaction kind yet. Treat as incorrect with
-      // the authored default copy. (Once `Interaction` has 2+ members, switch this to
-      // an `assertNever(interaction)` exhaustiveness guard.)
+      // If content references an unhandled interaction kind, fail closed with the
+      // authored default feedback instead of revealing an answer.
       return {
         correct: false,
         feedbackText: feedback.defaultIncorrect,

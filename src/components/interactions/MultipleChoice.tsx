@@ -52,14 +52,14 @@ export function MultipleChoice({ interaction, value, onChange, locked, result }:
             disabled={locked}
             onClick={() => onChange(option.id)}
             className={cn(
-              'flex w-full items-center gap-3 rounded-2xl border p-4 text-left text-base transition',
+              'flex w-full items-center gap-3 border p-4 text-left text-base transition',
               'active:scale-[0.99] disabled:active:scale-100',
               tone,
             )}
           >
             <span
               className={cn(
-                'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold',
+                'flex h-6 w-6 shrink-0 items-center justify-center border text-xs font-bold',
                 isSelected ? 'border-transparent bg-wave-400 text-ink-950' : 'border-white/30 text-slate-400',
               )}
             >

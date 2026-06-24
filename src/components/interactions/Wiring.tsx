@@ -57,7 +57,9 @@ export function Wiring({ onChange, locked }: InteractionProps) {
           </text>
           {/* Speaker */}
           <rect x="226" y="56" width="70" height="94" className="fill-ink-700 stroke-white/15" strokeWidth="2" />
-          <path d="M226 80 L210 70 L210 136 L226 126 Z" className="fill-wave-500/20 stroke-wave-400" strokeWidth="2" />
+          <rect x="232" y="78" width="10" height="50" className="fill-slate-500/60" />
+          <rect x="242" y="86" width="6" height="34" className="fill-wave-400/80" />
+          <path d="M248 82 L286 66 L286 140 L248 124 Z" className="fill-wave-500/20 stroke-wave-400" strokeWidth="2" />
           <text x="261" y="48" textAnchor="middle" className="fill-slate-300 text-[12px] font-bold">
             SPEAKER
           </text>

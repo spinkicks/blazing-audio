@@ -259,6 +259,77 @@ export interface DualSubPhaseInteraction {
   passScore: number;
 }
 
+/**
+ * "Comb-filter alignment": adjust delay and polarity between two matched sources
+ * until their summed frequency response becomes flat.
+ */
+export interface CombFilterAlignInteraction {
+  kind: 'combFilterAlign';
+  minDelayMs: number;
+  maxDelayMs: number;
+  stepMs: number;
+  initialDelayMs: number;
+  targetDelayMs: number;
+  toleranceMs: number;
+  initialPolarity: 'normal' | 'inverted';
+  targetPolarity: 'normal' | 'inverted';
+  frequencyMin: number;
+  frequencyMax: number;
+  points: number;
+}
+
+/**
+ * "Wavelength phase": adjust an extra path length and see what part of the
+ * physical wave reaches the listener.
+ */
+export interface WavelengthPhaseInteraction {
+  kind: 'wavelengthPhase';
+  frequencyHz: number;
+  speedMps: number;
+  minPathDiffM: number;
+  maxPathDiffM: number;
+  stepM: number;
+  initialPathDiffM: number;
+  targetPathDiffM: number;
+  toleranceM: number;
+}
+
+export interface SensitivityPowerTargetSpeaker {
+  id: string;
+  label: string;
+  sensitivityDb: number;
+  initialW: number;
+  minW: number;
+  maxW: number;
+  stepW: number;
+}
+
+/**
+ * "Sensitivity target": tune power for two speakers with different sensitivity
+ * ratings to hit the same SPL target.
+ */
+export interface SensitivityPowerTargetInteraction {
+  kind: 'sensitivityPowerTarget';
+  targetDb: number;
+  toleranceDb: number;
+  speakers: SensitivityPowerTargetSpeaker[];
+}
+
+/**
+ * "Watts to dB curve": tune watts on a logarithmic power curve to see why dB
+ * output rises slowly.
+ */
+export interface WattsDbCurveInteraction {
+  kind: 'wattsDbCurve';
+  sensitivityDb: number;
+  minW: number;
+  maxW: number;
+  stepW: number;
+  initialW: number;
+  targetW: number;
+  toleranceRatio: number;
+}
+
 export interface VoltageMatchInteraction {
   kind: 'voltageMatch';
   amplifiers: Array<{
@@ -274,10 +345,51 @@ export interface VoltageMatchInteraction {
   }>;
 }
 
+export type AmplifierClass = 'A' | 'B' | 'AB' | 'D';
+
 export interface AmpClassSelectInteraction {
   kind: 'ampClassSelect';
   scenario: string;
-  target: 'A' | 'B' | 'AB' | 'D';
+  target: AmplifierClass;
+}
+
+export interface AmpClassMeterInteraction {
+  kind: 'ampClassMeter';
+  reading: {
+    title: string;
+    efficiency: number;
+    idleHeat: number;
+    conduction: string;
+    distortionClue: string;
+    switching: boolean;
+  };
+  target: AmplifierClass;
+}
+
+export interface AmpBiasInteraction {
+  kind: 'ampBias';
+  initialBias: number;
+  minBias: number;
+  maxBias: number;
+  step: number;
+  targetMin: number;
+  targetMax: number;
+}
+
+export interface ClassDSignalPathInteraction {
+  kind: 'classDSignalPath';
+  items: ReorderItem[];
+  correctOrder: string[];
+}
+
+export interface AmpApplicationMatchInteraction {
+  kind: 'ampApplicationMatch';
+  applications: Array<{
+    id: string;
+    label: string;
+    hint: string;
+    correctClass: AmplifierClass;
+  }>;
 }
 
 /**
@@ -299,8 +411,16 @@ export type Interaction =
   | SubPlacementInteraction
   | PatchBayInteraction
   | DualSubPhaseInteraction
+  | CombFilterAlignInteraction
+  | WavelengthPhaseInteraction
+  | SensitivityPowerTargetInteraction
+  | WattsDbCurveInteraction
   | VoltageMatchInteraction
-  | AmpClassSelectInteraction;
+  | AmpClassSelectInteraction
+  | AmpClassMeterInteraction
+  | AmpBiasInteraction
+  | ClassDSignalPathInteraction
+  | AmpApplicationMatchInteraction;
 
 export type InteractionKind = Interaction['kind'];
 

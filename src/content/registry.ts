@@ -13,11 +13,7 @@ import { phaseAlignmentLesson } from './lessons/lesson-10-phase-alignment';
 import { wattsDecibelsLesson } from './lessons/lesson-11-watts-decibels';
 import { amplifierClassesLesson } from './lessons/lesson-12-amplifier-classes';
 
-/**
- * The ordered set of lessons that make up the course. Lessons are added here as
- * they are designed and built. (Lazy/code-split loading is introduced later for
- * the performance pass; for now they are imported eagerly.)
- */
+/** The ordered set of lessons that make up the course. */
 const lessons: Lesson[] = [
   introLesson,
   soundWaveLesson,

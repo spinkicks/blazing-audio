@@ -38,15 +38,15 @@ export function SpeakerDiagram({
 
   return (
     <svg
-      viewBox="0 0 340 200"
+      viewBox="0 0 340 208"
       className={cn('viz-canvas', className)}
       style={{ '--viz-h': `${height}px` } as CSSProperties}
       role="img"
       aria-label="Cross-section of a loudspeaker"
     >
       {/* Magnet + motor assembly (back of the speaker) */}
-      <rect x="252" y="60" width="48" height="80" rx="4" className="fill-ink-600" />
-      <rect x="266" y="84" width="20" height="32" rx="2" className="fill-slate-500/70" />
+      <rect x="252" y="60" width="48" height="80" className="fill-ink-600" />
+      <rect x="266" y="84" width="20" height="32" className="fill-slate-500/70" />
       {/* Terminals */}
       <circle cx="306" cy="74" r="5" className="fill-clip-500" />
       <circle cx="306" cy="126" r="5" className="fill-slate-300" />
@@ -62,7 +62,7 @@ export function SpeakerDiagram({
         {/* surround */}
         <path d="M72 40 q-8 60 0 120" className="stroke-wave-400/70" strokeWidth="3" fill="none" />
         {/* voice coil former in the magnetic gap */}
-        <rect x="236" y="86" width="12" height="28" rx="2" className="fill-amp-500" />
+        <rect x="236" y="86" width="12" height="28" className="fill-amp-500" />
         {/* dust cap */}
         <path d="M238 88 q10 12 0 24" className="fill-wave-400/40" />
       </g>
@@ -74,10 +74,10 @@ export function SpeakerDiagram({
           <text x="14" y="16" className="fill-slate-200 text-[11px] font-semibold">Cone</text>
 
           <line x1="150" y1="188" x2="240" y2="108" stroke="rgba(148,163,184,0.5)" strokeWidth="1" />
-          <text x="118" y="200" className="fill-slate-200 text-[11px] font-semibold">Voice coil</text>
+          <text x="118" y="198" className="fill-slate-200 text-[11px] font-semibold">Voice coil</text>
 
           <line x1="262" y1="188" x2="276" y2="124" stroke="rgba(148,163,184,0.5)" strokeWidth="1" />
-          <text x="246" y="200" className="fill-slate-200 text-[11px] font-semibold">Magnet</text>
+          <text x="246" y="198" className="fill-slate-200 text-[11px] font-semibold">Magnet</text>
 
           <line x1="292" y1="20" x2="306" y2="70" stroke="rgba(148,163,184,0.5)" strokeWidth="1" />
           <text x="250" y="16" className="fill-slate-200 text-[11px] font-semibold">Terminals</text>

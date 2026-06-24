@@ -158,7 +158,7 @@ function CoursePathRail({ nodes }: { nodes: CourseNode[] }) {
 
 function MiniStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-2xl bg-ink-800 p-3 text-center">
+    <div className="bg-ink-800 p-3 text-center">
       <div className="text-xl font-extrabold text-white">{value}</div>
       <div className="mt-0.5 text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
     </div>
@@ -174,7 +174,7 @@ function LessonRow({ node, onClick }: { node: CourseNode; onClick: () => void })
         disabled={locked}
         onClick={onClick}
         className={cn(
-          'flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition',
+          'flex w-full items-center gap-4 border p-4 text-left transition',
           locked
             ? 'cursor-not-allowed border-white/5 bg-ink-800/50 opacity-60'
             : 'border-white/5 bg-ink-800 hover:border-wave-400/40 active:scale-[0.99]',
@@ -188,7 +188,7 @@ function LessonRow({ node, onClick }: { node: CourseNode; onClick: () => void })
           </p>
         </div>
         {needsReview ? (
-          <span className="rounded-full bg-amp-500/15 px-2 py-1 text-[11px] font-bold text-amp-400">
+          <span className="bg-amp-500/15 px-2 py-1 text-[11px] font-bold text-amp-400">
             Review
           </span>
         ) : null}
@@ -220,7 +220,7 @@ function StatusBadge({
   return (
     <span
       className={cn(
-        'flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold',
+        'flex h-10 w-10 shrink-0 items-center justify-center text-sm font-bold',
         tone,
       )}
     >

@@ -5,11 +5,24 @@ import type { InteractionProps } from './types';
 
 export function VoltageMatch({ interaction, onChange, locked }: InteractionProps) {
   const vm = interaction as VoltageMatchInteraction;
-  const [choices, setChoices] = useState<Record<string, string>>({});
+  const [choices, setChoices] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
-    onChange(choices);
+    onChange(Object.fromEntries(Object.entries(choices).map(([ampId, ids]) => [ampId, [...ids].sort().join('|')])));
   }, [choices, onChange]);
+
+  function choose(ampId: string, outletId: string, acceptsCount: number) {
+    setChoices((prev) => {
+      if (acceptsCount === 1) {
+        return { ...prev, [ampId]: [outletId] };
+      }
+      const current = prev[ampId] ?? [];
+      const next = current.includes(outletId)
+        ? current.filter((id) => id !== outletId)
+        : [...current, outletId];
+      return { ...prev, [ampId]: next };
+    });
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -29,15 +42,18 @@ export function VoltageMatch({ interaction, onChange, locked }: InteractionProps
         {vm.amplifiers.map((amp) => (
           <div key={amp.id} className="border border-white/10 bg-ink-950/60 p-4">
             <p className="text-sm font-bold text-white">{amp.label}</p>
+            <p className="mt-1 text-xs text-slate-500">
+              {amp.accepts.length > 1 ? 'Select every safe outlet voltage.' : 'Select the one matching outlet voltage.'}
+            </p>
             <div className="mt-3 flex gap-2">
               {vm.outlets.map((outlet) => {
-                const selected = choices[amp.id] === outlet.id;
+                const selected = (choices[amp.id] ?? []).includes(outlet.id);
                 return (
                   <button
                     key={outlet.id}
                     type="button"
                     disabled={locked}
-                    onClick={() => setChoices((prev) => ({ ...prev, [amp.id]: outlet.id }))}
+                    onClick={() => choose(amp.id, outlet.id, amp.accepts.length)}
                     className={cn(
                       'border px-4 py-3 text-sm font-bold transition',
                       selected

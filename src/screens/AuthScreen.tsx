@@ -93,7 +93,7 @@ export function AuthScreen() {
           />
 
           {error ? (
-            <p className="rounded-xl bg-clip-500/10 px-3 py-2 text-sm text-clip-300">{error}</p>
+            <p className="bg-clip-500/10 px-3 py-2 text-sm text-clip-300">{error}</p>
           ) : null}
 
           <Button type="submit" fullWidth disabled={busy} className="mt-1">
@@ -150,7 +150,7 @@ function Field({ label, value, onChange, type = 'text', ...rest }: FieldProps) {
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-2xl border border-white/10 bg-ink-800 px-4 py-3 text-slate-100 placeholder:text-slate-600 focus:border-wave-400 focus:outline-none focus:ring-2 focus:ring-wave-400/40"
+        className="w-full border border-white/10 bg-ink-800 px-4 py-3 text-slate-100 placeholder:text-slate-600 focus:border-wave-400 focus:outline-none focus:ring-2 focus:ring-wave-400/40"
         {...rest}
       />
     </label>

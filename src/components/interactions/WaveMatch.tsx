@@ -48,7 +48,7 @@ export function WaveMatch({ interaction, onChange, locked }: InteractionProps) {
           type="button"
           onClick={() => (enabled ? disable() : void enable())}
           className={cn(
-            'self-start rounded-full px-3 py-1.5 text-xs font-semibold transition',
+            'self-start px-3 py-1.5 text-xs font-semibold transition',
             enabled ? 'bg-wave-400/20 text-wave-400' : 'bg-ink-700 text-slate-300',
           )}
         >
@@ -116,7 +116,7 @@ function SliderRow({ label, hint, display, value, min, max, step, disabled, onCh
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="h-2 w-full cursor-pointer touch-none appearance-none rounded-full bg-ink-700 accent-wave-400 disabled:opacity-50"
+        className="h-2 w-full cursor-pointer touch-none appearance-none bg-ink-700 accent-wave-400 disabled:opacity-50"
         aria-label={`${label} (${hint})`}
       />
     </div>
