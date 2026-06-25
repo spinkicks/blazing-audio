@@ -128,6 +128,7 @@ export function LessonPlayer({ lesson, initialStepId, reviewStepId, onExit, onGo
               </h2>
               <div className="mt-5 lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:mt-0">
                 <InteractionView
+                  key={step.id}
                   interaction={step.interaction}
                   value={answer}
                   onChange={setAnswer}

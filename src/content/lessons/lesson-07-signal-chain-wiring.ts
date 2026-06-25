@@ -272,7 +272,7 @@ export const signalChainWiringLesson: Lesson = {
             { x: 0.92, y: 0.92 },
           ],
           maxDistance: 0.62,
-          passScore: 92,
+          passScore: 78,
         },
       },
       feedback: {

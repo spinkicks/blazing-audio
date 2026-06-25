@@ -260,13 +260,13 @@ export function grade(
           : {};
       const connectionsRaw = String(value.connections ?? '');
       const connections = new Set(connectionsRaw.split('|').filter(Boolean));
-      const expected = new Set(
-        interaction.correctConnections.map((connection) =>
-          canonicalConnection(connection.from, connection.to),
-        ),
+      const expectedList = interaction.correctConnections.map((connection) =>
+        canonicalConnection(connection.from, connection.to),
       );
-      const wiringCorrect =
-        connections.size === expected.size && [...expected].every((connection) => connections.has(connection));
+      const expected = new Set(expectedList);
+      const missing = expectedList.filter((connection) => !connections.has(connection));
+      const extra = [...connections].filter((connection) => !expected.has(connection));
+      const wiringCorrect = missing.length === 0 && extra.length === 0;
 
       let subCorrect = true;
       if (interaction.subPlacement) {
@@ -287,9 +287,11 @@ export function grade(
       }
       const matchKey = !wiringCorrect ? 'wiring' : 'placement';
       const matched = feedback.incorrect?.find((entry) => entry.match === matchKey);
+      const baseText = matched?.text ?? feedback.defaultIncorrect;
+      const detail = wiringCorrect ? '' : describePatchMismatch(interaction, missing, extra);
       return {
         correct: false,
-        feedbackText: matched?.text ?? feedback.defaultIncorrect,
+        feedbackText: detail ? `${baseText} ${detail}` : baseText,
         insight: feedback.insight,
       };
     }
@@ -514,6 +516,38 @@ function dualSubScore(ax: number, ay: number, bx: number, by: number, lx: number
 
 function canonicalConnection(a: string, b: string): string {
   return [a, b].sort().join('<->');
+}
+
+/**
+ * Turn unmatched wiring into a specific, learner-facing hint that names the
+ * exact links still needed and any wrong links to remove, using the diagram's
+ * own box and port labels. This is what lets a learner who believes they wired
+ * it correctly see precisely which connection is off (e.g. a left/right swap).
+ */
+function describePatchMismatch(
+  interaction: Extract<Interaction, { kind: 'patchBay' }>,
+  missing: string[],
+  extra: string[],
+): string {
+  const labels = new Map<string, string>();
+  for (const box of interaction.boxes) {
+    for (const port of box.ports) {
+      const portLabel = port.label.trim();
+      // Color-only terminals have no text label, so name them by color (red /
+      // black / blue) to keep the hint precise about which terminal is meant.
+      labels.set(port.id, portLabel ? `${box.label} ${portLabel}` : `${box.label} (${port.color})`);
+    }
+  }
+  const describe = (canon: string): string => {
+    const [a, b] = canon.split('<->');
+    return `${labels.get(a) ?? a} to ${labels.get(b) ?? b}`;
+  };
+  const cap = (items: string[]): string =>
+    items.length > 2 ? `${items.slice(0, 2).join('; ')}; and ${items.length - 2} more` : items.join('; ');
+  const parts: string[] = [];
+  if (missing.length) parts.push(`Still need: ${cap(missing.map(describe))}.`);
+  if (extra.length) parts.push(`Remove: ${cap(extra.map(describe))}.`);
+  return parts.join(' ');
 }
 
 function wallNearCornerScore(

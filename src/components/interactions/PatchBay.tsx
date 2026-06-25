@@ -274,6 +274,9 @@ export function PatchBay({ interaction, onChange, locked }: InteractionProps) {
 
   function setSubFromPointer(clientX: number, clientY: number) {
     if (!patch.subPlacement || locked) return;
+    // Moving the sub clears any half-started cable so a pending selection can
+    // never complete to the wrong port after a drag.
+    setSelectedPort(null);
     const el = svgRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
