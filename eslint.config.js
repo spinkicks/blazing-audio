@@ -5,7 +5,9 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist', 'node_modules', 'firebase-export-*'] },
+  // `functions` is a separate Node package with its own tsconfig and is built
+  // (typechecked) on its own via `npm --prefix functions run build`.
+  { ignores: ['dist', 'node_modules', 'firebase-export-*', 'functions'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],

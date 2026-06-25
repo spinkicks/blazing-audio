@@ -16,6 +16,9 @@ const ProfileScreen = lazy(() =>
 const ReviewScreen = lazy(() =>
   import('@/screens/ReviewScreen').then((m) => ({ default: m.ReviewScreen })),
 );
+const SafetyScreen = lazy(() =>
+  import('@/screens/SafetyScreen').then((m) => ({ default: m.SafetyScreen })),
+);
 const LessonScreen = lazy(() =>
   import('@/screens/LessonScreen').then((m) => ({ default: m.LessonScreen })),
 );
@@ -63,6 +66,7 @@ export default function App() {
           <Route path="/learn" element={<HomeScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="/review" element={<ReviewScreen />} />
+          <Route path="/safety" element={<SafetyScreen />} />
         </Route>
         <Route path="/lesson/:lessonId" element={<LessonScreen />} />
         <Route path="*" element={<Navigate to="/learn" replace />} />

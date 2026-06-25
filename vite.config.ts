@@ -17,7 +17,7 @@ export default defineConfig({
         // Split big, rarely-changing vendor code so it caches separately and
         // downloads in parallel (keeps the app chunk small and first paint fast).
         manualChunks: {
-          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore'],
+          firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/functions'],
           react: ['react', 'react-dom', 'react-router-dom'],
         },
       },

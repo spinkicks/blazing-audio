@@ -36,12 +36,14 @@ export function FeedbackPanel({ result }: FeedbackPanelProps) {
 
       <p className="mt-2 text-sm leading-relaxed text-slate-100">{feedbackText}</p>
 
-      <div className="mt-3 bg-ink-900/60 p-3">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-wave-400">
-          The idea behind this
-        </p>
-        <p className="mt-1 text-sm leading-relaxed text-slate-300">{insight}</p>
-      </div>
+      {insight ? (
+        <div className="mt-3 bg-ink-900/60 p-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-wave-400">
+            The idea behind this
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-slate-300">{insight}</p>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { useProgressStore, type CompletionSummary } from '@/features/progress/pr
 import { Button } from '@/components/ui/Button';
 import { InteractionView } from '@/components/interactions/InteractionView';
 import { isAnswerable } from '@/components/interactions/answerable';
+import { ConceptTutor } from '@/components/tutor/ConceptTutor';
 import { ConceptView } from './ConceptView';
 import { FeedbackPanel } from './FeedbackPanel';
 import { LessonProgressBar } from './LessonProgressBar';
@@ -139,6 +140,13 @@ export function LessonPlayer({ lesson, initialStepId, reviewStepId, onExit, onGo
               {result ? (
                 <div className="mt-5 lg:col-start-2 lg:row-start-2 lg:mt-4">
                   <FeedbackPanel result={result} />
+                  <div className="mt-3">
+                    <ConceptTutor
+                      prompt={step.prompt}
+                      insight={step.feedback.insight}
+                      lessonTitle={lesson.title}
+                    />
+                  </div>
                 </div>
               ) : null}
             </div>

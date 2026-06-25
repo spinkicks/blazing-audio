@@ -1,8 +1,11 @@
 import { useNavigate } from 'react-router-dom';
 import { collectReviewTopics } from '@/content/review';
+import { getLesson } from '@/content/registry';
 import { useProgressStore } from '@/features/progress/progressStore';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { ReviewPractice } from '@/components/review/ReviewPractice';
+import { ConceptTutor } from '@/components/tutor/ConceptTutor';
 
 export function ReviewScreen() {
   const navigate = useNavigate();
@@ -32,24 +35,44 @@ export function ReviewScreen() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-          {topics.map((topic) => (
-            <Card key={`${topic.lessonId}-${topic.stepId}`}>
-              <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
-                {topic.lessonTitle}
-              </p>
-              <h2 className="mt-2 text-lg font-bold leading-snug text-white">{topic.prompt}</h2>
-              <p className="mt-2 text-sm text-slate-400">
-                Wrong attempts: {topic.wrongAttempts}. Answer this exact question correctly to
-                remove it from review.
-              </p>
-              <Button
-                className="mt-4"
-                onClick={() => navigate(`/lesson/${topic.lessonId}?reviewStep=${topic.stepId}`)}
-              >
-                Review this question
-              </Button>
-            </Card>
-          ))}
+          {topics.map((topic) => {
+            const lesson = getLesson(topic.lessonId);
+            const step = lesson?.steps.find((s) => s.id === topic.stepId);
+            const insight = step && step.type === 'problem' ? step.feedback.insight : undefined;
+
+            return (
+              <Card key={`${topic.lessonId}-${topic.stepId}`}>
+                <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
+                  {topic.lessonTitle}
+                </p>
+                <h2 className="mt-2 text-lg font-bold leading-snug text-white">{topic.prompt}</h2>
+                <p className="mt-2 text-sm text-slate-400">
+                  Wrong attempts: {topic.wrongAttempts}. Answer this exact question correctly to
+                  remove it from review.
+                </p>
+                <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+                  <Button
+                    onClick={() => navigate(`/lesson/${topic.lessonId}?reviewStep=${topic.stepId}`)}
+                  >
+                    Review this question
+                  </Button>
+                  <ConceptTutor
+                    prompt={topic.prompt}
+                    insight={insight}
+                    lessonTitle={topic.lessonTitle}
+                  />
+                </div>
+
+                <ReviewPractice
+                  lessonId={topic.lessonId}
+                  lessonTitle={topic.lessonTitle}
+                  stepId={topic.stepId}
+                  missedPrompt={topic.prompt}
+                  concepts={lesson?.concepts ?? []}
+                />
+              </Card>
+            );
+          })}
         </div>
       )}
     </div>

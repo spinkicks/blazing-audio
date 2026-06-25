@@ -6,6 +6,7 @@ import { cn } from '@/lib/cn';
 const items = [
   { to: '/learn', label: 'Learn', icon: BookIcon },
   { to: '/review', label: 'Review', icon: ReviewIcon },
+  { to: '/safety', label: 'Setup check', icon: ShieldIcon },
   { to: '/profile', label: 'Profile', icon: UserIcon },
 ];
 
@@ -94,6 +95,15 @@ function UserIcon({ className }: { className?: string }) {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
       <circle cx="12" cy="8" r="4" />
       <path d="M4 21c0-4 4-6 8-6s8 2 8 6" />
+    </svg>
+  );
+}
+
+function ShieldIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+      <path d="M12 3l7 3v5c0 4.5-3 8-7 10-4-2-7-5.5-7-10V6l7-3Z" />
+      <path d="M9.5 12l2 2 3.5-4" />
     </svg>
   );
 }
