@@ -42,16 +42,16 @@ const RECEIVER_51: PatchBox[] = [
     w: 39,
     h: 38,
     ports: [
-      { id: 'avr.fl+', label: 'FL+', x: 39, y: 31, color: 'red' },
-      { id: 'avr.fl-', label: 'FL-', x: 39, y: 36, color: 'black' },
-      { id: 'avr.c+', label: 'C+', x: 48, y: 31, color: 'red' },
-      { id: 'avr.c-', label: 'C-', x: 48, y: 36, color: 'black' },
-      { id: 'avr.fr+', label: 'FR+', x: 57, y: 31, color: 'red' },
-      { id: 'avr.fr-', label: 'FR-', x: 57, y: 36, color: 'black' },
-      { id: 'avr.sl+', label: 'SL+', x: 39, y: 47, color: 'red' },
-      { id: 'avr.sl-', label: 'SL-', x: 39, y: 52, color: 'black' },
-      { id: 'avr.sr+', label: 'SR+', x: 57, y: 47, color: 'red' },
-      { id: 'avr.sr-', label: 'SR-', x: 57, y: 52, color: 'black' },
+      { id: 'avr.fl+', label: 'FL', x: 39, y: 31, color: 'red' },
+      { id: 'avr.fl-', label: '', x: 39, y: 36, color: 'black' },
+      { id: 'avr.c+', label: 'C', x: 48, y: 31, color: 'red' },
+      { id: 'avr.c-', label: '', x: 48, y: 36, color: 'black' },
+      { id: 'avr.fr+', label: 'FR', x: 57, y: 31, color: 'red' },
+      { id: 'avr.fr-', label: '', x: 57, y: 36, color: 'black' },
+      { id: 'avr.sl+', label: 'SL', x: 39, y: 47, color: 'red' },
+      { id: 'avr.sl-', label: '', x: 39, y: 52, color: 'black' },
+      { id: 'avr.sr+', label: 'SR', x: 57, y: 47, color: 'red' },
+      { id: 'avr.sr-', label: '', x: 57, y: 52, color: 'black' },
       { id: 'avr.sub', label: 'sub pre-out', x: 66, y: 52, color: 'blue' },
     ],
   },
@@ -63,8 +63,8 @@ const RECEIVER_51: PatchBox[] = [
     w: 20,
     h: 11,
     ports: [
-      { id: 'fl+', label: '+', x: 20, y: 9, color: 'red' },
-      { id: 'fl-', label: '-', x: 20, y: 14, color: 'black' },
+      { id: 'fl+', label: '', x: 20, y: 9, color: 'red' },
+      { id: 'fl-', label: '', x: 20, y: 14, color: 'black' },
     ],
   },
   {
@@ -75,8 +75,8 @@ const RECEIVER_51: PatchBox[] = [
     w: 20,
     h: 11,
     ports: [
-      { id: 'c+', label: '+', x: 44, y: 14, color: 'red' },
-      { id: 'c-', label: '-', x: 56, y: 14, color: 'black' },
+      { id: 'c+', label: '', x: 44, y: 14, color: 'red' },
+      { id: 'c-', label: '', x: 56, y: 14, color: 'black' },
     ],
   },
   {
@@ -87,8 +87,8 @@ const RECEIVER_51: PatchBox[] = [
     w: 20,
     h: 11,
     ports: [
-      { id: 'fr+', label: '+', x: 80, y: 9, color: 'red' },
-      { id: 'fr-', label: '-', x: 80, y: 14, color: 'black' },
+      { id: 'fr+', label: '', x: 80, y: 9, color: 'red' },
+      { id: 'fr-', label: '', x: 80, y: 14, color: 'black' },
     ],
   },
   {
@@ -99,8 +99,8 @@ const RECEIVER_51: PatchBox[] = [
     w: 20,
     h: 11,
     ports: [
-      { id: 'sl+', label: '+', x: 20, y: 54, color: 'red' },
-      { id: 'sl-', label: '-', x: 20, y: 59, color: 'black' },
+      { id: 'sl+', label: '', x: 20, y: 54, color: 'red' },
+      { id: 'sl-', label: '', x: 20, y: 59, color: 'black' },
     ],
   },
   {
@@ -111,8 +111,8 @@ const RECEIVER_51: PatchBox[] = [
     w: 20,
     h: 11,
     ports: [
-      { id: 'sr+', label: '+', x: 80, y: 54, color: 'red' },
-      { id: 'sr-', label: '-', x: 80, y: 59, color: 'black' },
+      { id: 'sr+', label: '', x: 80, y: 54, color: 'red' },
+      { id: 'sr-', label: '', x: 80, y: 59, color: 'black' },
     ],
   },
   {
@@ -153,8 +153,8 @@ const RECEIVER_COMPLETE: PatchBox[] = [
     w: 22,
     h: 8,
     ports: [
-      { id: 'rxfull.c+', label: '+', x: 45, y: 24, color: 'red' },
-      { id: 'rxfull.c-', label: '-', x: 55, y: 24, color: 'black' },
+      { id: 'rxfull.c+', label: '', x: 45, y: 24, color: 'red' },
+      { id: 'rxfull.c-', label: '', x: 55, y: 24, color: 'black' },
     ],
   },
   {
@@ -167,16 +167,16 @@ const RECEIVER_COMPLETE: PatchBox[] = [
     ports: [
       { id: 'rxfull.hdmiIn', label: 'HDMI in', x: 33, y: 36, color: 'gray' },
       { id: 'rxfull.hdmiOut', label: 'HDMI out', x: 69, y: 36, color: 'gray' },
-      { id: 'rxfull.fl+', label: 'FL+', x: 38, y: 45, color: 'red' },
-      { id: 'rxfull.fl-', label: 'FL-', x: 38, y: 50, color: 'black' },
-      { id: 'rxfull.cOut+', label: 'C+', x: 47, y: 45, color: 'red' },
-      { id: 'rxfull.cOut-', label: 'C-', x: 47, y: 50, color: 'black' },
-      { id: 'rxfull.fr+', label: 'FR+', x: 56, y: 45, color: 'red' },
-      { id: 'rxfull.fr-', label: 'FR-', x: 56, y: 50, color: 'black' },
-      { id: 'rxfull.sl+', label: 'SL+', x: 38, y: 58, color: 'red' },
-      { id: 'rxfull.sl-', label: 'SL-', x: 38, y: 63, color: 'black' },
-      { id: 'rxfull.sr+', label: 'SR+', x: 56, y: 58, color: 'red' },
-      { id: 'rxfull.sr-', label: 'SR-', x: 56, y: 63, color: 'black' },
+      { id: 'rxfull.fl+', label: 'FL', x: 38, y: 45, color: 'red' },
+      { id: 'rxfull.fl-', label: '', x: 38, y: 50, color: 'black' },
+      { id: 'rxfull.cOut+', label: 'C', x: 47, y: 45, color: 'red' },
+      { id: 'rxfull.cOut-', label: '', x: 47, y: 50, color: 'black' },
+      { id: 'rxfull.fr+', label: 'FR', x: 56, y: 45, color: 'red' },
+      { id: 'rxfull.fr-', label: '', x: 56, y: 50, color: 'black' },
+      { id: 'rxfull.sl+', label: 'SL', x: 38, y: 58, color: 'red' },
+      { id: 'rxfull.sl-', label: '', x: 38, y: 63, color: 'black' },
+      { id: 'rxfull.sr+', label: 'SR', x: 56, y: 58, color: 'red' },
+      { id: 'rxfull.sr-', label: '', x: 56, y: 63, color: 'black' },
       { id: 'rxfull.subPre', label: 'sub pre-out', x: 66, y: 63, color: 'blue' },
     ],
   },
@@ -188,8 +188,8 @@ const RECEIVER_COMPLETE: PatchBox[] = [
     w: 18,
     h: 12,
     ports: [
-      { id: 'rxfull.flSpk+', label: '+', x: 19, y: 9, color: 'red' },
-      { id: 'rxfull.flSpk-', label: '-', x: 19, y: 14, color: 'black' },
+      { id: 'rxfull.flSpk+', label: '', x: 19, y: 9, color: 'red' },
+      { id: 'rxfull.flSpk-', label: '', x: 19, y: 14, color: 'black' },
     ],
   },
   {
@@ -200,8 +200,8 @@ const RECEIVER_COMPLETE: PatchBox[] = [
     w: 18,
     h: 12,
     ports: [
-      { id: 'rxfull.frSpk+', label: '+', x: 81, y: 9, color: 'red' },
-      { id: 'rxfull.frSpk-', label: '-', x: 81, y: 14, color: 'black' },
+      { id: 'rxfull.frSpk+', label: '', x: 81, y: 9, color: 'red' },
+      { id: 'rxfull.frSpk-', label: '', x: 81, y: 14, color: 'black' },
     ],
   },
   {
@@ -212,8 +212,8 @@ const RECEIVER_COMPLETE: PatchBox[] = [
     w: 20,
     h: 11,
     ports: [
-      { id: 'rxfull.slSpk+', label: '+', x: 20, y: 72, color: 'red' },
-      { id: 'rxfull.slSpk-', label: '-', x: 20, y: 77, color: 'black' },
+      { id: 'rxfull.slSpk+', label: '', x: 20, y: 72, color: 'red' },
+      { id: 'rxfull.slSpk-', label: '', x: 20, y: 77, color: 'black' },
     ],
   },
   {
@@ -224,8 +224,8 @@ const RECEIVER_COMPLETE: PatchBox[] = [
     w: 20,
     h: 11,
     ports: [
-      { id: 'rxfull.srSpk+', label: '+', x: 80, y: 72, color: 'red' },
-      { id: 'rxfull.srSpk-', label: '-', x: 80, y: 77, color: 'black' },
+      { id: 'rxfull.srSpk+', label: '', x: 80, y: 72, color: 'red' },
+      { id: 'rxfull.srSpk-', label: '', x: 80, y: 77, color: 'black' },
     ],
   },
   {
@@ -276,8 +276,8 @@ export const receiversLesson: Lesson = {
     {
       id: 'rx-51',
       type: 'concept',
-      title: 'What “5.1” means',
-      body: 'In a 5.1 system, the “5” means five full-range speaker channels: front left, front right, center, surround left, and surround right.\n\nThe “.1” means the low-frequency effects channel: the subwoofer/LFE channel. Many home-theater subs are active/powered, so the receiver does NOT send amplified speaker power to the sub. It sends a low-level RCA signal from the “subwoofer pre-out” or “LFE out,” and the subwoofer’s own amplifier does the power work.',
+      title: 'What "5.1" means',
+      body: 'In a 5.1 system, the "5" means five full-range speaker channels: front left, front right, center, surround left, and surround right.\n\nThe ".1" means the low-frequency effects channel: the subwoofer/LFE channel. Many home-theater subs are active/powered, so the receiver does NOT send amplified speaker power to the sub. It sends a low-level RCA signal from the "subwoofer pre-out" or "LFE out," and the subwoofer has its own amplifier that does the power work.',
     },
     {
       id: 'rx-wire-51',
@@ -302,11 +302,11 @@ export const receiversLesson: Lesson = {
       },
       feedback: {
         correct:
-          'Correct. Five passive speakers use amplified speaker outputs, and the powered sub uses the receiver’s subwoofer pre-out.',
+          'Correct. Five passive speakers use amplified speaker outputs, and the powered sub uses the subwoofer pre-out on the receiver.',
         incorrect: [
           {
             match: 'wiring',
-            text: 'Passive speaker channels need + and - speaker outputs. The powered subwoofer is different: it uses the blue subwoofer pre-out / LFE RCA signal.',
+            text: 'Each passive speaker channel uses two speaker-level terminals: connect the red output to the red terminal and the black output to the black terminal. The powered subwoofer is different: it uses the blue subwoofer pre-out / LFE RCA signal.',
           },
         ],
         defaultIncorrect: 'Match each channel label carefully, and remember the sub is powered/active.',
@@ -344,7 +344,7 @@ export const receiversLesson: Lesson = {
         incorrect: [
           {
             match: 'wiring',
-            text: 'Trace the receiver as the hub: Roku HDMI out to receiver HDMI in, receiver HDMI out to TV, each speaker output to its matching speaker, and sub pre-out to the powered sub LFE input.',
+            text: 'Trace the receiver as the hub: Roku HDMI out to receiver HDMI in, receiver HDMI out to TV, each speaker output to its matching speaker with red to red and black to black, and sub pre-out to the powered sub LFE input.',
           },
         ],
         defaultIncorrect: 'Connect every signal and speaker path through the receiver.',

@@ -116,41 +116,57 @@ function ResponseGraph({
   minFreq: number;
   maxFreq: number;
 }) {
-  const width = 640;
-  const height = 260;
-  const pad = 34;
-  const x = (freq: number) =>
-    pad + (Math.log10(freq / minFreq) / Math.log10(maxFreq / minFreq)) * (width - pad * 2);
-  const y = (db: number) => pad + ((DB_MAX - db) / (DB_MAX - DB_MIN)) * (height - pad * 2);
+  const width = 680;
+  const height = 280;
+  const padL = 36;
+  const padR = 18;
+  const padT = 18;
+  const padB = 44;
+  const plotW = width - padL - padR;
+  const plotH = height - padT - padB;
+  const x = (freq: number) => padL + (Math.log10(freq / minFreq) / Math.log10(maxFreq / minFreq)) * plotW;
+  const y = (db: number) => padT + ((DB_MAX - db) / (DB_MAX - DB_MIN)) * plotH;
   const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(p.freq).toFixed(1)} ${y(p.db).toFixed(1)}`).join(' ');
   const zeroY = y(0);
 
+  const freqTicks = [20, 30, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000].filter(
+    (freq) => freq >= minFreq && freq <= maxFreq,
+  );
+  if (freqTicks[0] !== minFreq) freqTicks.unshift(minFreq);
+  if (freqTicks[freqTicks.length - 1] !== maxFreq) freqTicks.push(maxFreq);
+  const formatFreq = (freq: number) => (freq >= 1000 ? `${freq / 1000}k` : `${freq}`);
+
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} className="h-[260px] w-full" role="img" aria-label="Comb-filtering frequency response graph">
+    <svg
+      viewBox={`0 0 ${width} ${height}`}
+      className="block h-auto w-full"
+      role="img"
+      aria-label="Comb-filtering frequency response from low bass to a few kilohertz"
+    >
       <rect x="0" y="0" width={width} height={height} className="fill-ink-950" />
       {[0, -6, -12, -18, -24, -30].map((db) => (
         <g key={db}>
-          <line x1={pad} x2={width - pad} y1={y(db)} y2={y(db)} className="stroke-white/10" />
-          <text x="8" y={y(db) + 4} className="fill-slate-500 text-[11px]">
+          <line x1={padL} x2={width - padR} y1={y(db)} y2={y(db)} className="stroke-white/10" />
+          <text x={padL - 8} y={y(db) + 4} textAnchor="end" className="fill-slate-500 text-[11px]">
             {db}
           </text>
         </g>
       ))}
-      {[minFreq, 60, 100, maxFreq].map((freq) => (
+      {freqTicks.map((freq) => (
         <g key={freq}>
-          <line x1={x(freq)} x2={x(freq)} y1={pad} y2={height - pad} className="stroke-white/10" />
-          <text x={x(freq) - 12} y={height - 8} className="fill-slate-500 text-[11px]">
-            {freq}
+          <line x1={x(freq)} x2={x(freq)} y1={padT} y2={height - padB} className="stroke-white/10" />
+          <text x={x(freq)} y={height - padB + 16} textAnchor="middle" className="fill-slate-500 text-[11px]">
+            {formatFreq(freq)}
           </text>
         </g>
       ))}
-      <line x1={pad} x2={width - pad} y1={zeroY} y2={zeroY} className="stroke-emerald-400/70" strokeDasharray="6 5" />
-      <path d={path} fill="none" className="stroke-wave-400" strokeWidth="3" />
-      <text x={width - 70} y={zeroY - 7} className="fill-emerald-300 text-[11px]">
+      <line x1={padL} x2={width - padR} y1={zeroY} y2={zeroY} className="stroke-emerald-400/70" strokeDasharray="6 5" />
+      <path d={path} fill="none" className="stroke-wave-400" strokeWidth="2.5" />
+      <text x={width - padR} y={zeroY - 6} textAnchor="end" className="fill-emerald-300 text-[11px]">
         0 dB
       </text>
-      <text x={width - 86} y={height - 8} className="fill-slate-500 text-[11px]">
-        Hz
+      <text x={padL + plotW / 2} y={height - 6} textAnchor="middle" className="fill-slate-500 text-[11px]">
+        Frequency (Hz)
       </text>
     </svg>
   );

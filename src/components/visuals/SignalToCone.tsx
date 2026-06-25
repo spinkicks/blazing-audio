@@ -149,6 +149,9 @@ export function SignalToCone({ height = 300 }: { height?: number }) {
           aria-hidden="true"
         />
       </div>
+      <p className="text-xs leading-snug text-slate-500">
+        Frequency not to scale. The motion is slowed so you can see it; higher frequency just means the cone moves faster.
+      </p>
       <div>
         <div className="mb-1 flex items-baseline justify-between">
           <span className="text-sm font-semibold text-slate-200">

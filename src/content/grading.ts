@@ -335,13 +335,16 @@ export function grade(
     }
     case 'wavelengthPhase': {
       const pathDiffM = typeof answer === 'number' ? answer : interaction.initialPathDiffM;
-      if (Math.abs(pathDiffM - interaction.targetPathDiffM) <= interaction.toleranceM) {
+      // Keep the acceptance window coordinated with the slider granularity so a
+      // deliberate target value is always reachable: never tighter than a step.
+      const tol = Math.max(interaction.toleranceM, interaction.stepM);
+      if (Math.abs(pathDiffM - interaction.targetPathDiffM) <= tol) {
         return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
       }
       const wavelength = interaction.speedMps / interaction.frequencyHz;
       const halfWave = wavelength / 2;
       const matchKey =
-        Math.abs(pathDiffM - halfWave) <= interaction.toleranceM * 2
+        Math.abs(pathDiffM - halfWave) <= tol * 2
           ? 'half'
           : pathDiffM < interaction.targetPathDiffM
             ? 'low'
@@ -363,7 +366,10 @@ export function grade(
         const db = speaker.sensitivityDb + 10 * Math.log10(Math.max(watts, 0.001));
         return { id: speaker.id, offset: db - interaction.targetDb };
       });
-      const wrong = offsets.filter((entry) => Math.abs(entry.offset) > interaction.toleranceDb);
+      // Floor keeps the pass band wider than one ~0.2 dB slider step, so the reachable
+      // power is not a knife-edge single value.
+      const tolerance = Math.max(interaction.toleranceDb, 0.3);
+      const wrong = offsets.filter((entry) => Math.abs(entry.offset) > tolerance);
       if (wrong.length === 0) {
         return { correct: true, feedbackText: feedback.correct, insight: feedback.insight };
       }
@@ -524,8 +530,21 @@ function wallNearCornerScore(
     1,
   );
 
-  const wallScore = Math.max(0, 1 - nearestWall / 0.16);
-  const cornerScore = Math.max(0, 1 - nearestCorner / 0.42);
-  const avoidOccupiedScore = Math.min(1, nearestOccupied / 0.18);
-  return Math.round(Math.min(wallScore, cornerScore, avoidOccupiedScore) * 100);
+  // Keep-out radius around an occupied corner. Must match SUB_EXCLUSION_RADIUS
+  // in src/components/interactions/SubPlacement.tsx so the collision limit and
+  // the scoring agree on the best achievable spot.
+  const exclusionRadius = 0.18;
+
+  // Sitting inside an object's keep-out radius is never valid.
+  if (nearestOccupied < exclusionRadius - 0.001) return 0;
+
+  // Full credit for hugging any wall (within the draggable clamp), then decay.
+  const wallScore = Math.max(0, Math.min(1, 1 - Math.max(0, nearestWall - 0.09) / 0.22));
+  // Full credit for getting as close to a corner as the keep-out allows, then
+  // decay toward mid-wall and open room.
+  const cornerScore = Math.max(
+    0,
+    Math.min(1, 1 - Math.max(0, nearestCorner - (exclusionRadius + 0.04)) / 0.5),
+  );
+  return Math.round(Math.min(wallScore, cornerScore) * 100);
 }

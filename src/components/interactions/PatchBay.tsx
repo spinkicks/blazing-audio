@@ -4,6 +4,12 @@ import type { InteractionProps } from './types';
 
 const ROOM = { x: 4, y: 39, w: 92, h: 38 };
 
+// Approximate glyph advance as a fraction of the font size. Used only to size
+// chips and to decide when a label must shrink or wrap, so a slightly generous
+// value is safer (it shrinks a touch early rather than clipping).
+const BOX_CHAR = 0.66;
+const PORT_CHAR = 0.62;
+
 function portColor(color: PatchPort['color']): string {
   switch (color) {
     case 'red':
@@ -52,10 +58,6 @@ function shortPortLabel(label: string): string {
     .toUpperCase();
 }
 
-function labelWidth(label: string, min = 8, perChar = 1.55): number {
-  return Math.max(min, label.length * perChar + 2.6);
-}
-
 function boxKind(box: PatchBox): 'source' | 'display' | 'speaker' | 'sub' | 'rack' {
   const text = `${box.id} ${box.label}`.toLowerCase();
   if (text.includes('tv') || text.includes('display')) return 'display';
@@ -76,6 +78,120 @@ function connectionColor(a: PatchPort, b: PatchPort): string {
   if (a.color === 'white' && b.color === 'white') return '#e5e7eb';
   if (a.color === 'black' && b.color === 'black') return '#94a3b8';
   return '#38bdf8';
+}
+
+function textWidth(text: string, font: number, ratio: number): number {
+  return text.length * font * ratio;
+}
+
+interface BoxLabelFit {
+  lines: string[];
+  font: number;
+}
+
+/**
+ * Size a device label to its box: keep the base size if it fits, otherwise
+ * shrink, and if the box is tall enough wrap onto two balanced lines instead of
+ * shrinking past readability. Guarantees the label never spills out of its box
+ * (and therefore never clips at the viewport edge).
+ */
+function fitBoxLabel(label: string, boxW: number, boxH: number): BoxLabelFit {
+  const avail = Math.max(4, boxW - 1.8);
+  const base = 2.8;
+  const natural = textWidth(label, base, BOX_CHAR);
+  if (natural <= avail) return { lines: [label], font: base };
+
+  const single = base * (avail / natural);
+  const floor = 2.05;
+  if (single >= floor) return { lines: [label], font: single };
+
+  const words = label.split(' ').filter(Boolean);
+  if (words.length >= 2 && boxH >= 13) {
+    let best = { l1: words[0], l2: words.slice(1).join(' '), score: Infinity };
+    for (let i = 1; i < words.length; i += 1) {
+      const l1 = words.slice(0, i).join(' ');
+      const l2 = words.slice(i).join(' ');
+      const score = Math.max(textWidth(l1, base, BOX_CHAR), textWidth(l2, base, BOX_CHAR));
+      if (score < best.score) best = { l1, l2, score };
+    }
+    const font = Math.max(1.9, Math.min(base, base * (avail / best.score)));
+    return { lines: [best.l1, best.l2], font };
+  }
+
+  return { lines: [label], font: Math.max(1.7, single) };
+}
+
+type Zone = 'L' | 'R' | 'T' | 'B';
+
+/**
+ * For a side-pointing label, find the x boundary it must not cross so it never
+ * overruns into a neighbouring box (the converter -> powered-sub gap is the
+ * tight case). Returns the viewport edge when nothing is in the way.
+ */
+function sideBound(zone: 'L' | 'R', port: PatchPort, selfBox: PatchBox, boxes: PatchBox[]): number {
+  let bound = zone === 'R' ? 100 : 0;
+  for (const b of boxes) {
+    if (b.id === selfBox.id) continue;
+    if (port.y < b.y - 1 || port.y > b.y + b.h + 1) continue;
+    if (zone === 'R') {
+      if (b.x >= port.x) bound = Math.min(bound, b.x);
+    } else if (b.x + b.w <= port.x) {
+      bound = Math.max(bound, b.x + b.w);
+    }
+  }
+  return bound;
+}
+
+/**
+ * Decide which way a port label points, from geometry alone (no per-lesson
+ * hardcoding):
+ *  - Hard against a side wall, or near a wall with open space toward it (no
+ *    close facing box), it labels outward into the gap.
+ *  - Otherwise it is a grid terminal and labels vertically. It prefers below,
+ *    but flips above when a partner sits just below it (the +/- pair / color
+ *    only receiver terminals) and there is room above the box label.
+ */
+function portZone(port: PatchPort, box: PatchBox, boxes: PatchBox[]): Zone {
+  const dL = port.x - box.x;
+  const dR = box.x + box.w - port.x;
+  const dSide = Math.min(dL, dR);
+  const side: Zone = dL <= dR ? 'L' : 'R';
+  const others = box.ports.filter((p) => p.id !== port.id);
+
+  if (dSide <= 2.6) return side;
+
+  if (dSide <= 8) {
+    const innerRowSibling = others.some(
+      (p) =>
+        Math.abs(p.y - port.y) < 3 &&
+        (side === 'L' ? p.x > port.x : p.x < port.x) &&
+        Math.abs(p.x - port.x) < 14,
+    );
+    const bound = sideBound(side, port, box, boxes);
+    const gap = side === 'R' ? bound - (box.x + box.w) : box.x - bound;
+    const facingBoxClose = (side === 'R' ? bound < 99.5 : bound > 0.5) && gap < 14;
+    if (!innerRowSibling && !facingBoxClose) return side;
+  }
+
+  const closeBelow = others.some(
+    (p) => p.y > port.y + 1 && p.y < port.y + 6.5 && Math.abs(p.x - port.x) < 6,
+  );
+  const aboveClear = port.y - box.y > 8;
+  if (closeBelow && aboveClear) return 'T';
+  return 'B';
+}
+
+function fitPortLabel(label: string, availW: number): { text: string; font: number } {
+  const base = 2.25;
+  const natural = textWidth(label, base, PORT_CHAR);
+  if (natural <= availW) return { text: label, font: base };
+
+  const scaled = base * (availW / natural);
+  const floor = 1.5;
+  if (scaled >= floor) return { text: label, font: scaled };
+
+  const maxChars = Math.max(1, Math.floor(availW / (floor * PORT_CHAR)));
+  return { text: label.slice(0, maxChars), font: floor };
 }
 
 export function PatchBay({ interaction, onChange, locked }: InteractionProps) {
@@ -138,12 +254,20 @@ export function PatchBay({ interaction, onChange, locked }: InteractionProps) {
       setSelectedPort(null);
       return;
     }
-    const nextConnection = canonical(selectedPort, portId);
+    const a = selectedPort;
+    const b = portId;
+    const nextConnection = canonical(a, b);
     setConnections((prev) => {
       if (prev.includes(nextConnection)) return prev.filter((c) => c !== nextConnection);
-      // One cable per port: remove any existing cable using either endpoint.
-      const next = prev.filter((c) => !c.includes(`${selectedPort}<->`) && !c.includes(`<->${selectedPort}`) && !c.includes(`${portId}<->`) && !c.includes(`<->${portId}`));
-      return [...next, nextConnection];
+      // One cable per port. Compare exact endpoint ids (split on the separator)
+      // instead of substring matching, so a port id that happens to be a suffix
+      // of another (e.g. "sub+" inside "amp.sub+", or "fl+" inside "avr.fl+")
+      // can never silently drop an unrelated, valid cable.
+      const usesEndpoint = (c: string) => {
+        const [x, y] = c.split('<->');
+        return x === a || y === a || x === b || y === b;
+      };
+      return [...prev.filter((c) => !usesEndpoint(c)), nextConnection];
     });
     setSelectedPort(null);
   }
@@ -167,12 +291,8 @@ export function PatchBay({ interaction, onChange, locked }: InteractionProps) {
     return `M ${a.x} ${a.y} C ${a.x + dir * bend} ${a.y}, ${b.x - dir * bend} ${b.y}, ${b.x} ${b.y}`;
   }
 
-  function renderHardware(box: PatchBox) {
+  function renderBody(box: PatchBox) {
     const kind = boxKind(box);
-    const label = shortBoxLabel(box.label);
-    const labelW = Math.min(box.w - 2, labelWidth(label, 10, 1.28));
-    const labelX = box.x + box.w / 2 - labelW / 2;
-    const labelY = box.y + 1.5;
     const driverSize = Math.max(2.4, Math.min(box.w * 0.38, box.h * 0.42));
     const driverCx = box.x + box.w / 2;
     const driverCy = box.y + box.h * 0.58;
@@ -249,47 +369,108 @@ export function PatchBay({ interaction, onChange, locked }: InteractionProps) {
             />
           </g>
         ) : null}
+      </g>
+    );
+  }
 
-        <rect x={labelX} y={labelY} width={labelW} height="4.4" className="fill-ink-950/90" />
-        <text x={box.x + box.w / 2} y={box.y + 4.8} textAnchor="middle" className="fill-slate-100 text-[2.8px] font-black tracking-wide">
-          {label}
-        </text>
+  function renderBoxLabel(box: PatchBox) {
+    const fit = fitBoxLabel(shortBoxLabel(box.label), box.w, box.h);
+    const cx = box.x + box.w / 2;
+    const lineGap = fit.font * 1.18;
+    const chipTop = box.y + 1;
+    const chipH = fit.lines.length * lineGap + 1.2;
+    const widest = Math.max(...fit.lines.map((line) => textWidth(line, fit.font, BOX_CHAR)));
+    const chipW = Math.min(box.w - 0.8, widest + 1.6);
+    const firstBaseline = chipTop + 0.8 + fit.font * 0.78;
 
+    return (
+      <g key={`${box.id}-label`} pointerEvents="none">
+        <rect x={cx - chipW / 2} y={chipTop} width={chipW} height={chipH} className="fill-ink-950/90" />
+        {fit.lines.map((line, i) => (
+          <text
+            key={line + i}
+            x={cx}
+            y={firstBaseline + i * lineGap}
+            textAnchor="middle"
+            className="fill-slate-100 font-black tracking-wide"
+            style={{ fontSize: `${fit.font}px` }}
+          >
+            {line}
+          </text>
+        ))}
+      </g>
+    );
+  }
+
+  function renderPorts(box: PatchBox) {
+    return (
+      <g key={`${box.id}-ports`}>
         {box.ports.map((port) => {
           const selected = selectedPort === port.id;
-          const portLabel = shortPortLabel(port.label);
-          const onLeft = port.x <= box.x + 2.5;
-          const onRight = port.x >= box.x + box.w - 2.5;
-          const labelAnchor = onLeft ? 'end' : onRight ? 'start' : 'middle';
-          const labelXPos = onLeft ? port.x - 3 : onRight ? port.x + 3 : port.x;
-          const labelYPos = onLeft || onRight ? port.y + 0.8 : port.y + 4.8;
-          const portLabelW = labelWidth(portLabel, 4, 1.25);
-          const bgX =
-            labelAnchor === 'middle'
-              ? labelXPos - portLabelW / 2
-              : labelAnchor === 'end'
-                ? labelXPos - portLabelW
-                : labelXPos;
+          const marker = (
+            <rect
+              x={port.x - 1.65}
+              y={port.y - 1.65}
+              width="3.3"
+              height="3.3"
+              fill={portColor(port.color)}
+              stroke={selected ? '#fbbf24' : '#64748b'}
+              strokeWidth={selected ? 0.8 : 0.35}
+            />
+          );
+
+          const label = shortPortLabel(port.label);
+          // Color-only terminals carry meaning through red/black markers alone;
+          // drawing an empty chip would leave an ugly dark patch, so skip it.
+          if (label.trim() === '') {
+            return (
+              <g key={port.id} onClick={() => connect(port.id)} style={{ cursor: locked ? 'default' : 'pointer' }}>
+                {marker}
+              </g>
+            );
+          }
+
+          const zone = portZone(port, box, displayBoxes);
+          let anchor: 'start' | 'middle' | 'end';
+          let lx: number;
+          let ly: number;
+          let availW: number;
+          if (zone === 'L') {
+            anchor = 'end';
+            lx = port.x - 2.6;
+            ly = port.y + 0.85;
+            availW = lx - sideBound('L', port, box, displayBoxes) - 0.8;
+          } else if (zone === 'R') {
+            anchor = 'start';
+            lx = port.x + 2.6;
+            ly = port.y + 0.85;
+            availW = sideBound('R', port, box, displayBoxes) - lx - 0.8;
+          } else if (zone === 'T') {
+            anchor = 'middle';
+            lx = port.x;
+            ly = port.y - 2.9;
+            availW = Math.min(2 * (port.x - 0.5), 2 * (99.5 - port.x), box.w + 8);
+          } else {
+            anchor = 'middle';
+            lx = port.x;
+            ly = port.y + 4.1;
+            availW = Math.min(2 * (port.x - 0.5), 2 * (99.5 - port.x), box.w + 8);
+          }
+
+          const { text, font } = fitPortLabel(label, Math.max(2.2, availW));
+          const tw = textWidth(text, font, PORT_CHAR);
+          const chipH = font * 1.5;
+          const chipY = ly - font * 1.05;
+          const chipX = anchor === 'middle' ? lx - tw / 2 - 0.6 : anchor === 'end' ? lx - tw - 0.6 : lx - 0.6;
+          const chipW = tw + 1.2;
+
           return (
-            <g
-              key={port.id}
-              onPointerDown={(e) => e.stopPropagation()}
-              onClick={() => connect(port.id)}
-              style={{ cursor: locked ? 'default' : 'pointer' }}
-            >
-              <rect
-                x={port.x - 1.65}
-                y={port.y - 1.65}
-                width="3.3"
-                height="3.3"
-                fill={portColor(port.color)}
-                stroke={selected ? '#fbbf24' : '#64748b'}
-                strokeWidth={selected ? 0.8 : 0.35}
-              />
-              <rect x={bgX - 0.6} y={labelYPos - 2.45} width={portLabelW + 1.2} height="3.4" className="fill-ink-950/90" />
-              <text x={labelXPos} y={labelYPos} textAnchor={labelAnchor} className="fill-slate-200 text-[2.25px] font-semibold">
-                {portLabel}
+            <g key={port.id} onClick={() => connect(port.id)} style={{ cursor: locked ? 'default' : 'pointer' }}>
+              <rect x={chipX} y={chipY} width={chipW} height={chipH} className="fill-ink-950/90" />
+              <text x={lx} y={ly} textAnchor={anchor} className="fill-slate-200 font-semibold" style={{ fontSize: `${font}px` }}>
+                {text}
               </text>
+              {marker}
             </g>
           );
         })}
@@ -338,8 +519,10 @@ export function PatchBay({ interaction, onChange, locked }: InteractionProps) {
             </g>
           ) : null}
 
-          {displayBoxes.map((box) => renderHardware(box))}
+          {/* Layer 1: hardware bodies. */}
+          {displayBoxes.map((box) => renderBody(box))}
 
+          {/* Layer 2: cables sit above the hardware (per the wiring-on-top rule). */}
           <g pointerEvents="none">
             {connections.map((connection) => {
               const [a, b] = connection.split('<->');
@@ -355,6 +538,11 @@ export function PatchBay({ interaction, onChange, locked }: InteractionProps) {
               );
             })}
           </g>
+
+          {/* Layer 3: labels and jacks sit above the cables on solid chips, so
+              text stays readable even where a cable crosses it. */}
+          {displayBoxes.map((box) => renderBoxLabel(box))}
+          {displayBoxes.map((box) => renderPorts(box))}
         </svg>
       </div>
 

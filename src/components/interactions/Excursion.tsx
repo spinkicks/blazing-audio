@@ -51,10 +51,20 @@ export function Excursion({ interaction, onChange, locked }: InteractionProps) {
       ratio: number;
       color: string;
     }) => {
-      const maxTravel = width * 0.055;
+      // Excursion geometry. The cone is a rigid body that translates by `offset`.
+      // `maxTravel` is the peak displacement at 100% Xmax, so the front face moves
+      // exactly to a dashed limit line when ratio === 1. The dashed lines are
+      // centered on the front-face rest position (not on cx) so that low ratios
+      // sit well inside the window and over-excursion clearly crosses it.
+      const maxTravel = 44; // peak cone travel at 100% Xmax (px)
+      const coneLen = 30; // mouth -> apex horizontal length (px); narrower than the window
+      const mouthRest = cx - 12; // rest position of the cone front face (window center)
+      const apexRest = mouthRest + coneLen; // rest position of the apex / voice coil
+      const leftLine = mouthRest - maxTravel; // forward Xmax limit
+      const rightLine = mouthRest + maxTravel; // backward Xmax limit
+
       const travel = Math.min(1.55, ratio) * maxTravel;
       const offset = Math.sin(phase) * travel;
-      const xmax = maxTravel;
       const past = ratio > 1;
 
       if (box) {
@@ -69,34 +79,34 @@ export function Excursion({ interaction, onChange, locked }: InteractionProps) {
         ctx.fillText('sealed air spring', cx, cy + 101);
       }
 
-      // Xmax lines.
+      // Xmax limit lines (forward + backward peak excursion of the front face).
       ctx.strokeStyle = 'rgba(245,158,11,0.75)';
       ctx.setLineDash([5, 5]);
-      for (const x of [cx - xmax, cx + xmax]) {
+      for (const x of [leftLine, rightLine]) {
         ctx.beginPath();
-        ctx.moveTo(x, cy - 62);
-        ctx.lineTo(x, cy + 62);
+        ctx.moveTo(x, cy - 58);
+        ctx.lineTo(x, cy + 58);
         ctx.stroke();
       }
       ctx.setLineDash([]);
 
-      // Motor.
+      // Motor (fixed in place; the cone and voice coil move through it).
       ctx.fillStyle = '#1f2f4d';
-      ctx.fillRect(cx + 54, cy - 44, 54, 88);
+      ctx.fillRect(cx + 34, cy - 44, 52, 88);
       ctx.fillStyle = '#16223a';
-      ctx.fillRect(cx + 73, cy - 18, 24, 36);
+      ctx.fillRect(cx + 53, cy - 18, 24, 36);
 
-      // Cone.
-      const mouth = cx - 40 + offset;
-      const apex = cx + 55;
+      // Cone (rigid: front face and apex translate together by `offset`).
+      const mouth = mouthRest + offset;
+      const apex = apexRest + offset;
       ctx.fillStyle = past ? 'rgba(248,113,113,0.18)' : 'rgba(56,189,248,0.15)';
       ctx.strokeStyle = past ? '#f87171' : color;
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.moveTo(mouth, cy - 54);
-      ctx.lineTo(apex, cy - 15);
-      ctx.lineTo(apex, cy + 15);
-      ctx.lineTo(mouth, cy + 54);
+      ctx.moveTo(mouth, cy - 50);
+      ctx.lineTo(apex, cy - 14);
+      ctx.lineTo(apex, cy + 14);
+      ctx.lineTo(mouth, cy + 50);
       ctx.closePath();
       ctx.stroke();
       ctx.fill();

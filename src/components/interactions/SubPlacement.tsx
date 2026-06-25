@@ -3,23 +3,52 @@ import type { SubPlacementInteraction } from '@/content/types';
 import { cn } from '@/lib/cn';
 import type { InteractionProps } from './types';
 
+// Keep-out radius (normalized) around an occupied corner: the draggable sub can
+// never enter it, and the wall-near-corner score peaks just outside it. Must
+// stay in sync with the subPlacement grader in src/content/grading.ts.
+const SUB_EXCLUSION_RADIUS = 0.18;
+
+// Draggable bounds inside the room (the sub center cannot leave this box).
+const MIN_X = 0.05;
+const MAX_X = 0.95;
+const MIN_Y = 0.08;
+const MAX_Y = 0.92;
+
+function clamp(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
+}
+
+function clamp01(value: number): number {
+  return Math.max(0, Math.min(1, value));
+}
+
 function cornerScore(x: number, y: number, interaction: SubPlacementInteraction): number {
   const nearest = Math.min(...interaction.corners.map((corner) => Math.hypot(x - corner.x, y - corner.y)));
   return Math.max(0, Math.round((1 - nearest / interaction.maxDistance) * 100));
 }
 
 function wallNearCornerScore(x: number, y: number, interaction: SubPlacementInteraction): number {
-  const nearestCorner = Math.min(...interaction.corners.map((corner) => Math.hypot(x - corner.x, y - corner.y)));
+  const nearestCorner = Math.min(
+    ...interaction.corners.map((corner) => Math.hypot(x - corner.x, y - corner.y)),
+  );
   const nearestWall = Math.min(x, y, 1 - x, 1 - y);
   const nearestOccupied = Math.min(
     ...(interaction.occupiedCorners ?? []).map((corner) => Math.hypot(x - corner.x, y - corner.y)),
     1,
   );
 
-  const wallScore = Math.max(0, 1 - nearestWall / 0.16);
-  const cornerProximity = Math.max(0, 1 - nearestCorner / 0.42);
-  const avoidOccupied = Math.min(1, nearestOccupied / 0.18);
-  return Math.round(Math.min(wallScore, cornerProximity, avoidOccupied) * 100);
+  // Sitting inside an object's keep-out radius is never valid.
+  if (nearestOccupied < SUB_EXCLUSION_RADIUS - 0.001) return 0;
+
+  // Full credit for hugging any wall (within the draggable clamp), then decay.
+  const wallScore = clamp01(1 - Math.max(0, nearestWall - 0.09) / 0.22);
+  // Full credit for getting as close to a corner as the keep-out allows, then
+  // decay toward mid-wall and open room.
+  const cornerProximity = clamp01(
+    1 - Math.max(0, nearestCorner - (SUB_EXCLUSION_RADIUS + 0.04)) / 0.5,
+  );
+
+  return Math.round(Math.min(wallScore, cornerProximity) * 100);
 }
 
 function scoreFor(x: number, y: number, interaction: SubPlacementInteraction): number {
@@ -28,10 +57,70 @@ function scoreFor(x: number, y: number, interaction: SubPlacementInteraction): n
     : cornerScore(x, y, interaction);
 }
 
+// Pick center +/- offset on one axis: the in-room candidate nearest `toward`.
+function nearestOnAxis(center: number, offset: number, toward: number, min: number, max: number): number {
+  const lo = center - offset;
+  const hi = center + offset;
+  const loOk = lo >= min && lo <= max;
+  const hiOk = hi >= min && hi <= max;
+  if (loOk && hiOk) return Math.abs(lo - toward) <= Math.abs(hi - toward) ? lo : hi;
+  if (loOk) return lo;
+  if (hiOk) return hi;
+  return Math.abs(lo - toward) <= Math.abs(hi - toward) ? clamp(lo, min, max) : clamp(hi, min, max);
+}
+
+// Push a point out of every occupied corner's keep-out radius while keeping it
+// inside the room. When a radial push would leave the room, slide along the
+// blocking wall to the circle/wall intersection so the sub stops on the wall.
+function resolveCollision(
+  x: number,
+  y: number,
+  interaction: SubPlacementInteraction,
+): { x: number; y: number } {
+  let px = clamp(x, MIN_X, MAX_X);
+  let py = clamp(y, MIN_Y, MAX_Y);
+
+  for (const corner of interaction.occupiedCorners ?? []) {
+    const dx = px - corner.x;
+    const dy = py - corner.y;
+    const dist = Math.hypot(dx, dy);
+    if (dist >= SUB_EXCLUSION_RADIUS) continue;
+
+    // Project the point radially out to the keep-out boundary.
+    let rx: number;
+    let ry: number;
+    if (dist > 1e-6) {
+      rx = corner.x + (dx / dist) * SUB_EXCLUSION_RADIUS;
+      ry = corner.y + (dy / dist) * SUB_EXCLUSION_RADIUS;
+    } else {
+      rx = corner.x + SUB_EXCLUSION_RADIUS;
+      ry = corner.y;
+    }
+
+    let cx = clamp(rx, MIN_X, MAX_X);
+    let cy = clamp(ry, MIN_Y, MAX_Y);
+
+    // A clamped axis means a wall blocked the radial push; slide along that wall
+    // to the keep-out boundary, landing on the in-room point nearest the drag.
+    if (cx !== rx) {
+      const rem = SUB_EXCLUSION_RADIUS * SUB_EXCLUSION_RADIUS - (cx - corner.x) ** 2;
+      if (rem > 0) cy = nearestOnAxis(corner.y, Math.sqrt(rem), py, MIN_Y, MAX_Y);
+    } else if (cy !== ry) {
+      const rem = SUB_EXCLUSION_RADIUS * SUB_EXCLUSION_RADIUS - (cy - corner.y) ** 2;
+      if (rem > 0) cx = nearestOnAxis(corner.x, Math.sqrt(rem), px, MIN_X, MAX_X);
+    }
+
+    px = cx;
+    py = cy;
+  }
+
+  return { x: px, y: py };
+}
+
 export function SubPlacement({ interaction, onChange, locked }: InteractionProps) {
   const sp = interaction as SubPlacementInteraction;
   const roomRef = useRef<HTMLDivElement | null>(null);
-  const [point, setPoint] = useState({ x: sp.initialX, y: sp.initialY });
+  const [point, setPoint] = useState(() => resolveCollision(sp.initialX, sp.initialY, sp));
 
   useEffect(() => {
     onChange(point);
@@ -50,9 +139,9 @@ export function SubPlacement({ interaction, onChange, locked }: InteractionProps
     const el = roomRef.current;
     if (!el || locked) return;
     const rect = el.getBoundingClientRect();
-    const x = Math.max(0.05, Math.min(0.95, (clientX - rect.left) / rect.width));
-    const y = Math.max(0.08, Math.min(0.92, (clientY - rect.top) / rect.height));
-    setPoint({ x, y });
+    const x = (clientX - rect.left) / rect.width;
+    const y = (clientY - rect.top) / rect.height;
+    setPoint(resolveCollision(x, y, sp));
   }
 
   return (
@@ -72,14 +161,16 @@ export function SubPlacement({ interaction, onChange, locked }: InteractionProps
       >
         {/* Empty room: walls only. No corner hints or target guides. */}
         <div className="absolute inset-0 border-[18px] border-ink-800" />
-        <div className="absolute bottom-[18px] right-[18px] h-28 w-32 border-l border-t border-dashed border-white/20 bg-ink-950/40 text-center text-[11px] uppercase tracking-wide text-slate-500">
-          open space
-        </div>
+        {(sp.occupiedCorners ?? []).length === 0 && (
+          <div className="absolute bottom-[18px] right-[18px] h-28 w-32 border-l border-t border-dashed border-white/20 bg-ink-950/40 text-center text-[11px] uppercase tracking-wide text-slate-500">
+            open space
+          </div>
+        )}
 
         {(sp.occupiedCorners ?? []).map((item) => (
           <div
             key={`${item.x}-${item.y}-${item.label}`}
-            className="absolute flex h-14 w-14 items-center justify-center border border-emerald-400/40 bg-emerald-500/10 text-[10px] font-bold uppercase text-emerald-300"
+            className="absolute flex h-14 w-14 items-center justify-center border border-clip-500 bg-ink-900 text-[10px] font-bold uppercase text-clip-400"
             style={{
               left: `${item.x * 100}%`,
               top: `${item.y * 100}%`,

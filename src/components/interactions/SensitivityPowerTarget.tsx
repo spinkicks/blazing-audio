@@ -34,6 +34,7 @@ export function SensitivityPowerTarget({ interaction, onChange, locked }: Intera
               key={speaker.id}
               speaker={speaker}
               targetDb={spt.targetDb}
+              tolerance={spt.toleranceDb}
               watts={watts}
               db={db}
               offset={offset}
@@ -50,6 +51,7 @@ export function SensitivityPowerTarget({ interaction, onChange, locked }: Intera
 function SpeakerPanel({
   speaker,
   targetDb,
+  tolerance,
   watts,
   db,
   offset,
@@ -58,6 +60,7 @@ function SpeakerPanel({
 }: {
   speaker: SensitivityPowerTargetSpeaker;
   targetDb: number;
+  tolerance: number;
   watts: number;
   db: number;
   offset: number;
@@ -65,11 +68,19 @@ function SpeakerPanel({
   onChange: (watts: number) => void;
 }) {
   const status =
-    Math.abs(offset) <= 0.4
+    Math.abs(offset) <= tolerance
       ? { text: 'On target', tone: 'text-emerald-300' }
       : offset < 0
         ? { text: 'Too quiet', tone: 'text-amp-400' }
         : { text: 'Too loud', tone: 'text-clip-300' };
+
+  // Drive the slider in log space so each pixel is an equal dB change (watts to SPL is
+  // logarithmic). ~0.2 dB per step keeps the pass band several steps wide for both drivers.
+  const decades = Math.max(Math.log10(speaker.maxW / speaker.minW), 1e-6);
+  const sliderSteps = Math.max(20, Math.round((10 * decades) / 0.2));
+  const indexToWatts = (index: number) => speaker.minW * (speaker.maxW / speaker.minW) ** (index / sliderSteps);
+  const wattsToIndex = (w: number) =>
+    Math.round((Math.log10(Math.max(w, speaker.minW) / speaker.minW) / decades) * sliderSteps);
 
   return (
     <div className="border border-white/10 bg-ink-950 p-4">
@@ -95,13 +106,14 @@ function SpeakerPanel({
         </div>
         <input
           type="range"
-          min={speaker.minW}
-          max={speaker.maxW}
-          step={speaker.stepW}
-          value={watts}
+          min={0}
+          max={sliderSteps}
+          step={1}
+          value={wattsToIndex(watts)}
           disabled={locked}
-          onChange={(e) => onChange(Number(e.target.value))}
+          onChange={(e) => onChange(indexToWatts(Number(e.target.value)))}
           aria-label={`${speaker.label} amplifier power`}
+          className="w-full"
         />
       </div>
     </div>
