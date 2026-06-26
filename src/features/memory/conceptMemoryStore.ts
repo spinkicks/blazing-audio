@@ -47,11 +47,21 @@ export const useConceptMemoryStore = create<ConceptMemoryState>()((set) => ({
   load: async (uid) => {
     set({ uid, loaded: false });
     try {
-      const memory = await fetchAllConceptMemory(uid);
-      set({ memory, loaded: true });
+      const fetched = await fetchAllConceptMemory(uid);
+      // Preserve any review recorded locally while the fetch was in flight: a
+      // dirty (not-yet-synced) entry wins over the fetched copy, so answering a
+      // problem during loading is never clobbered by the resolving load.
+      set((state) => {
+        const merged: Record<string, ConceptMemory> = { ...fetched };
+        for (const id of dirty) {
+          const local = state.memory[id];
+          if (local) merged[id] = local;
+        }
+        return { memory: merged, loaded: true };
+      });
     } catch (e) {
       console.error('conceptMemory load failed', e);
-      set({ memory: {}, loaded: true });
+      set({ loaded: true });
     }
   },
 
