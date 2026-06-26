@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { anthropicApiKey, askClaude, parseJson, CLAUDE_MODEL } from './anthropic';
+import { openAiApiKey, askModel, parseJson, OPENAI_MODEL } from './openai';
 import { SYSTEM_VOICE, JSON_ONLY } from './prompts';
 import { requireAuth, enforceDailyQuota } from './guardrails';
 
@@ -118,7 +118,7 @@ function buildGeneratePrompt(input: z.infer<typeof generateInput>): string {
 /* -------------------------------- callables -------------------------------- */
 
 export const generateReviewQuestions = onCall(
-  { secrets: [anthropicApiKey], maxInstances: 10 },
+  { secrets: [openAiApiKey], maxInstances: 10 },
   async (request) => {
     const uid = requireAuth(request.auth?.uid);
     const input = generateInput.parse(request.data);
@@ -140,11 +140,12 @@ export const generateReviewQuestions = onCall(
 
     await enforceDailyQuota(uid, DAILY_LIMIT);
 
-    const raw = await askClaude({
+    const raw = await askModel({
       system: SYSTEM_VOICE,
       user: buildGeneratePrompt(input),
       maxTokens: 1800,
       temperature: 0.7,
+      json: true,
     });
 
     const parsed = modelOutput.safeParse(parseJson(raw));
@@ -184,7 +185,7 @@ export const generateReviewQuestions = onCall(
         stepId: input.stepId,
         sourcePrompt: input.missedPrompt,
         questions: clientQuestions,
-        model: CLAUDE_MODEL,
+        model: OPENAI_MODEL,
         generatedAt,
       },
       { merge: false },
@@ -201,7 +202,7 @@ export const generateReviewQuestions = onCall(
 );
 
 export const verifyFillBlankAnswer = onCall(
-  { secrets: [anthropicApiKey], maxInstances: 10 },
+  { secrets: [openAiApiKey], maxInstances: 10 },
   async (request) => {
     const uid = requireAuth(request.auth?.uid);
     const input = verifyInput.parse(request.data);
@@ -235,11 +236,12 @@ export const verifyFillBlankAnswer = onCall(
       JSON_ONLY,
     ].join('\n');
 
-    const raw = await askClaude({
+    const raw = await askModel({
       system: SYSTEM_VOICE,
       user: prompt,
       maxTokens: 400,
       temperature: 0.2,
+      json: true,
     });
 
     const parsed = verdictOutput.safeParse(parseJson(raw));

@@ -1,61 +1,62 @@
-import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
 import { HttpsError } from 'firebase-functions/v2/https';
 import { defineSecret } from 'firebase-functions/params';
 
 /**
- * The Claude API key. It is stored as a Firebase secret (never in the client
- * bundle and never in source). Set it later with:
- *   firebase functions:secrets:set ANTHROPIC_API_KEY
+ * The OpenAI API key. It is stored as a Firebase secret (never in the client
+ * bundle and never in source). Set it with:
+ *   firebase functions:secrets:set OPENAI_API_KEY
  * Until it is set, every AI callable fails closed with a clear message.
  */
-export const anthropicApiKey = defineSecret('ANTHROPIC_API_KEY');
+export const openAiApiKey = defineSecret('OPENAI_API_KEY');
 
 /**
- * Pinned model id. The exact production model is chosen when the key is
- * provisioned; override without a code change via the CLAUDE_MODEL env var.
+ * Pinned model id. Override without a code change via the OPENAI_MODEL env var.
+ * Defaults to a cost-effective model that supports JSON response format.
  */
-export const CLAUDE_MODEL = process.env.CLAUDE_MODEL ?? 'claude-3-5-sonnet-latest';
+export const OPENAI_MODEL = process.env.OPENAI_MODEL ?? 'gpt-4o-mini';
 
-function getClient(): Anthropic {
-  const apiKey = anthropicApiKey.value();
+function getClient(): OpenAI {
+  const apiKey = openAiApiKey.value();
   if (!apiKey) {
     throw new HttpsError(
       'failed-precondition',
-      'The AI assistant is not configured yet. An administrator needs to set the ANTHROPIC_API_KEY secret.',
+      'The AI assistant is not configured yet. An administrator needs to set the OPENAI_API_KEY secret.',
     );
   }
-  return new Anthropic({ apiKey });
+  return new OpenAI({ apiKey });
 }
 
-export interface AskClaudeOptions {
+export interface AskModelOptions {
   system: string;
   user: string;
   maxTokens?: number;
   temperature?: number;
+  /** Ask the model for a strict JSON object (uses OpenAI's JSON response mode). */
+  json?: boolean;
 }
 
-/** Sends one user message and returns the concatenated text of the reply. */
-export async function askClaude(opts: AskClaudeOptions): Promise<string> {
+/** Sends a system + user message and returns the assistant's reply text. */
+export async function askModel(opts: AskModelOptions): Promise<string> {
   const client = getClient();
-  let message;
+  let completion;
   try {
-    message = await client.messages.create({
-      model: CLAUDE_MODEL,
+    completion = await client.chat.completions.create({
+      model: OPENAI_MODEL,
       max_tokens: opts.maxTokens ?? 1024,
       temperature: opts.temperature ?? 0.5,
-      system: opts.system,
-      messages: [{ role: 'user', content: opts.user }],
+      messages: [
+        { role: 'system', content: opts.system },
+        { role: 'user', content: opts.user },
+      ],
+      ...(opts.json ? { response_format: { type: 'json_object' as const } } : {}),
     });
   } catch (err) {
-    console.error('Claude request failed', err);
+    console.error('OpenAI request failed', err);
     throw new HttpsError('internal', 'The AI assistant could not be reached. Please try again.');
   }
 
-  const text = message.content
-    .map((block) => (block.type === 'text' ? block.text : ''))
-    .join('\n')
-    .trim();
-
+  const text = completion.choices[0]?.message?.content?.trim() ?? '';
   if (!text) {
     throw new HttpsError('internal', 'The AI assistant returned an empty response.');
   }

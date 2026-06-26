@@ -14,7 +14,7 @@ function today(): string {
 }
 
 /**
- * Per-user daily cap on Claude calls to bound cost. Counts live in a private
+ * Per-user daily cap on model calls to bound cost. Counts live in a private
  * doc written only by the Admin SDK (clients never see or edit it). Throws once
  * the limit is hit for the current day.
  */

@@ -9,7 +9,7 @@ interface FillBlankProps {
 
 /**
  * Free-text answer box for AI-generated fill-in-the-blank questions. There is no
- * single correct string; the server (Claude) judges the meaning of the answer.
+ * single correct string; the server (OpenAI) judges the meaning of the answer.
  */
 export function FillBlank({ value, onChange, disabled, placeholder }: FillBlankProps) {
   return (

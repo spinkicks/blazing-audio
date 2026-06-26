@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { z } from 'zod';
-import { anthropicApiKey, askClaude, parseJson } from './anthropic';
+import { openAiApiKey, askModel, parseJson } from './openai';
 import { SYSTEM_VOICE, JSON_ONLY } from './prompts';
 import { requireAuth, enforceDailyQuota } from './guardrails';
 
@@ -26,7 +26,7 @@ const safetyOutput = z.object({
  * (amp power vs a speaker's RMS rating, clipping, voice-coil heating). Ephemeral.
  */
 export const checkSetupSafety = onCall(
-  { secrets: [anthropicApiKey], maxInstances: 10 },
+  { secrets: [openAiApiKey], maxInstances: 10 },
   async (request) => {
     const uid = requireAuth(request.auth?.uid);
     const input = safetyInput.parse(request.data);
@@ -61,11 +61,12 @@ export const checkSetupSafety = onCall(
       JSON_ONLY,
     ].join('\n');
 
-    const raw = await askClaude({
+    const raw = await askModel({
       system: SYSTEM_VOICE,
       user: prompt,
       maxTokens: 700,
       temperature: 0.3,
+      json: true,
     });
 
     const parsed = safetyOutput.safeParse(parseJson(raw));

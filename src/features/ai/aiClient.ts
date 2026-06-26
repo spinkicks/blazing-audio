@@ -5,7 +5,7 @@ import type { GeneratedQuestion } from '@/features/review/generatedQuestions';
 
 /**
  * Typed wrappers around the callable Cloud Functions. Screens import these and
- * never touch the Functions SDK or the Claude API directly.
+ * never touch the Functions SDK or the OpenAI API directly.
  */
 
 /* ----------------------------- request/response ---------------------------- */
@@ -74,7 +74,7 @@ function unwrap<T>(promise: Promise<HttpsCallableResult<T>>): Promise<T> {
 /**
  * Normalizes a callable failure into a user-facing message. Cloud Functions
  * surface our `HttpsError` messages here (e.g. the "not configured yet" case
- * when the Claude key is unset, or the daily-limit case).
+ * when the OpenAI key is unset, or the daily-limit case).
  */
 export function aiErrorMessage(error: unknown): string {
   if (error instanceof FirebaseError) {

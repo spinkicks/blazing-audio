@@ -20,7 +20,7 @@ const firebaseConfig = {
 export const app: FirebaseApp = initializeApp(firebaseConfig);
 export const auth: Auth = getAuth(app);
 export const db: Firestore = getFirestore(app);
-// Callable Cloud Functions are the server-side proxy for all Claude/AI calls,
+// Callable Cloud Functions are the server-side proxy for all AI (OpenAI) calls,
 // so the API key stays off the client.
 export const functions: Functions = getFunctions(app);
 

@@ -15,7 +15,7 @@ export function topicDocId(lessonId: string, stepId: string): string {
 
 /**
  * Reads a previously generated set straight from Firestore (rules allow the
- * owner to read), so prior practice reappears instantly with no Claude call.
+ * owner to read), so prior practice reappears instantly with no model call.
  */
 export async function fetchCachedQuestions(
   uid: string,

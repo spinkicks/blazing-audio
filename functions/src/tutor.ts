@@ -1,6 +1,6 @@
 import { onCall } from 'firebase-functions/v2/https';
 import { z } from 'zod';
-import { anthropicApiKey, askClaude } from './anthropic';
+import { openAiApiKey, askModel } from './openai';
 import { SYSTEM_VOICE } from './prompts';
 import { requireAuth, enforceDailyQuota } from './guardrails';
 
@@ -18,7 +18,7 @@ const explainInput = z.object({
  * follow-up question about it. Ephemeral - nothing is persisted.
  */
 export const explainConcept = onCall(
-  { secrets: [anthropicApiKey], maxInstances: 10 },
+  { secrets: [openAiApiKey], maxInstances: 10 },
   async (request) => {
     const uid = requireAuth(request.auth?.uid);
     const input = explainInput.parse(request.data);
@@ -45,7 +45,7 @@ export const explainConcept = onCall(
       'they can find it themselves.',
     );
 
-    const explanation = await askClaude({
+    const explanation = await askModel({
       system: SYSTEM_VOICE,
       user: lines.join('\n'),
       maxTokens: 400,

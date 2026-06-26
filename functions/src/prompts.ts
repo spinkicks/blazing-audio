@@ -1,5 +1,5 @@
 /**
- * Shared persona + domain framing reused by every Claude call so all three
+ * Shared persona + domain framing reused by every model call so all three
  * integrations speak in the app's voice.
  */
 export const SYSTEM_VOICE = [
