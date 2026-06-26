@@ -23,6 +23,9 @@ const CapstoneScreen = lazy(() =>
 const LessonScreen = lazy(() =>
   import('@/screens/LessonScreen').then((m) => ({ default: m.LessonScreen })),
 );
+const LeaderboardScreen = lazy(() =>
+  import('@/screens/LeaderboardScreen').then((m) => ({ default: m.LeaderboardScreen })),
+);
 
 export default function App() {
   const user = useAuthStore((s) => s.user);
@@ -74,6 +77,7 @@ export default function App() {
           <Route path="/learn" element={<HomeScreen />} />
           <Route path="/profile" element={<ProfileScreen />} />
           <Route path="/review" element={<ReviewScreen />} />
+          <Route path="/leaderboard" element={<LeaderboardScreen />} />
           <Route path="/capstone" element={<CapstoneScreen />} />
         </Route>
         <Route path="/lesson/:lessonId" element={<LessonScreen />} />
