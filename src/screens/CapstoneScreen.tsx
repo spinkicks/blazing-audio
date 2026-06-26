@@ -9,6 +9,7 @@ import {
   type EvaluateCapstoneResponse,
   type SurroundFormat,
   type CompatStatus,
+  type CapstoneVerdict,
 } from '@/features/ai/aiClient';
 import { fetchCapstone, saveCapstone } from '@/features/capstone/capstoneService';
 import { Button } from '@/components/ui/Button';
@@ -22,6 +23,12 @@ const STATUS_STYLES: Record<CompatStatus, { label: string; box: string }> = {
   ok: { label: 'OK', box: 'border-emerald-400/40 bg-emerald-500/10' },
   caution: { label: 'Caution', box: 'border-amp-400/40 bg-amp-500/10' },
   mismatch: { label: 'Mismatch', box: 'border-clip-400/40 bg-clip-500/10' },
+};
+
+const VERDICT_STYLES: Record<CapstoneVerdict, { label: string; badge: string }> = {
+  compatible: { label: 'Compatible', badge: 'bg-emerald-400 text-ink-950' },
+  caution: { label: 'Use caution', badge: 'bg-amp-400 text-ink-950' },
+  mismatch: { label: 'Mismatch', badge: 'bg-clip-500 text-white' },
 };
 
 const inputClass = cn(
@@ -123,6 +130,7 @@ export function CapstoneScreen() {
               value={components}
               onChange={(e) => setComponents(e.target.value)}
               rows={6}
+              maxLength={3000}
               placeholder="e.g. Denon AVR-X1700H (80W/ch, 7.2), 2x Polk R200 (100W RMS, 8 ohm) fronts, Polk center, 2x surrounds, 2x Atmos up-firing modules, SVS SB-1000 sub"
               className={cn(inputClass, 'resize-none')}
             />
@@ -151,10 +159,20 @@ function CapstoneReport({ result }: { result: EvaluateCapstoneResponse }) {
   return (
     <div className="flex flex-col gap-3 animate-fade-in">
       <Card>
-        <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
-          {result.suggestedFormat ? `Suggested format: ${result.resolvedFormat}` : `Format: ${result.resolvedFormat}`}
-        </p>
-        <h2 className="mt-1 text-xl font-bold text-white">{result.headline}</h2>
+        <div className="flex items-center gap-3">
+          <span
+            className={cn(
+              'px-2.5 py-1 text-xs font-bold uppercase tracking-wide',
+              VERDICT_STYLES[result.overall].badge,
+            )}
+          >
+            {VERDICT_STYLES[result.overall].label}
+          </span>
+          <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
+            {result.suggestedFormat ? `Suggested format: ${result.resolvedFormat}` : `Format: ${result.resolvedFormat}`}
+          </p>
+        </div>
+        <h2 className="mt-2 text-xl font-bold text-white">{result.headline}</h2>
       </Card>
 
       {result.aspects.map((aspect, i) => {
