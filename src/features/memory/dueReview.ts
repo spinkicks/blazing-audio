@@ -9,7 +9,7 @@ export interface ProblemRef {
 }
 
 /** Inverts CONCEPT_TAGS ("lessonId:stepId" -> conceptIds) into conceptId -> refs. */
-export function problemsByConcept(): Record<string, ProblemRef[]> {
+function buildProblemsByConcept(): Record<string, ProblemRef[]> {
   const out: Record<string, ProblemRef[]> = {};
   for (const [key, conceptIds] of Object.entries(CONCEPT_TAGS)) {
     const sep = key.indexOf(':');
@@ -20,6 +20,13 @@ export function problemsByConcept(): Record<string, ProblemRef[]> {
     }
   }
   return out;
+}
+
+let cache: Record<string, ProblemRef[]> | null = null;
+
+/** conceptId -> authored problem refs (computed once; CONCEPT_TAGS is immutable). */
+export function problemsByConcept(): Record<string, ProblemRef[]> {
+  return (cache ??= buildProblemsByConcept());
 }
 
 /** Encountered concepts (present in memory) whose dueAt has passed, soonest first. */

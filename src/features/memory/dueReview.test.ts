@@ -14,11 +14,21 @@ describe('dueReview selectors', () => {
   });
 
   it('lists only encountered concepts whose dueAt has passed, soonest first', () => {
-    const a = review(newConceptMemory('sine-wave', NOW), 'pass', NOW); // due NOW+1d
-    const b = review(newConceptMemory('voice-coil', NOW), 'pass', NOW);
-    const memory = { 'sine-wave': a, 'voice-coil': b };
-    expect(dueConceptIds(memory, NOW)).toEqual([]); // not due yet
-    expect(dueConceptIds(memory, LATER)).toEqual(['sine-wave', 'voice-coil']);
+    // voice-coil reviewed later (due later); sine-wave reviewed earlier (due sooner).
+    const later = review(newConceptMemory('voice-coil', NOW + 5 * 86_400_000), 'pass', NOW + 5 * 86_400_000);
+    const sooner = review(newConceptMemory('sine-wave', NOW), 'pass', NOW);
+    // Insertion order is [voice-coil, sine-wave] but due order is [sine-wave, voice-coil].
+    const memory = { 'voice-coil': later, 'sine-wave': sooner };
+    expect(dueConceptIds(memory, NOW)).toEqual([]); // neither due yet
+    expect(dueConceptIds(memory, LATER)).toEqual(['sine-wave', 'voice-coil']); // sorted by dueAt
+  });
+
+  it('includes only due concepts in a mixed set', () => {
+    const due = review(newConceptMemory('sine-wave', NOW), 'pass', NOW); // due NOW+1d
+    const notDue = review(newConceptMemory('voice-coil', LATER), 'pass', LATER); // due LATER+1d
+    const memory = { 'sine-wave': due, 'voice-coil': notDue };
+    const at = NOW + 2 * 86_400_000; // after sine-wave's dueAt, before voice-coil's
+    expect(dueConceptIds(memory, at)).toEqual(['sine-wave']);
   });
 
   it('finds a concrete authored problem for a concept', () => {
