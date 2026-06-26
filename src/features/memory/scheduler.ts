@@ -47,3 +47,15 @@ export function review(state: ConceptMemory, grade: 'pass' | 'fail', now: number
 export function isDue(state: ConceptMemory, now: number): boolean {
   return state.dueAt === null || state.dueAt <= now;
 }
+
+/** Box at/above which a concept counts as "mastered" for dashboards. */
+export const MASTERY_BOX = 3;
+
+/** Derived 0..1 strength from the Leitner box (no stored field needed). */
+export function strength(state: ConceptMemory): number {
+  return Math.min(1, state.box / MAX_BOX);
+}
+
+export function isMastered(state: ConceptMemory): boolean {
+  return state.box >= MASTERY_BOX;
+}

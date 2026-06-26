@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   BOX_INTERVALS_MS,
   MAX_BOX,
+  MASTERY_BOX,
   isDue,
+  isMastered,
   newConceptMemory,
   review,
+  strength,
 } from './scheduler';
 
 const DAY = 86_400_000;
@@ -44,5 +47,20 @@ describe('scheduler', () => {
     for (let i = 0; i < 20; i += 1) m = review(m, 'pass', NOW);
     expect(m.box).toBe(MAX_BOX);
     expect(m.dueAt).toBe(NOW + BOX_INTERVALS_MS[MAX_BOX]);
+  });
+
+  it('reports strength as box / MAX_BOX, clamped to 1', () => {
+    const m = newConceptMemory('sine-wave', NOW);
+    expect(strength(m)).toBe(0);
+    let s = m;
+    for (let i = 0; i < MAX_BOX; i += 1) s = review(s, 'pass', NOW);
+    expect(strength(s)).toBe(1);
+  });
+
+  it('marks a concept mastered at or above MASTERY_BOX', () => {
+    let m = newConceptMemory('sine-wave', NOW);
+    for (let i = 0; i < MASTERY_BOX; i += 1) m = review(m, 'pass', NOW);
+    expect(isMastered(m)).toBe(true);
+    expect(isMastered(newConceptMemory('x', NOW))).toBe(false);
   });
 });
