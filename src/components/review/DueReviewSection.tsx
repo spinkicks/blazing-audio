@@ -1,29 +1,43 @@
-import { useMemo, useState } from 'react';
+import { useRef, useState } from 'react';
 import { useConceptMemoryStore } from '@/features/memory/conceptMemoryStore';
 import { dueConceptIds, findProblemForConcept } from '@/features/memory/dueReview';
 import { getConcept } from '@/content/concepts';
+import type { ConceptMemory } from '@/features/memory/scheduler';
 import { Card } from '@/components/ui/Card';
 import { RetrievalCard } from './RetrievalCard';
 
+interface QueueItem {
+  conceptId: string;
+  conceptName: string;
+  found: NonNullable<ReturnType<typeof findProblemForConcept>>;
+}
+
+function buildQueue(memory: Record<string, ConceptMemory>): QueueItem[] {
+  return dueConceptIds(memory, Date.now())
+    .map((conceptId) => {
+      const found = findProblemForConcept(conceptId);
+      const concept = getConcept(conceptId);
+      return found && concept ? { conceptId, conceptName: concept.name, found } : null;
+    })
+    .filter((x): x is QueueItem => x !== null);
+}
+
 export function DueReviewSection() {
   const memory = useConceptMemoryStore((s) => s.memory);
-  // Snapshot the due queue when the section mounts so answering (which pushes
-  // dueAt into the future) doesn't reshuffle the list mid-session.
-  const queue = useMemo(() => {
-    const ids = dueConceptIds(memory, Date.now());
-    return ids
-      .map((conceptId) => {
-        const found = findProblemForConcept(conceptId);
-        const concept = getConcept(conceptId);
-        return found && concept ? { conceptId, conceptName: concept.name, found } : null;
-      })
-      .filter((x): x is NonNullable<typeof x> => x !== null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const loaded = useConceptMemoryStore((s) => s.loaded);
+
+  // Snapshot once, on the first render after the store has loaded: a late
+  // Firestore resolve can't leave a permanently-empty queue, and answering
+  // (which pushes dueAt out) still can't reshuffle the list mid-session.
+  const snapshotRef = useRef<QueueItem[] | null>(null);
+  if (loaded && snapshotRef.current === null) {
+    snapshotRef.current = buildQueue(memory);
+  }
+  const queue = snapshotRef.current;
 
   const [index, setIndex] = useState(0);
 
-  if (queue.length === 0) return null;
+  if (!queue || queue.length === 0) return null;
 
   if (index >= queue.length) {
     return (
