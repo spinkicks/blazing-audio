@@ -11,12 +11,15 @@ import { isMastered, strength } from '@/features/memory/scheduler';
 export function ProfileScreen() {
   const profile = useProgressStore((s) => s.profile);
   const reset = useProgressStore((s) => s.reset);
+  const setLeaderboard = useProgressStore((s) => s.setLeaderboard);
   const conceptMemory = useConceptMemoryStore((s) => s.memory);
   const masteredCount = CONCEPTS.filter((c) => {
     const m = conceptMemory[c.id];
     return m ? isMastered(m) : false;
   }).length;
   const [busy, setBusy] = useState(false);
+  const [alias, setAlias] = useState(profile?.alias ?? '');
+  const [optIn, setOptIn] = useState(Boolean(profile?.leaderboardOptIn));
 
   async function handleSignOut() {
     setBusy(true);
@@ -86,6 +89,35 @@ export function ProfileScreen() {
             );
           })}
         </ul>
+      </Card>
+
+      <Card>
+        <h2 className="text-lg font-bold text-white">Leaderboard</h2>
+        <p className="mt-1 text-sm text-slate-400">
+          Opt in to appear on the public XP leaderboard under an alias (not your name or email).
+        </p>
+        <label className="mt-4 flex flex-col gap-1.5">
+          <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Alias</span>
+          <input
+            value={alias}
+            maxLength={24}
+            onChange={(e) => setAlias(e.target.value)}
+            placeholder="e.g. BassMonkey"
+            className="w-full border border-white/10 bg-ink-700/60 px-3 py-2 text-base text-slate-100 placeholder:text-slate-500 focus:border-wave-400 focus:outline-none"
+          />
+        </label>
+        <label className="mt-3 flex items-center gap-2">
+          <input type="checkbox" checked={optIn} onChange={(e) => setOptIn(e.target.checked)} />
+          <span className="text-sm text-slate-300">Show me on the leaderboard</span>
+        </label>
+        <Button
+          className="mt-4"
+          variant="secondary"
+          disabled={optIn && !alias.trim()}
+          onClick={() => setLeaderboard(alias, optIn)}
+        >
+          Save leaderboard settings
+        </Button>
       </Card>
 
       <Button variant="danger" fullWidth disabled={busy} onClick={handleSignOut}>
