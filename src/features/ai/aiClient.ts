@@ -70,21 +70,30 @@ export interface ExplainConceptResponse {
   explanation: string;
 }
 
-export type SafetyVerdict = 'safe' | 'caution' | 'risky';
+export type CompatStatus = 'ok' | 'caution' | 'mismatch';
+export type CapstoneVerdict = 'compatible' | 'caution' | 'mismatch';
 
-export interface CheckSetupSafetyRequest {
-  ampWatts: number;
-  speakerRmsW: number;
-  speakerPeakW?: number;
-  impedanceOhms?: number;
-  notes?: string;
+export type SurroundFormat =
+  | '2.0' | '2.1' | '5.1' | '7.1' | '5.1.2' | '5.1.4' | '7.1.4' | 'unsure';
+
+export interface EvaluateCapstoneRequest {
+  targetFormat: SurroundFormat;
+  components: string;
 }
 
-export interface CheckSetupSafetyResponse {
-  verdict: SafetyVerdict;
+export interface CapstoneAspect {
+  name: string;
+  status: CompatStatus;
+  detail: string;
+}
+
+export interface EvaluateCapstoneResponse {
+  resolvedFormat: string;
+  suggestedFormat: boolean;
+  overall: CapstoneVerdict;
   headline: string;
-  reasons: string[];
-  guidance: string;
+  aspects: CapstoneAspect[];
+  nextSteps: string;
 }
 
 /* --------------------------------- helpers --------------------------------- */
@@ -131,7 +140,7 @@ export function explainConcept(req: ExplainConceptRequest): Promise<ExplainConce
   return unwrap(call(req));
 }
 
-export function checkSetupSafety(req: CheckSetupSafetyRequest): Promise<CheckSetupSafetyResponse> {
-  const call = makeCallable<CheckSetupSafetyRequest, CheckSetupSafetyResponse>('checkSetupSafety');
+export function evaluateCapstone(req: EvaluateCapstoneRequest): Promise<EvaluateCapstoneResponse> {
+  const call = makeCallable<EvaluateCapstoneRequest, EvaluateCapstoneResponse>('evaluateCapstone');
   return unwrap(call(req));
 }
