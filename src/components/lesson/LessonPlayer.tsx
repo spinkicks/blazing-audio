@@ -51,6 +51,10 @@ export function LessonPlayer({
     })(),
   );
 
+  // Track which step ids already recorded a concept review this session, so only the
+  // first check attempt drives spaced-repetition scheduling (survives re-renders).
+  const conceptRecordedRef = useRef<Set<string>>(new Set());
+
   const [index, setIndex] = useState(initialIndex.current);
   const [answer, setAnswer] = useState<AnswerValue | null>(null);
   const [result, setResult] = useState<GradeResult | null>(null);
@@ -72,7 +76,10 @@ export function LessonPlayer({
     const graded = grade(step.interaction, step.feedback, answer);
     setResult(graded); // synchronous -> instant feedback
     recordAnswer(lesson.id, step.id, graded.correct, { reviewing: step.id === reviewStepId });
-    recordConceptReview(conceptsForStep(lesson.id, step.id), graded.correct ? 'pass' : 'fail');
+    if (!conceptRecordedRef.current.has(step.id)) {
+      conceptRecordedRef.current.add(step.id);
+      recordConceptReview(conceptsForStep(lesson.id, step.id), graded.correct ? 'pass' : 'fail');
+    }
   }
 
   function handleTryAgain() {
