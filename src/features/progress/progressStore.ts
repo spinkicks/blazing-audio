@@ -253,7 +253,8 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
     }));
     dirtyLessons.add(lessonId);
     scheduleSync();
-    syncLeaderboard();
+    // Only touch the leaderboard when an opted-in learner's XP actually changed.
+    if (firstSolve && nextProfile?.leaderboardOptIn && nextProfile.alias) syncLeaderboard();
   },
 
   completeLesson: (lessonId, totalProblems) => {
@@ -294,7 +295,8 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
     }));
     dirtyLessons.add(lessonId);
     void flushNow();
-    syncLeaderboard();
+    // Only touch the leaderboard when an opted-in learner's XP actually changed.
+    if (firstCompletion && nextProfile?.leaderboardOptIn && nextProfile.alias) syncLeaderboard();
 
     return {
       masteryScore,
