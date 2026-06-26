@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProgressStore } from '@/features/progress/progressStore';
-import { buildCoursePath, recommendNext, type CourseNode } from '@/content/course';
+import { buildCoursePath, recommendNext, isCourseComplete, type CourseNode } from '@/content/course';
 import { collectReviewTopics } from '@/content/review';
 import { useConceptMemoryStore } from '@/features/memory/conceptMemoryStore';
 import { dueConceptIds } from '@/features/memory/dueReview';
@@ -16,6 +16,8 @@ export function HomeScreen() {
   const progress = useProgressStore((s) => s.progress);
 
   const nodes = buildCoursePath(progress);
+  const courseComplete = isCourseComplete(progress);
+  const completedLessons = nodes.filter((n) => n.status === 'completed').length;
   const recommended = recommendNext(nodes);
   const reviewTopics = collectReviewTopics(progress);
   const conceptMemory = useConceptMemoryStore((s) => s.memory);
@@ -24,6 +26,32 @@ export function HomeScreen() {
 
   return (
     <div className="flex flex-col gap-6">
+      {courseComplete ? (
+        <Card className="border-amp-500/40 bg-ink-800">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amp-400">Final project</p>
+          <h2 className="mt-1 text-lg font-bold text-white">Your course is complete - build your system</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Plan a real audio system and get an objective compatibility check.
+          </p>
+          <Button className="mt-4" onClick={() => navigate('/capstone')}>
+            Start your final project
+          </Button>
+        </Card>
+      ) : (
+        <Card className="border-white/10 bg-ink-800/60">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Final project - locked
+            </p>
+            <LockIcon className="h-4 w-4 text-slate-500" />
+          </div>
+          <h2 className="mt-1 text-lg font-bold text-slate-300">Plan your real audio system</h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Unlock by completing every lesson. {completedLessons}/{nodes.length} done.
+          </p>
+        </Card>
+      )}
+
       {/* Greeting + streak */}
       <header className="flex items-center justify-between">
         <div>
