@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useProgressStore } from '@/features/progress/progressStore';
 import { buildCoursePath, recommendNext, type CourseNode } from '@/content/course';
 import { collectReviewTopics } from '@/content/review';
+import { useConceptMemoryStore } from '@/features/memory/conceptMemoryStore';
+import { dueConceptIds } from '@/features/memory/dueReview';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StreakBadge } from '@/components/ui/StreakBadge';
@@ -16,6 +18,8 @@ export function HomeScreen() {
   const nodes = buildCoursePath(progress);
   const recommended = recommendNext(nodes);
   const reviewTopics = collectReviewTopics(progress);
+  const conceptMemory = useConceptMemoryStore((s) => s.memory);
+  const dueCount = dueConceptIds(conceptMemory, Date.now()).length;
   const firstName = profile?.displayName?.split(' ')[0] ?? 'there';
 
   return (
@@ -72,6 +76,23 @@ export function HomeScreen() {
           </p>
           <Button className="mt-4" variant="secondary" onClick={() => navigate('/review')}>
             Review all difficult topics
+          </Button>
+        </Card>
+      ) : null}
+
+      {dueCount > 0 ? (
+        <Card className="border-amp-500/30 bg-ink-800">
+          <p className="text-xs font-semibold uppercase tracking-wide text-amp-400">
+            Daily goal
+          </p>
+          <h2 className="mt-1 text-lg font-bold text-white">
+            {dueCount} concept{dueCount === 1 ? '' : 's'} due for review
+          </h2>
+          <p className="mt-1 text-sm text-slate-400">
+            A quick refresh keeps what you have learned from fading.
+          </p>
+          <Button className="mt-4" onClick={() => navigate('/review')}>
+            Start today&apos;s review
           </Button>
         </Card>
       ) : null}
