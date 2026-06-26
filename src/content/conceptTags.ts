@@ -7,8 +7,11 @@
 export const CONCEPT_TAGS: Record<string, string[]> = {
   // Lesson 1: sound-wave
   'sound-wave:sw-match-amplitude': ['sine-wave'],
-  'sound-wave:sw-match-frequency': ['sine-wave'],
-  'sound-wave:sw-match-both': ['sine-wave'],
+  // wavelength/period are direct functions of frequency, so this early problem also
+  // seeds 'wavelength-period' into memory (so the room-gain & phase-alignment
+  // prerequisite warm-up chains can fire later instead of staying inert).
+  'sound-wave:sw-match-frequency': ['sine-wave', 'wavelength-period'],
+  'sound-wave:sw-match-both': ['sine-wave', 'wavelength-period'],
   'sound-wave:sw-destructive': ['wave-interference'],
   'sound-wave:sw-constructive': ['wave-interference'],
   'sound-wave:sw-recap': ['sine-wave'],
