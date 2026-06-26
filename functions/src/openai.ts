@@ -27,18 +27,49 @@ function getClient(): OpenAI {
   return new OpenAI({ apiKey });
 }
 
+/**
+ * A strict JSON Schema for OpenAI Structured Outputs. When supplied, the model
+ * is constrained to return JSON that exactly matches this schema (no missing
+ * fields, no stray prose), which removes a whole class of "the model returned
+ * something we could not parse" failures.
+ */
+export interface JsonSchemaSpec {
+  name: string;
+  schema: Record<string, unknown>;
+}
+
 export interface AskModelOptions {
   system: string;
   user: string;
   maxTokens?: number;
   temperature?: number;
-  /** Ask the model for a strict JSON object (uses OpenAI's JSON response mode). */
+  /** Ask the model for a JSON object (loose JSON mode). */
   json?: boolean;
+  /** Ask the model for JSON matching this exact schema (Structured Outputs). */
+  schema?: JsonSchemaSpec;
 }
+
+type ResponseFormat =
+  | { type: 'json_object' }
+  | {
+      type: 'json_schema';
+      json_schema: { name: string; strict: true; schema: Record<string, unknown> };
+    };
 
 /** Sends a system + user message and returns the assistant's reply text. */
 export async function askModel(opts: AskModelOptions): Promise<string> {
   const client = getClient();
+
+  let responseFormat: ResponseFormat | undefined;
+  if (opts.schema) {
+    responseFormat = {
+      type: 'json_schema',
+      json_schema: { name: opts.schema.name, strict: true, schema: opts.schema.schema },
+    };
+  } else if (opts.json) {
+    responseFormat = { type: 'json_object' };
+  }
+
   let completion;
   try {
     completion = await client.chat.completions.create({
@@ -49,14 +80,25 @@ export async function askModel(opts: AskModelOptions): Promise<string> {
         { role: 'system', content: opts.system },
         { role: 'user', content: opts.user },
       ],
-      ...(opts.json ? { response_format: { type: 'json_object' as const } } : {}),
+      ...(responseFormat ? { response_format: responseFormat } : {}),
     });
   } catch (err) {
     console.error('OpenAI request failed', err);
     throw new HttpsError('internal', 'The AI assistant could not be reached. Please try again.');
   }
 
-  const text = completion.choices[0]?.message?.content?.trim() ?? '';
+  const choice = completion.choices[0];
+  if (choice?.message?.refusal) {
+    console.error('OpenAI refused the request', choice.message.refusal);
+    throw new HttpsError('internal', 'The AI assistant could not help with that request.');
+  }
+  if (choice?.finish_reason === 'length') {
+    // The reply was cut off mid-JSON; treat as a soft failure so the caller can retry.
+    console.error('OpenAI response truncated (hit max_tokens)');
+    throw new HttpsError('internal', 'The AI assistant ran out of room. Please try again.');
+  }
+
+  const text = choice?.message?.content?.trim() ?? '';
   if (!text) {
     throw new HttpsError('internal', 'The AI assistant returned an empty response.');
   }

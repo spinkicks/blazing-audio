@@ -1,6 +1,6 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { z } from 'zod';
-import { openAiApiKey, askModel, parseJson } from './openai';
+import { openAiApiKey, askModel, parseJson, type JsonSchemaSpec } from './openai';
 import { SYSTEM_VOICE, JSON_ONLY } from './prompts';
 import { requireAuth, enforceDailyQuota } from './guardrails';
 
@@ -14,12 +14,30 @@ const safetyInput = z.object({
   notes: z.string().max(500).optional(),
 });
 
+// Lenient net: Structured Outputs already guarantees the shape, so we only check
+// the essentials here and avoid tight length caps that used to reject otherwise
+// good answers (which surfaced to the user as a generic "internal" error).
 const safetyOutput = z.object({
   verdict: z.enum(['safe', 'caution', 'risky']),
-  headline: z.string().min(1).max(200),
-  reasons: z.array(z.string().min(1).max(400)).min(1).max(6),
-  guidance: z.string().min(1).max(800),
+  headline: z.string().min(1),
+  reasons: z.array(z.string().min(1)).min(1),
+  guidance: z.string().min(1),
 });
+
+const SAFETY_SCHEMA: JsonSchemaSpec = {
+  name: 'setup_safety',
+  schema: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['verdict', 'headline', 'reasons', 'guidance'],
+    properties: {
+      verdict: { type: 'string', enum: ['safe', 'caution', 'risky'] },
+      headline: { type: 'string' },
+      reasons: { type: 'array', items: { type: 'string' } },
+      guidance: { type: 'string' },
+    },
+  },
+};
 
 /**
  * Setup safety checker: grounds its answer in the same model the course teaches
@@ -64,9 +82,9 @@ export const checkSetupSafety = onCall(
     const raw = await askModel({
       system: SYSTEM_VOICE,
       user: prompt,
-      maxTokens: 700,
+      maxTokens: 900,
       temperature: 0.3,
-      json: true,
+      schema: SAFETY_SCHEMA,
     });
 
     const parsed = safetyOutput.safeParse(parseJson(raw));

@@ -1,12 +1,34 @@
-import { httpsCallable, type HttpsCallableResult } from 'firebase/functions';
+import {
+  httpsCallable,
+  httpsCallableFromURL,
+  type HttpsCallable,
+  type HttpsCallableResult,
+} from 'firebase/functions';
 import { FirebaseError } from 'firebase/app';
-import { functions } from '@/firebase/config';
+import { functions, usingEmulators } from '@/firebase/config';
 import type { GeneratedQuestion } from '@/features/review/generatedQuestions';
 
 /**
  * Typed wrappers around the callable Cloud Functions. Screens import these and
  * never touch the Functions SDK or the OpenAI API directly.
+ *
+ * In production we do NOT call cloudfunctions.net directly: this project's org
+ * policy blocks public (allUsers) invocation of the 2nd-gen functions. Instead
+ * we call same-origin `/ai/<name>` paths that Firebase Hosting rewrites to each
+ * function (Hosting invokes them with its own service account, which the policy
+ * allows). The callable protocol - including the Firebase Auth token - is
+ * preserved, so the function's own auth checks still run.
+ *
+ * Against the local emulator suite we keep the normal httpsCallable path, which
+ * `connectFunctionsEmulator` points at the Functions emulator.
  */
+
+function makeCallable<Req, Res>(name: string): HttpsCallable<Req, Res> {
+  if (usingEmulators) {
+    return httpsCallable<Req, Res>(functions, name);
+  }
+  return httpsCallableFromURL<Req, Res>(functions, `${window.location.origin}/ai/${name}`);
+}
 
 /* ----------------------------- request/response ---------------------------- */
 
@@ -89,8 +111,7 @@ export function aiErrorMessage(error: unknown): string {
 export function generateReviewQuestions(
   req: GenerateReviewQuestionsRequest,
 ): Promise<GenerateReviewQuestionsResponse> {
-  const call = httpsCallable<GenerateReviewQuestionsRequest, GenerateReviewQuestionsResponse>(
-    functions,
+  const call = makeCallable<GenerateReviewQuestionsRequest, GenerateReviewQuestionsResponse>(
     'generateReviewQuestions',
   );
   return unwrap(call(req));
@@ -99,25 +120,18 @@ export function generateReviewQuestions(
 export function verifyFillBlankAnswer(
   req: VerifyFillBlankRequest,
 ): Promise<VerifyFillBlankResponse> {
-  const call = httpsCallable<VerifyFillBlankRequest, VerifyFillBlankResponse>(
-    functions,
+  const call = makeCallable<VerifyFillBlankRequest, VerifyFillBlankResponse>(
     'verifyFillBlankAnswer',
   );
   return unwrap(call(req));
 }
 
 export function explainConcept(req: ExplainConceptRequest): Promise<ExplainConceptResponse> {
-  const call = httpsCallable<ExplainConceptRequest, ExplainConceptResponse>(
-    functions,
-    'explainConcept',
-  );
+  const call = makeCallable<ExplainConceptRequest, ExplainConceptResponse>('explainConcept');
   return unwrap(call(req));
 }
 
 export function checkSetupSafety(req: CheckSetupSafetyRequest): Promise<CheckSetupSafetyResponse> {
-  const call = httpsCallable<CheckSetupSafetyRequest, CheckSetupSafetyResponse>(
-    functions,
-    'checkSetupSafety',
-  );
+  const call = makeCallable<CheckSetupSafetyRequest, CheckSetupSafetyResponse>('checkSetupSafety');
   return unwrap(call(req));
 }

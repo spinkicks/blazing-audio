@@ -1,7 +1,7 @@
 import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { getFirestore } from 'firebase-admin/firestore';
 import { z } from 'zod';
-import { openAiApiKey, askModel, parseJson, OPENAI_MODEL } from './openai';
+import { openAiApiKey, askModel, parseJson, OPENAI_MODEL, type JsonSchemaSpec } from './openai';
 import { SYSTEM_VOICE, JSON_ONLY } from './prompts';
 import { requireAuth, enforceDailyQuota } from './guardrails';
 
@@ -19,36 +19,106 @@ const generateInput = z.object({
   regenerate: z.boolean().optional(),
 });
 
-const optionSchema = z.object({ id: z.string().min(1).max(40), label: z.string().min(1).max(300) });
+/* ----- Client-facing question shapes (what we store + return to the app) ---- */
 
-const mcSchema = z.object({
-  kind: z.literal('mc'),
-  prompt: z.string().min(1).max(600),
-  options: z.array(optionSchema).min(2).max(6),
-  correctOptionId: z.string().min(1).max(40),
-  explanation: z.string().min(1).max(600),
+interface GenOption {
+  id: string;
+  label: string;
+}
+interface McQuestion {
+  id: string;
+  kind: 'mc';
+  prompt: string;
+  options: GenOption[];
+  correctOptionId: string;
+  explanation: string;
+}
+interface MatchingQuestion {
+  id: string;
+  kind: 'matching';
+  prompt: string;
+  left: GenOption[];
+  right: GenOption[];
+  correct: Record<string, string>;
+  explanation: string;
+}
+interface FillBlankQuestion {
+  id: string;
+  kind: 'fillBlank';
+  prompt: string;
+  sampleAnswer: string;
+  explanation: string;
+}
+type Question = McQuestion | MatchingQuestion | FillBlankQuestion;
+
+/*
+ * Structured Outputs schema for generation. To keep it strict-mode compatible
+ * (every field required; no open-ended maps) we use a single flat item with
+ * nullable, kind-specific fields. Matching answers are expressed as term ->
+ * definition "pairs"; the server builds the shuffled columns and answer key
+ * from them, which removes the id-mismatch failures the old format hit.
+ */
+const GENERATION_SCHEMA: JsonSchemaSpec = {
+  name: 'review_questions',
+  schema: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['questions'],
+    properties: {
+      questions: {
+        type: 'array',
+        items: {
+          type: 'object',
+          additionalProperties: false,
+          required: ['kind', 'prompt', 'explanation', 'options', 'correctOptionId', 'pairs', 'sampleAnswer'],
+          properties: {
+            kind: { type: 'string', enum: ['mc', 'matching', 'fillBlank'] },
+            prompt: { type: 'string' },
+            explanation: { type: 'string' },
+            options: {
+              type: ['array', 'null'],
+              items: {
+                type: 'object',
+                additionalProperties: false,
+                required: ['id', 'label'],
+                properties: { id: { type: 'string' }, label: { type: 'string' } },
+              },
+            },
+            correctOptionId: { type: ['string', 'null'] },
+            pairs: {
+              type: ['array', 'null'],
+              items: {
+                type: 'object',
+                additionalProperties: false,
+                required: ['term', 'definition'],
+                properties: { term: { type: 'string' }, definition: { type: 'string' } },
+              },
+            },
+            sampleAnswer: { type: ['string', 'null'] },
+          },
+        },
+      },
+    },
+  },
+};
+
+/** Loose validation of the raw structured-output item before we shape it. */
+const rawItemSchema = z.object({
+  kind: z.enum(['mc', 'matching', 'fillBlank']),
+  prompt: z.string().min(1),
+  explanation: z.string().min(1),
+  options: z
+    .array(z.object({ id: z.string().min(1), label: z.string().min(1) }))
+    .nullable()
+    .optional(),
+  correctOptionId: z.string().nullable().optional(),
+  pairs: z
+    .array(z.object({ term: z.string().min(1), definition: z.string().min(1) }))
+    .nullable()
+    .optional(),
+  sampleAnswer: z.string().nullable().optional(),
 });
-
-const matchingSchema = z.object({
-  kind: z.literal('matching'),
-  prompt: z.string().min(1).max(600),
-  left: z.array(optionSchema).min(2).max(6),
-  right: z.array(optionSchema).min(2).max(6),
-  correct: z.record(z.string(), z.string()),
-  explanation: z.string().min(1).max(600),
-});
-
-const fillBlankSchema = z.object({
-  kind: z.literal('fillBlank'),
-  prompt: z.string().min(1).max(600),
-  sampleAnswer: z.string().min(1).max(400),
-  explanation: z.string().min(1).max(600),
-});
-
-const questionSchema = z.discriminatedUnion('kind', [mcSchema, matchingSchema, fillBlankSchema]);
-const modelOutput = z.object({ questions: z.array(questionSchema).min(1).max(5) });
-
-type Question = z.infer<typeof questionSchema> & { id: string };
+const rawOutputSchema = z.object({ questions: z.array(z.unknown()).min(1) });
 
 const verifyInput = z.object({
   topicId: z.string().min(1).max(260),
@@ -56,7 +126,20 @@ const verifyInput = z.object({
   userAnswer: z.string().min(1).max(1000),
 });
 
-const verdictOutput = z.object({ correct: z.boolean(), feedback: z.string().min(1).max(600) });
+const verdictOutput = z.object({ correct: z.boolean(), feedback: z.string().min(1) });
+
+const VERDICT_SCHEMA: JsonSchemaSpec = {
+  name: 'fill_blank_verdict',
+  schema: {
+    type: 'object',
+    additionalProperties: false,
+    required: ['correct', 'feedback'],
+    properties: {
+      correct: { type: 'boolean' },
+      feedback: { type: 'string' },
+    },
+  },
+};
 
 /* --------------------------------- helpers --------------------------------- */
 
@@ -64,23 +147,70 @@ function topicDocId(lessonId: string, stepId: string): string {
   return `${lessonId}__${stepId}`;
 }
 
-/** Keeps only questions whose answer keys are internally consistent. */
-function sanitize(questions: z.infer<typeof questionSchema>[]): Question[] {
-  const valid: Question[] = [];
-  for (const q of questions) {
-    if (q.kind === 'mc') {
-      if (!q.options.some((o) => o.id === q.correctOptionId)) continue;
-    } else if (q.kind === 'matching') {
-      const rightIds = new Set(q.right.map((r) => r.id));
-      const ok = q.left.every((l) => {
-        const target = q.correct[l.id];
-        return typeof target === 'string' && rightIds.has(target);
-      });
-      if (!ok) continue;
-    }
-    valid.push({ ...q, id: `q${valid.length + 1}` });
+/** Deterministic shuffle so the matching "right" column isn't in answer order. */
+function shuffle<T>(items: T[], seed: number): T[] {
+  const arr = [...items];
+  let h = seed >>> 0;
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    h = (h * 1103515245 + 12345) & 0x7fffffff;
+    const j = h % (i + 1);
+    [arr[i], arr[j]] = [arr[j], arr[i]];
   }
-  return valid;
+  return arr;
+}
+
+/**
+ * Turns raw structured-output items into clean client questions. Each item is
+ * validated and shaped independently, so one malformed question is skipped
+ * rather than discarding the whole batch (the old all-or-nothing behavior that
+ * made generation fail every time).
+ */
+function shapeQuestions(rawItems: unknown[]): Question[] {
+  const out: Question[] = [];
+  for (const candidate of rawItems) {
+    const parsed = rawItemSchema.safeParse(candidate);
+    if (!parsed.success) continue;
+    const item = parsed.data;
+    const id = `q${out.length + 1}`;
+
+    if (item.kind === 'mc') {
+      const options = item.options ?? [];
+      if (options.length < 2) continue;
+      const correctOptionId =
+        item.correctOptionId && options.some((o) => o.id === item.correctOptionId)
+          ? item.correctOptionId
+          : null;
+      if (!correctOptionId) continue;
+      out.push({ id, kind: 'mc', prompt: item.prompt, options, correctOptionId, explanation: item.explanation });
+      continue;
+    }
+
+    if (item.kind === 'matching') {
+      const pairs = (item.pairs ?? []).filter((p) => p.term && p.definition);
+      if (pairs.length < 2) continue;
+      const left: GenOption[] = pairs.map((p, i) => ({ id: `l${i + 1}`, label: p.term }));
+      const rightSource = pairs.map((p, i) => ({ leftId: `l${i + 1}`, label: p.definition }));
+      const shuffled = shuffle(rightSource, pairs.length * 31 + out.length);
+      const right: GenOption[] = shuffled.map((r, i) => ({ id: `r${i + 1}`, label: r.label }));
+      const correct: Record<string, string> = {};
+      shuffled.forEach((r, i) => {
+        correct[r.leftId] = `r${i + 1}`;
+      });
+      out.push({ id, kind: 'matching', prompt: item.prompt, left, right, correct, explanation: item.explanation });
+      continue;
+    }
+
+    // fillBlank
+    if (!item.sampleAnswer) continue;
+    out.push({
+      id,
+      kind: 'fillBlank',
+      prompt: item.prompt,
+      sampleAnswer: item.sampleAnswer,
+      explanation: item.explanation,
+    });
+  }
+  return out;
 }
 
 function buildGeneratePrompt(input: z.infer<typeof generateInput>): string {
@@ -97,19 +227,18 @@ function buildGeneratePrompt(input: z.infer<typeof generateInput>): string {
     'if they missed a phase-alignment question about subwoofers, lean into room gain and',
     'boundary reinforcement).',
     '',
-    'Vary the formats across these allowed kinds:',
-    '- "mc": multiple choice. 3-4 options, each with a short "id" and "label", and one',
-    '  "correctOptionId" that matches an option id.',
-    '- "matching": match terms to definitions/examples. "left" and "right" are arrays of',
-    '  {id,label}; "correct" maps each left id to exactly one right id. Use 3-4 pairs.',
-    '- "fillBlank": one short sentence containing "___". Provide a concise "sampleAnswer"',
-    '  used only as a private grading rubric (never shown to the learner).',
+    'Each question object has these fields. Fields that do not apply to a kind MUST be null:',
+    '- "kind": one of "mc", "matching", "fillBlank".',
+    '- "prompt": the question text. For "fillBlank", include a "___" blank.',
+    '- "explanation": one sentence explaining the correct answer, in the app voice.',
+    '- "options": for "mc" only, an array of 3-4 {id,label} choices (else null).',
+    '- "correctOptionId": for "mc" only, the id of the correct option (else null).',
+    '- "pairs": for "matching" only, an array of 3-4 {term,definition} pairs that correctly',
+    '  go together; the app shuffles them into a matching exercise (else null).',
+    '- "sampleAnswer": for "fillBlank" only, a concise model answer used privately to grade',
+    '  the learner (never shown to them) (else null).',
     '',
-    'Every question also needs a one-sentence "explanation" of the correct answer in the',
-    'app voice. Prefer a mix of formats over three of the same kind.',
-    '',
-    'Output shape:',
-    '{"questions":[{"kind":"mc","prompt":"...","options":[{"id":"a","label":"..."}],"correctOptionId":"a","explanation":"..."}]}',
+    'Prefer a mix of formats over three of the same kind.',
     '',
     JSON_ONLY,
   ].join('\n');
@@ -143,18 +272,18 @@ export const generateReviewQuestions = onCall(
     const raw = await askModel({
       system: SYSTEM_VOICE,
       user: buildGeneratePrompt(input),
-      maxTokens: 1800,
+      maxTokens: 2500,
       temperature: 0.7,
-      json: true,
+      schema: GENERATION_SCHEMA,
     });
 
-    const parsed = modelOutput.safeParse(parseJson(raw));
+    const parsed = rawOutputSchema.safeParse(parseJson(raw));
     if (!parsed.success) {
       console.error('generateReviewQuestions: invalid model output', parsed.error.flatten());
       throw new HttpsError('internal', 'The AI assistant returned questions we could not use. Please try again.');
     }
 
-    const fullQuestions = sanitize(parsed.data.questions);
+    const fullQuestions = shapeQuestions(parsed.data.questions);
     if (fullQuestions.length === 0) {
       throw new HttpsError('internal', 'The AI assistant could not produce a usable question set. Please try again.');
     }
@@ -241,7 +370,7 @@ export const verifyFillBlankAnswer = onCall(
       user: prompt,
       maxTokens: 400,
       temperature: 0.2,
-      json: true,
+      schema: VERDICT_SCHEMA,
     });
 
     const parsed = verdictOutput.safeParse(parseJson(raw));
