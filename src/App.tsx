@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/authStore';
 import { flushNow, useProgressStore } from '@/features/progress/progressStore';
+import { flushConceptMemory, useConceptMemoryStore } from '@/features/memory/conceptMemoryStore';
 import { FullScreenSpinner } from '@/components/ui/Spinner';
 import { AppShell } from '@/components/layout/AppShell';
 import { AuthScreen } from '@/screens/AuthScreen';
@@ -35,15 +36,22 @@ export default function App() {
   // Load (or clear) the learner's progress whenever auth state changes.
   useEffect(() => {
     if (user) {
-      if (loadedUid !== user.uid) void load(user);
+      if (loadedUid !== user.uid) {
+        void load(user);
+        void useConceptMemoryStore.getState().load(user.uid);
+      }
     } else {
       reset();
+      useConceptMemoryStore.getState().reset();
     }
   }, [user, load, reset, loadedUid]);
 
   // Persist any pending writes when the tab is hidden or closed.
   useEffect(() => {
-    const flush = () => void flushNow();
+    const flush = () => {
+      void flushNow();
+      void flushConceptMemory();
+    };
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') flush();
     };

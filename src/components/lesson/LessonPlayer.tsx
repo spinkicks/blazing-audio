@@ -2,7 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import type { Lesson } from '@/content/types';
 import { grade, type AnswerValue, type GradeResult } from '@/content/grading';
 import { problemCount, getNextLesson } from '@/content/registry';
+import { conceptsForStep } from '@/content/conceptTags';
 import { useProgressStore, type CompletionSummary } from '@/features/progress/progressStore';
+import { useConceptMemoryStore } from '@/features/memory/conceptMemoryStore';
 import { Button } from '@/components/ui/Button';
 import { InteractionView } from '@/components/interactions/InteractionView';
 import { isAnswerable } from '@/components/interactions/answerable';
@@ -34,6 +36,7 @@ export function LessonPlayer({
   const setCurrentStep = useProgressStore((s) => s.setCurrentStep);
   const recordAnswer = useProgressStore((s) => s.recordAnswer);
   const completeLesson = useProgressStore((s) => s.completeLesson);
+  const recordConceptReview = useConceptMemoryStore((s) => s.recordConceptReview);
 
   // Resume where the learner left off (skip if the lesson is already completed).
   const initialIndex = useRef<number>(
@@ -69,6 +72,7 @@ export function LessonPlayer({
     const graded = grade(step.interaction, step.feedback, answer);
     setResult(graded); // synchronous -> instant feedback
     recordAnswer(lesson.id, step.id, graded.correct, { reviewing: step.id === reviewStepId });
+    recordConceptReview(conceptsForStep(lesson.id, step.id), graded.correct ? 'pass' : 'fail');
   }
 
   function handleTryAgain() {
