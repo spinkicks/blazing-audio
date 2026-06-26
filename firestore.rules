@@ -16,6 +16,11 @@ service cloud.firestore {
         allow read, write: if request.auth != null && request.auth.uid == userId;
       }
 
+      // End-of-course capstone submissions: owner-only, same as lessonProgress.
+      match /capstone/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
       // AI-generated review questions are written only by Cloud Functions (Admin
       // SDK, which bypasses rules). The learner may read their own cached sets;
       // client writes stay denied so generated answer keys can't be tampered with.

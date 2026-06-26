@@ -16,8 +16,8 @@
         "function": { "functionId": "explainConcept", "region": "us-central1" }
       },
       {
-        "source": "/ai/checkSetupSafety",
-        "function": { "functionId": "checkSetupSafety", "region": "us-central1" }
+        "source": "/ai/evaluateCapstone",
+        "function": { "functionId": "evaluateCapstone", "region": "us-central1" }
       },
       { "source": "**", "destination": "/index.html" }
     ],
