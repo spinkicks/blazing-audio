@@ -5,6 +5,7 @@ import { useProgressStore } from '@/features/progress/progressStore';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { ReviewPractice } from '@/components/review/ReviewPractice';
+import { DueReviewSection } from '@/components/review/DueReviewSection';
 import { ConceptTutor } from '@/components/tutor/ConceptTutor';
 
 export function ReviewScreen() {
@@ -14,6 +15,7 @@ export function ReviewScreen() {
 
   return (
     <div className="flex flex-col gap-6">
+      <DueReviewSection />
       <header>
         <p className="text-sm font-semibold uppercase tracking-wide text-amp-400">Review</p>
         <h1 className="mt-1 text-3xl font-extrabold text-white">Missed questions</h1>
