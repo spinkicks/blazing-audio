@@ -13,6 +13,7 @@ import { ConceptView } from './ConceptView';
 import { FeedbackPanel } from './FeedbackPanel';
 import { LessonProgressBar } from './LessonProgressBar';
 import { LessonComplete } from './LessonComplete';
+import { PrereqWarmup } from './PrereqWarmup';
 
 interface LessonPlayerProps {
   lesson: Lesson;
@@ -59,6 +60,7 @@ export function LessonPlayer({
   const [answer, setAnswer] = useState<AnswerValue | null>(null);
   const [result, setResult] = useState<GradeResult | null>(null);
   const [completion, setCompletion] = useState<CompletionSummary | null>(null);
+  const [warmupDone, setWarmupDone] = useState<boolean>(Boolean(initialStepId || reviewStepId));
 
   const step = lesson.steps[index];
   const isLast = index === lesson.steps.length - 1;
@@ -111,6 +113,14 @@ export function LessonPlayer({
         onNext={() => nextLesson && onGoToLesson(nextLesson.id)}
         onHome={onExit}
       />
+    );
+  }
+
+  if (!warmupDone) {
+    return (
+      <div className="flex h-full flex-col bg-ink-900">
+        <PrereqWarmup lesson={lesson} onDone={() => setWarmupDone(true)} />
+      </div>
     );
   }
 
