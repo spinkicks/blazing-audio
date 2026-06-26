@@ -49,7 +49,7 @@ export function MultipleChoice({ interaction, value, onChange, locked, result }:
             type="button"
             role="radio"
             aria-checked={isSelected}
-            disabled={locked}
+            disabled={locked || revealed}
             onClick={() => onChange(option.id)}
             className={cn(
               'flex w-full items-center gap-3 border p-4 text-left text-base transition',

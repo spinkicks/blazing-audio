@@ -235,7 +235,7 @@ function QuestionItem({ topicId, index, question }: QuestionItemProps) {
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
-                  disabled={locked}
+                  disabled={revealed}
                   onClick={() => setOptionId(option.id)}
                   className={cn(
                     'flex w-full items-center gap-3 border p-3 text-left text-sm transition active:scale-[0.99]',
@@ -263,13 +263,13 @@ function QuestionItem({ topicId, index, question }: QuestionItemProps) {
             left={question.left}
             right={question.right}
             onChange={setPairs}
-            disabled={locked}
+            disabled={revealed}
             verdict={revealed ? (result?.correct ? 'correct' : 'incorrect') : null}
           />
         ) : null}
 
         {question.kind === 'fillBlank' ? (
-          <FillBlank value={text} onChange={setText} disabled={locked} />
+          <FillBlank value={text} onChange={setText} disabled={revealed} />
         ) : null}
       </div>
 
