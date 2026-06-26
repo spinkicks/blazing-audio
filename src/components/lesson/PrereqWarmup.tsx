@@ -5,6 +5,7 @@ import { useConceptMemoryStore } from '@/features/memory/conceptMemoryStore';
 import { isDue, type ConceptMemory } from '@/features/memory/scheduler';
 import { findProblemForConcept } from '@/features/memory/dueReview';
 import { RetrievalCard } from '@/components/review/RetrievalCard';
+import { FullScreenSpinner } from '@/components/ui/Spinner';
 
 const MAX_WARMUPS = 2;
 
@@ -60,7 +61,11 @@ export function PrereqWarmup({ lesson, onDone }: PrereqWarmupProps) {
     if (finished) onDone();
   }, [finished, onDone]);
 
-  if (!queue || queue.length === 0 || index >= queue.length) return null;
+  // queue === null means concept memory hasn't loaded yet: show a spinner rather
+  // than a blank screen. Empty/finished queues render null while the effect above
+  // advances into the lesson.
+  if (queue === null) return <FullScreenSpinner />;
+  if (queue.length === 0 || index >= queue.length) return null;
 
   const current = queue[index];
   return (
