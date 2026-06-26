@@ -4,10 +4,18 @@ import { flushNow, useProgressStore } from '@/features/progress/progressStore';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StreakBadge } from '@/components/ui/StreakBadge';
+import { CONCEPTS } from '@/content/concepts';
+import { useConceptMemoryStore } from '@/features/memory/conceptMemoryStore';
+import { isMastered, strength } from '@/features/memory/scheduler';
 
 export function ProfileScreen() {
   const profile = useProgressStore((s) => s.profile);
   const reset = useProgressStore((s) => s.reset);
+  const conceptMemory = useConceptMemoryStore((s) => s.memory);
+  const masteredCount = CONCEPTS.filter((c) => {
+    const m = conceptMemory[c.id];
+    return m ? isMastered(m) : false;
+  }).length;
   const [busy, setBusy] = useState(false);
 
   async function handleSignOut() {
@@ -55,6 +63,30 @@ export function ProfileScreen() {
           help="XP = 10 points for each problem solved for the first time, plus 50 points the first time you complete a lesson. Reviewing does not double-count XP."
         />
       </div>
+
+      <Card>
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-lg font-bold text-white">Concept mastery</h2>
+          <span className="text-sm text-slate-400">
+            {masteredCount} / {CONCEPTS.length} mastered
+          </span>
+        </div>
+        <ul className="mt-4 flex flex-col gap-2">
+          {CONCEPTS.map((concept) => {
+            const m = conceptMemory[concept.id];
+            const pct = Math.round((m ? strength(m) : 0) * 100);
+            return (
+              <li key={concept.id} className="flex items-center gap-3">
+                <span className="w-40 shrink-0 truncate text-sm text-slate-300">{concept.name}</span>
+                <span className="h-2 flex-1 bg-ink-700">
+                  <span className="block h-full bg-wave-400" style={{ width: `${pct}%` }} />
+                </span>
+                <span className="w-10 shrink-0 text-right text-xs text-slate-500">{pct}%</span>
+              </li>
+            );
+          })}
+        </ul>
+      </Card>
 
       <Button variant="danger" fullWidth disabled={busy} onClick={handleSignOut}>
         Sign out
