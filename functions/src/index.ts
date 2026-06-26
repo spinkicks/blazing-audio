@@ -5,4 +5,4 @@ initializeApp();
 
 export { generateReviewQuestions, verifyFillBlankAnswer } from './review';
 export { explainConcept } from './tutor';
-export { checkSetupSafety } from './safety';
+export { evaluateCapstone } from './capstone';
