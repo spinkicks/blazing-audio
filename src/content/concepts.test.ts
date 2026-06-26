@@ -22,4 +22,27 @@ describe('concept registry', () => {
     expect(getConcept('phase-alignment')?.lessonId).toBe('phase-alignment');
     expect(prerequisitesOf('phase-alignment')).toContain('wave-interference');
   });
+
+  it('has no prerequisite cycles', () => {
+    const visiting = new Set<string>();
+    const done = new Set<string>();
+
+    const findCycle = (id: string, path: string[]): string[] | null => {
+      if (visiting.has(id)) return [...path, id];
+      if (done.has(id)) return null;
+      visiting.add(id);
+      for (const pre of prerequisitesOf(id)) {
+        const cycle = findCycle(pre, [...path, id]);
+        if (cycle) return cycle;
+      }
+      visiting.delete(id);
+      done.add(id);
+      return null;
+    };
+
+    for (const c of CONCEPTS) {
+      const cycle = findCycle(c.id, []);
+      expect(cycle, cycle ? `cycle: ${cycle.join(' -> ')}` : undefined).toBeNull();
+    }
+  });
 });
