@@ -42,6 +42,10 @@ export interface UserProfile {
   createdAt: number;
   streak: Streak;
   stats: UserStats;
+  /** Public display name for the opt-in leaderboard (not the real name/email). */
+  alias?: string;
+  /** Whether the learner appears on the leaderboard. Off unless explicitly enabled. */
+  leaderboardOptIn?: boolean;
 }
 
 export function emptyProgress(lessonId: string): LessonProgress {

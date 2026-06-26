@@ -7,6 +7,7 @@ import {
   saveLessonProgress,
   saveUserProfile,
 } from './progressService';
+import { removeLeaderboardEntry, upsertLeaderboardEntry } from '@/features/leaderboard/leaderboardService';
 import { emptyProgress, type LessonProgress, type StepState, type UserProfile } from './types';
 
 const XP_PER_PROBLEM = 10;
@@ -24,6 +25,19 @@ function scheduleSync(): void {
   syncTimer = setTimeout(() => {
     void flushNow();
   }, SYNC_DELAY_MS);
+}
+
+/** Publishes or removes the learner's leaderboard entry based on their profile. */
+function syncLeaderboard(): void {
+  const { uid, profile } = useProgressStore.getState();
+  if (!uid || !profile) return;
+  if (profile.leaderboardOptIn && profile.alias) {
+    void upsertLeaderboardEntry(uid, profile.alias, profile.stats.xp).catch((e) =>
+      console.error('upsertLeaderboardEntry', e),
+    );
+  } else {
+    void removeLeaderboardEntry(uid).catch((e) => console.error('removeLeaderboardEntry', e));
+  }
 }
 
 /** Writes any pending profile/lesson changes to Firestore immediately. */
@@ -119,6 +133,7 @@ interface ProgressState {
     options?: { reviewing?: boolean },
   ) => void;
   completeLesson: (lessonId: string, totalProblems: number) => CompletionSummary;
+  setLeaderboard: (alias: string, optIn: boolean) => void;
 }
 
 export const useProgressStore = create<ProgressState>()((set, get) => ({
@@ -238,6 +253,7 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
     }));
     dirtyLessons.add(lessonId);
     scheduleSync();
+    syncLeaderboard();
   },
 
   completeLesson: (lessonId, totalProblems) => {
@@ -278,6 +294,7 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
     }));
     dirtyLessons.add(lessonId);
     void flushNow();
+    syncLeaderboard();
 
     return {
       masteryScore,
@@ -285,5 +302,15 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       xpAwarded,
       firstCompletion,
     };
+  },
+
+  setLeaderboard: (alias, optIn) => {
+    const state = get();
+    if (!state.profile) return;
+    const nextProfile = { ...state.profile, alias: alias.trim(), leaderboardOptIn: optIn };
+    set({ profile: nextProfile });
+    profileDirty = true;
+    scheduleSync();
+    syncLeaderboard();
   },
 }));
