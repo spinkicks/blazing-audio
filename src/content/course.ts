@@ -57,3 +57,8 @@ export function recommendNext(nodes: CourseNode[]): CourseNode | null {
   const next = nodes.find((node) => node.status === 'notStarted' && !node.locked);
   return next ?? null;
 }
+
+/** True only when every lesson in the course has been completed. */
+export function isCourseComplete(progress: Record<string, LessonProgress>): boolean {
+  return allLessons.every((lesson) => progress[lesson.id]?.status === 'completed');
+}
