@@ -68,10 +68,11 @@ export const useConceptMemoryStore = create<ConceptMemoryState>()((set) => ({
       for (const id of conceptIds) {
         const prev = next[id] ?? newConceptMemory(id, now);
         next[id] = review(prev, grade, now);
-        dirty.add(id);
       }
       return { memory: next };
     });
+    // Track dirty ids and schedule outside the updater (updaters stay pure).
+    for (const id of conceptIds) dirty.add(id);
     scheduleSync();
   },
 }));
