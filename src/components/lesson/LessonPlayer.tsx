@@ -18,9 +18,18 @@ interface LessonPlayerProps {
   reviewStepId?: string;
   onExit: () => void;
   onGoToLesson: (lessonId: string) => void;
+  /** Called after the review step is answered correctly, to return to Review. */
+  onReviewComplete?: () => void;
 }
 
-export function LessonPlayer({ lesson, initialStepId, reviewStepId, onExit, onGoToLesson }: LessonPlayerProps) {
+export function LessonPlayer({
+  lesson,
+  initialStepId,
+  reviewStepId,
+  onExit,
+  onGoToLesson,
+  onReviewComplete,
+}: LessonPlayerProps) {
   const startLesson = useProgressStore((s) => s.startLesson);
   const setCurrentStep = useProgressStore((s) => s.setCurrentStep);
   const recordAnswer = useProgressStore((s) => s.recordAnswer);
@@ -183,6 +192,15 @@ export function LessonPlayer({ lesson, initialStepId, reviewStepId, onExit, onGo
     }
 
     if (result.correct) {
+      // When the learner opened this exact step from Review, send them back to the
+      // Review page after they get it right instead of continuing the lesson.
+      if (onReviewComplete && step.id === reviewStepId) {
+        return (
+          <Button fullWidth onClick={onReviewComplete}>
+            Back to review
+          </Button>
+        );
+      }
       return (
         <Button fullWidth onClick={goNext}>
           {isLast ? 'Finish' : 'Continue'}

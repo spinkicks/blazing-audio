@@ -25,6 +25,7 @@ export function LessonScreen() {
           reviewStepId={reviewStepId}
           onExit={() => navigate('/learn')}
           onGoToLesson={(id) => navigate(`/lesson/${id}`)}
+          onReviewComplete={() => navigate('/review')}
         />
       </div>
     </div>
