@@ -460,6 +460,8 @@ export interface ProblemStep {
   interaction: Interaction;
   feedback: Feedback;
   visual?: VisualSpec;
+  /** Concept ids this problem exercises (see src/content/concepts.ts). */
+  conceptIds?: string[];
 }
 
 export type Step = ConceptStep | ProblemStep;
