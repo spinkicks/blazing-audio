@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, setDoc } from 'firebase/firestore';
+import { collection, doc, getDoc, getDocs, setDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import type { LessonProgress, UserProfile } from './types';
 
@@ -35,4 +35,19 @@ export async function saveLessonProgress(
   await setDoc(doc(db, 'users', uid, 'lessonProgress', progress.lessonId), progress, {
     merge: true,
   });
+}
+
+/** Persists several lesson-progress docs atomically in a single write batch. */
+export async function saveLessonProgressBatch(
+  uid: string,
+  progresses: LessonProgress[],
+): Promise<void> {
+  if (progresses.length === 0) return;
+  const batch = writeBatch(db);
+  for (const progress of progresses) {
+    batch.set(doc(db, 'users', uid, 'lessonProgress', progress.lessonId), progress, {
+      merge: true,
+    });
+  }
+  await batch.commit();
 }

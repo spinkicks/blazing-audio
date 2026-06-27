@@ -44,8 +44,14 @@ export default function App() {
         void useConceptMemoryStore.getState().load(user.uid);
       }
     } else {
-      reset();
-      useConceptMemoryStore.getState().reset();
+      // On logout / token expiry, persist the last debounced writes before
+      // clearing state so nothing pending is lost.
+      void (async () => {
+        await flushNow();
+        await flushConceptMemory();
+        reset();
+        useConceptMemoryStore.getState().reset();
+      })();
     }
   }, [user, load, reset, loadedUid]);
 

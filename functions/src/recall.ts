@@ -2,9 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { z } from 'zod';
 import { openAiApiKey, askModel, parseJson, type JsonSchemaSpec } from './openai';
 import { SYSTEM_VOICE, JSON_ONLY } from './prompts';
-import { requireAuth, enforceDailyQuota, parseInput, guardErrors } from './guardrails';
-
-const DAILY_LIMIT = 40;
+import { requireAuth, enforceDailyQuota, parseInput, guardErrors, DAILY_LIMIT } from './guardrails';
 
 // The reference answer is authored lesson content (already shipped in the client
 // bundle), so passing it from the client is not a new information leak. This lets

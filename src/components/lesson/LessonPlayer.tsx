@@ -55,6 +55,9 @@ export function LessonPlayer({
   // Track which step ids already recorded a concept review this session, so only the
   // first check attempt drives spaced-repetition scheduling (survives re-renders).
   const conceptRecordedRef = useRef<Set<string>>(new Set());
+  // Step ids that have logged a 'pass' (a clean first try OR a recovery after misses),
+  // so we never double-count a pass for the same step.
+  const conceptPassedRef = useRef<Set<string>>(new Set());
 
   const [index, setIndex] = useState(initialIndex.current);
   const [answer, setAnswer] = useState<AnswerValue | null>(null);
@@ -81,9 +84,17 @@ export function LessonPlayer({
     setResult(graded); // synchronous -> instant feedback
     if (!graded.correct) setMissCount((n) => n + 1);
     recordAnswer(lesson.id, step.id, graded.correct, { reviewing: step.id === reviewStepId });
+    const concepts = conceptsForStep(lesson.id, step.id);
     if (!conceptRecordedRef.current.has(step.id)) {
+      // First attempt drives the initial scheduling outcome.
       conceptRecordedRef.current.add(step.id);
-      recordConceptReview(conceptsForStep(lesson.id, step.id), graded.correct ? 'pass' : 'fail');
+      if (graded.correct) conceptPassedRef.current.add(step.id);
+      recordConceptReview(concepts, graded.correct ? 'pass' : 'fail');
+    } else if (graded.correct && !conceptPassedRef.current.has(step.id)) {
+      // Eventually correct after a miss: record a recovery 'pass' so the final
+      // memory state reflects success instead of the earlier lapse.
+      conceptPassedRef.current.add(step.id);
+      recordConceptReview(concepts, 'pass');
     }
   }
 

@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import gsap from 'gsap';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/authStore';
 import { useProgressStore } from '@/features/progress/progressStore';
@@ -6,7 +7,7 @@ import { fetchTopLeaderboard, type LeaderboardEntry } from '@/features/leaderboa
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
-import { useTimeline, countUp } from '@/lib/anim';
+import { useTimeline, countUp, prefersReducedMotion } from '@/lib/anim';
 import { cn } from '@/lib/cn';
 
 export function LeaderboardScreen() {
@@ -29,14 +30,37 @@ export function LeaderboardScreen() {
 
   const ownIndex = entries && uid ? entries.findIndex((e) => e.uid === uid) : -1;
 
+  // Head + cards animate once on mount; the rows/XP do not exist yet (entries is
+  // still null), so they are choreographed in the effect below instead.
   useTimeline(rootRef, (tl) => {
-    const root = rootRef.current;
-    if (!root) return;
     tl.from('[data-anim="head"]', { opacity: 0, y: 12, ease: 'power2.out' }, 0);
     tl.from('[data-anim="card"]', { opacity: 0, y: 16, ease: 'power3.out', stagger: 0.1 }, 0.12);
-    tl.from('[data-anim="row"]', { opacity: 0, x: -28, ease: 'power3.out', stagger: 0.05 }, 0.3);
-    countUp(tl, root.querySelectorAll('[data-count]'), 0.35, 0.9);
   });
+
+  // Once the leaderboard rows have rendered, slide them in and count the XP up.
+  // Reduced motion skips straight to the resolved final state.
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root || !entries || entries.length === 0) return;
+    const rows = root.querySelectorAll('[data-anim="row"]');
+    const counts = root.querySelectorAll<HTMLElement>('[data-count]');
+
+    if (prefersReducedMotion()) {
+      gsap.set(rows, { opacity: 1, x: 0 });
+      counts.forEach((node) => {
+        const to = Number(node.dataset.count ?? node.textContent ?? 0);
+        if (Number.isFinite(to)) node.textContent = to.toLocaleString();
+      });
+      return;
+    }
+
+    const ctx = gsap.context(() => {
+      const tl = gsap.timeline({ defaults: { duration: 0.55, ease: 'power3.out' } });
+      tl.from(rows, { opacity: 0, x: -28, stagger: 0.05 }, 0);
+      countUp(tl, counts, 0.1, 0.9);
+    }, root);
+    return () => ctx.revert();
+  }, [entries]);
 
   return (
     <div ref={rootRef} className="flex flex-col gap-6">

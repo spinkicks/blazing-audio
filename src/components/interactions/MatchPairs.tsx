@@ -155,8 +155,10 @@ export function MatchPairs({ left, right, onChange, disabled, verdict }: MatchPa
               const lifted = drag?.rightId === option.id;
               const isSelected = selectedChip === option.id;
               return (
-                <span
+                <button
                   key={option.id}
+                  type="button"
+                  aria-pressed={isSelected}
                   onPointerDown={(event) => startDrag(event, option)}
                   onPointerMove={moveDrag}
                   onPointerUp={endDrag}
@@ -175,7 +177,7 @@ export function MatchPairs({ left, right, onChange, disabled, verdict }: MatchPa
                   )}
                 >
                   {option.label}
-                </span>
+                </button>
               );
             })}
           </div>

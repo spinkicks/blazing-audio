@@ -5,20 +5,66 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Owner may remove their own profile. Delete carries no request.resource,
+      // so it must NOT reference request.resource.data.
+      allow delete: if request.auth != null && request.auth.uid == userId;
+      // Profile is written via setDoc(..., { merge: true }) with the full
+      // UserProfile, so validate only fields that are PRESENT to avoid rejecting
+      // legitimate merge/partial writes. Unvalidated fields (displayName, email,
+      // streak, alias, leaderboardOptIn) are intentionally left permissive.
+      allow create, update: if request.auth != null
+        && request.auth.uid == userId
+        && (!('uid' in request.resource.data) || request.resource.data.uid == userId)
+        && (!('stats' in request.resource.data) || (
+          request.resource.data.stats is map
+          && (!('xp' in request.resource.data.stats)
+            || (request.resource.data.stats.xp is number && request.resource.data.stats.xp >= 0))
+          && (!('lessonsCompleted' in request.resource.data.stats)
+            || (request.resource.data.stats.lessonsCompleted is number && request.resource.data.stats.lessonsCompleted >= 0))
+          && (!('problemsSolved' in request.resource.data.stats)
+            || (request.resource.data.stats.problemsSolved is number && request.resource.data.stats.problemsSolved >= 0))
+        ))
+        // createdAt is immutable once set (guard for create + legacy docs without it).
+        && (!('createdAt' in request.resource.data)
+          || resource == null
+          || !('createdAt' in resource.data)
+          || request.resource.data.createdAt == resource.data.createdAt);
 
       match /lessonProgress/{lessonId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+        // Written via setDoc(..., { merge: true }) with the full LessonProgress;
+        // validate only present fields.
+        allow create, update: if request.auth != null
+          && request.auth.uid == userId
+          && (!('masteryScore' in request.resource.data)
+            || (request.resource.data.masteryScore is number
+              && request.resource.data.masteryScore >= 0
+              && request.resource.data.masteryScore <= 1))
+          && (!('status' in request.resource.data)
+            || request.resource.data.status in ['notStarted', 'inProgress', 'completed']);
       }
 
       // Per-concept spaced-repetition memory: owner-only, same as lessonProgress.
       match /conceptMemory/{conceptId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+        // Written via setDoc(..., { merge: true }); validate only present fields.
+        allow create, update: if request.auth != null
+          && request.auth.uid == userId
+          && (!('box' in request.resource.data)
+            || (request.resource.data.box is int && request.resource.data.box >= 0));
       }
 
       // End-of-course capstone submissions: owner-only, same as lessonProgress.
       match /capstone/{docId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read: if request.auth != null && request.auth.uid == userId;
+        allow delete: if request.auth != null && request.auth.uid == userId;
+        // Written via setDoc(..., { merge: false }); minimal shape validation only.
+        allow create, update: if request.auth != null
+          && request.auth.uid == userId
+          && request.resource.data is map;
       }
 
       // AI-generated review questions are written only by Cloud Functions (Admin
@@ -28,9 +74,17 @@ service cloud.firestore {
         allow read: if request.auth != null && request.auth.uid == userId;
       }
 
-      // Intentionally NO rule for `reviewQuestionsKeys/*` (fill-in-the-blank
-      // grading rubrics) or `aiUsage/*` (daily quota counters): they are written
-      // and read only by the Admin SDK and must never be client-readable.
+      // Fill-in-the-blank grading rubrics: written and read only by the Admin SDK.
+      // Explicitly deny ALL client access so answer keys can never be exposed.
+      match /reviewQuestionsKeys/{topicId} {
+        allow read, write: if false;
+      }
+
+      // Daily AI quota counters: written and read only by the Admin SDK.
+      // Explicitly deny ALL client access so quotas can't be tampered with.
+      match /aiUsage/{docId} {
+        allow read, write: if false;
+      }
     }
 
     // Opt-in leaderboard: any signed-in user may read; a user may write only their
@@ -47,7 +101,8 @@ service cloud.firestore {
         && request.resource.data.alias.size() > 0
         && request.resource.data.alias.size() <= 24
         && request.resource.data.xp is number
-        && request.resource.data.xp >= 0;
+        && request.resource.data.xp >= 0
+        && request.resource.data.xp <= 100000000;
     }
 
     // Deny everything else by default.

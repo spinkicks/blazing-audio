@@ -26,6 +26,8 @@ function buildWarmupQueue(lesson: Lesson, memory: Record<string, ConceptMemory>)
       const m = memory[id];
       return Boolean(m && isDue(m, now)); // only encountered + decayed prerequisites
     })
+    // Most-overdue first, so the cap below keeps the prerequisites that matter most.
+    .sort((a, b) => (memory[a]?.dueAt ?? 0) - (memory[b]?.dueAt ?? 0))
     .map((id) => {
       const found = findProblemForConcept(id);
       const concept = getConcept(id);

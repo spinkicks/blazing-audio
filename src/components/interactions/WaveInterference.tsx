@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { WaveInterferenceInteraction } from '@/content/types';
+import { prefersReducedMotion } from '@/lib/anim';
 import { cn } from '@/lib/cn';
 import type { InteractionProps } from './types';
 
@@ -15,6 +16,10 @@ function InterferenceCanvas({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const live = useRef({ phaseDeg, cycles });
   live.current = { phaseDeg, cycles };
+  const reduced = prefersReducedMotion();
+  // In reduced-motion mode no idle loop runs, so keep a handle to the static
+  // draw to repaint a single frame when an input changes.
+  const drawStaticRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -33,9 +38,6 @@ function InterferenceCanvas({
       canvas.height = Math.round(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
 
     const drawCurve = (fn: (t: number) => number, color: string, lineWidth: number, alpha: number) => {
       ctx.beginPath();
@@ -53,7 +55,7 @@ function InterferenceCanvas({
       ctx.globalAlpha = 1;
     };
 
-    const render = () => {
+    const draw = () => {
       const { phaseDeg: p, cycles: c } = live.current;
       const phase = (p * Math.PI) / 180;
       const mid = height / 2;
@@ -77,17 +79,43 @@ function InterferenceCanvas({
       drawCurve(wA, '#38bdf8', 2, 0.5); // wave A
       drawCurve(wB, '#f59e0b', 2, 0.5); // wave B
       drawCurve(sum, '#ffffff', 3, 1); // combined
+    };
 
+    const render = () => {
+      draw();
       scroll += 0.03;
       raf = requestAnimationFrame(render);
     };
-    raf = requestAnimationFrame(render);
+
+    resize();
+    const ro = new ResizeObserver(() => {
+      resize();
+      if (reduced) draw();
+    });
+    ro.observe(canvas);
+
+    if (reduced) {
+      // Honor prefers-reduced-motion: paint one static frame (scroll = 0) and
+      // never start the continuous rAF loop.
+      drawStaticRef.current = draw;
+      draw();
+    } else {
+      raf = requestAnimationFrame(render);
+    }
 
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      drawStaticRef.current = null;
     };
-  }, [height]);
+  }, [height, reduced]);
+
+  // Reduced motion only: repaint a single static frame when an input changes
+  // (the phase slider still updates the picture without animation).
+  useEffect(() => {
+    live.current = { phaseDeg, cycles };
+    drawStaticRef.current?.();
+  }, [phaseDeg, cycles]);
 
   return (
     <canvas

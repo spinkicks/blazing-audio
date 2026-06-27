@@ -4,7 +4,7 @@ import { todayKey, dayDiff } from '@/lib/date';
 import {
   fetchAllProgress,
   fetchUserProfile,
-  saveLessonProgress,
+  saveLessonProgressBatch,
   saveUserProfile,
 } from './progressService';
 import { removeLeaderboardEntry, upsertLeaderboardEntry } from '@/features/leaderboard/leaderboardService';
@@ -19,6 +19,12 @@ const SYNC_DELAY_MS = 600;
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
 const dirtyLessons = new Set<string>();
 let profileDirty = false;
+// Incremented at the start of every load() so a slow fetch from a previous
+// user/login can detect that it has been superseded and skip its set().
+let loadGeneration = 0;
+// Single-flight guard: concurrent flushNow() calls are serialized onto this
+// chain so they can never interleave their dirty-clearing.
+let flushing: Promise<void> | null = null;
 
 function scheduleSync(): void {
   if (syncTimer) clearTimeout(syncTimer);
@@ -40,8 +46,23 @@ function syncLeaderboard(): void {
   }
 }
 
-/** Writes any pending profile/lesson changes to Firestore immediately. */
-export async function flushNow(): Promise<void> {
+/**
+ * Writes any pending profile/lesson changes to Firestore immediately.
+ *
+ * Concurrent callers (the debounced timer plus completeLesson's immediate
+ * flush) are serialized so they cannot interleave dirty-clearing; failed
+ * writes re-mark their entity dirty and reschedule, so nothing is dropped.
+ */
+export function flushNow(): Promise<void> {
+  const next = (flushing ?? Promise.resolve()).catch(() => {}).then(() => doFlush());
+  flushing = next;
+  void next.finally(() => {
+    if (flushing === next) flushing = null;
+  });
+  return next;
+}
+
+async function doFlush(): Promise<void> {
   if (syncTimer) {
     clearTimeout(syncTimer);
     syncTimer = null;
@@ -49,18 +70,56 @@ export async function flushNow(): Promise<void> {
   const { uid, profile, progress } = useProgressStore.getState();
   if (!uid) return;
 
-  const tasks: Promise<unknown>[] = [];
-  if (profileDirty && profile) {
-    profileDirty = false;
-    tasks.push(saveUserProfile(profile).catch((e) => console.error('saveUserProfile', e)));
-  }
-  const ids = [...dirtyLessons];
+  // Snapshot what needs saving, then optimistically clear the dirty markers.
+  // Anything that fails below is re-marked dirty for the next sync.
+  const profileToSave = profileDirty && profile ? profile : null;
+  profileDirty = false;
+
+  const lessonIds = [...dirtyLessons];
   dirtyLessons.clear();
-  for (const id of ids) {
-    const p = progress[id];
-    if (p) tasks.push(saveLessonProgress(uid, p).catch((e) => console.error('saveLessonProgress', e)));
+  const lessonsToSave = lessonIds
+    .map((id) => progress[id])
+    .filter((p): p is LessonProgress => Boolean(p));
+
+  const tasks: ('profile' | 'lessons')[] = [];
+  const writes: Promise<void>[] = [];
+  if (profileToSave) {
+    tasks.push('profile');
+    writes.push(saveUserProfile(profileToSave));
   }
-  await Promise.allSettled(tasks);
+  if (lessonsToSave.length > 0) {
+    tasks.push('lessons');
+    writes.push(saveLessonProgressBatch(uid, lessonsToSave));
+  }
+  if (writes.length === 0) return;
+
+  const results = await Promise.allSettled(writes);
+
+  let profileSaved = false;
+  let needsResync = false;
+  results.forEach((result, i) => {
+    if (tasks[i] === 'profile') {
+      if (result.status === 'fulfilled') {
+        profileSaved = true;
+      } else {
+        console.error('saveUserProfile', result.reason);
+        profileDirty = true; // re-dirty so the next flush retries
+        needsResync = true;
+      }
+    } else if (result.status === 'rejected') {
+      console.error('saveLessonProgressBatch', result.reason);
+      for (const p of lessonsToSave) dirtyLessons.add(p.lessonId); // re-dirty the whole batch
+      needsResync = true;
+    }
+  });
+
+  // Throttle leaderboard writes onto this debounced flush: publish once per
+  // flush when the just-saved profile is opted in, instead of per solve.
+  if (profileSaved && profileToSave && profileToSave.leaderboardOptIn && profileToSave.alias) {
+    syncLeaderboard();
+  }
+
+  if (needsResync) scheduleSync();
 }
 
 /* --------------------------------- helpers ---------------------------------- */
@@ -143,6 +202,9 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
   loaded: false,
 
   load: async (user) => {
+    // Capture this load's generation; a later load (user switch / re-login)
+    // bumps it so this fetch knows to discard its result if superseded.
+    const generation = ++loadGeneration;
     set({ uid: user.uid, loaded: false });
     try {
       // Race the fetch against a timeout so a slow/unreachable backend never
@@ -153,14 +215,28 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
           setTimeout(() => reject(new Error('progress fetch timed out')), 6000),
         ),
       ]);
+      // Drop the result if a newer load started or the active user changed
+      // (e.g. switched account / logged out) while this fetch was in flight.
+      if (generation !== loadGeneration || useProgressStore.getState().uid !== user.uid) return;
       const [existing, progress] = fetched;
       let profile = existing;
       if (!profile) {
         profile = newProfile(user);
         void saveUserProfile(profile).catch((e) => console.error('create profile', e));
       }
-      set({ profile, progress, loaded: true });
+      // Preserve any lesson edited locally while the fetch was in flight: a
+      // dirty (not-yet-synced) entry wins over the fetched copy, so progress
+      // made during loading is never clobbered by the resolving load.
+      set((state) => {
+        const merged: Record<string, LessonProgress> = { ...progress };
+        for (const id of dirtyLessons) {
+          const local = state.progress[id];
+          if (local) merged[id] = local;
+        }
+        return { profile, progress: merged, loaded: true };
+      });
     } catch (error) {
+      if (generation !== loadGeneration || useProgressStore.getState().uid !== user.uid) return;
       // Offline / emulator down: fall back to an in-memory profile so the learner
       // can still work; changes will sync on the next successful write.
       console.error('progress load failed, using local profile', error);
@@ -169,6 +245,10 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
   },
 
   reset: () => {
+    if (syncTimer) {
+      clearTimeout(syncTimer);
+      syncTimer = null;
+    }
     dirtyLessons.clear();
     profileDirty = false;
     set({ uid: null, profile: null, progress: {}, loaded: false });
@@ -253,8 +333,8 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
     }));
     dirtyLessons.add(lessonId);
     scheduleSync();
-    // Only touch the leaderboard when an opted-in learner's XP actually changed.
-    if (firstSolve && nextProfile?.leaderboardOptIn && nextProfile.alias) syncLeaderboard();
+    // Leaderboard publishing is folded into flushNow() so it happens at most
+    // once per debounced flush rather than on every first solve.
   },
 
   completeLesson: (lessonId, totalProblems) => {
@@ -294,9 +374,9 @@ export const useProgressStore = create<ProgressState>()((set, get) => ({
       profile: nextProfile,
     }));
     dirtyLessons.add(lessonId);
+    // flushNow() persists the lesson + profile and, when opted in, publishes the
+    // leaderboard entry itself - no separate immediate leaderboard write needed.
     void flushNow();
-    // Only touch the leaderboard when an opted-in learner's XP actually changed.
-    if (firstCompletion && nextProfile?.leaderboardOptIn && nextProfile.alias) syncLeaderboard();
 
     return {
       masteryScore,

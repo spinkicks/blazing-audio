@@ -13,6 +13,13 @@
   border-radius: 0 !important;
 }
 
+/* Exception: native checkboxes/radios look broken when forced square, so let the
+   user-agent restore their default radius (the more specific selector wins). */
+input[type='checkbox'],
+input[type='radio'] {
+  border-radius: revert !important;
+}
+
 /* Respect the OS "reduce motion" setting: near-instant animations/transitions. */
 @media (prefers-reduced-motion: reduce) {
   *,

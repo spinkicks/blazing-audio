@@ -1,7 +1,7 @@
 import type { CurvePoint } from '@/content/types';
 
-export const FREQ_MIN = 20;
-export const FREQ_MAX = 20000;
+const FREQ_MIN = 20;
+const FREQ_MAX = 20000;
 
 /** Interpolate a response curve's dB at a frequency, linear in log-frequency. */
 export function dbAtFreq(points: CurvePoint[], freq: number): number {

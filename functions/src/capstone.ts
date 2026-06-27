@@ -2,9 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { z } from 'zod';
 import { openAiApiKey, askModel, parseJson, type JsonSchemaSpec } from './openai';
 import { SYSTEM_VOICE, JSON_ONLY } from './prompts';
-import { requireAuth, enforceDailyQuota, parseInput, guardErrors } from './guardrails';
-
-const DAILY_LIMIT = 40;
+import { requireAuth, enforceDailyQuota, parseInput, guardErrors, DAILY_LIMIT } from './guardrails';
 
 const FORMATS = ['2.0', '2.1', '5.1', '7.1', '5.1.2', '5.1.4', '7.1.4', 'unsure'] as const;
 

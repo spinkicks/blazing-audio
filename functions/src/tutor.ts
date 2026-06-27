@@ -2,9 +2,7 @@ import { onCall } from 'firebase-functions/v2/https';
 import { z } from 'zod';
 import { openAiApiKey, askModel } from './openai';
 import { SYSTEM_VOICE } from './prompts';
-import { requireAuth, enforceDailyQuota, parseInput, guardErrors } from './guardrails';
-
-const DAILY_LIMIT = 40;
+import { requireAuth, enforceDailyQuota, parseInput, guardErrors, DAILY_LIMIT } from './guardrails';
 
 // `.nullish()` (not `.optional()`) because the Firebase callable SDK serializes
 // absent fields as `null` on the wire, and `.optional()` accepts `undefined` but

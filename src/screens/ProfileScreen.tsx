@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { logOut } from '@/features/auth/authService';
 import { flushNow, useProgressStore } from '@/features/progress/progressStore';
 import { Button } from '@/components/ui/Button';
@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/Card';
 import { StreakBadge } from '@/components/ui/StreakBadge';
 import { CONCEPTS } from '@/content/concepts';
 import { allLessons } from '@/content/registry';
-import { useConceptMemoryStore } from '@/features/memory/conceptMemoryStore';
+import { flushConceptMemory, useConceptMemoryStore } from '@/features/memory/conceptMemoryStore';
 import { isMastered, strength } from '@/features/memory/scheduler';
 import { countMasteredLessons } from '@/features/memory/mastery';
 import { useTimeline, countUp } from '@/lib/anim';
@@ -40,6 +40,7 @@ export function ProfileScreen() {
   async function handleSignOut() {
     setBusy(true);
     await flushNow(); // make sure nothing pending is lost
+    await flushConceptMemory(); // include concept-memory reviews
     await logOut();
     reset();
   }
@@ -147,12 +148,22 @@ export function ProfileScreen() {
 }
 
 function Stat({ label, value, help }: { label: string; value: number; help?: string }) {
+  const helpId = useId();
   return (
-    <div data-anim="stat" className="group relative bg-ink-800 p-4 text-center" tabIndex={help ? 0 : undefined}>
+    <div
+      data-anim="stat"
+      className="group relative bg-ink-800 p-4 text-center"
+      tabIndex={help ? 0 : undefined}
+      aria-describedby={help ? helpId : undefined}
+    >
       <div data-count={value} className="font-mono text-2xl font-bold tabular-nums text-white">{value}</div>
       <div className="mt-1 text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
       {help ? (
-        <div className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-72 -translate-x-1/2 border border-white/10 bg-ink-950 p-3 text-left text-xs leading-relaxed text-slate-300 shadow-lg group-hover:block group-focus:block">
+        <div
+          id={helpId}
+          role="note"
+          className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-72 -translate-x-1/2 border border-white/10 bg-ink-950 p-3 text-left text-xs leading-relaxed text-slate-300 shadow-lg group-hover:block group-focus:block"
+        >
           {help}
         </div>
       ) : null}

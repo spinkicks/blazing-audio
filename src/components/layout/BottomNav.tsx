@@ -10,7 +10,7 @@ const items = [
 
 export function BottomNav() {
   return (
-    <nav className="safe-bottom sticky bottom-0 z-20 border-t border-white/5 bg-ink-900/95 backdrop-blur md:hidden">
+    <nav aria-label="Primary" className="safe-bottom sticky bottom-0 z-20 border-t border-white/5 bg-ink-900/95 backdrop-blur md:hidden">
       <div className="mx-auto flex w-full max-w-md items-stretch justify-around">
         {items.map(({ to, label, icon: Icon }) => (
           <NavLink

@@ -22,9 +22,6 @@ export function ReviewScreen() {
 
   return (
     <div ref={rootRef} className="flex flex-col gap-6">
-      <div data-anim="block">
-        <DueReviewSection />
-      </div>
       <header data-anim="head">
         <p className="text-sm font-semibold uppercase tracking-wide text-wave-400">Review</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-white">Missed questions</h1>
@@ -33,6 +30,9 @@ export function ReviewScreen() {
           disappears once you open it from Review and answer it correctly.
         </p>
       </header>
+      <div data-anim="block">
+        <DueReviewSection />
+      </div>
 
       {topics.length === 0 ? (
         <Card data-anim="block">

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { prefersReducedMotion } from '@/lib/anim';
 
 /**
  * Interactive: a scrolling sine "signal" drives a real speaker cross-section
@@ -10,6 +11,10 @@ export function SignalToCone({ height = 300 }: { height?: number }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const freqRef = useRef(freq);
   freqRef.current = freq;
+  const reduced = prefersReducedMotion();
+  // In reduced-motion mode no idle loop runs, so keep a handle to the static
+  // draw to repaint a single frame when the frequency changes.
+  const drawStaticRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -30,11 +35,8 @@ export function SignalToCone({ height = 300 }: { height?: number }) {
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
 
-    const render = () => {
+    const draw = () => {
       const f = freqRef.current;
       const yC = h * 0.46;
       const amp = h * 0.2;
@@ -127,17 +129,43 @@ export function SignalToCone({ height = 300 }: { height?: number }) {
       ctx.textAlign = 'center';
       ctx.fillText('cone', coneMouthX, h - 6);
       ctx.fillText('motor', motorX + width * 0.07, h - 6);
+    };
 
-      phase += 0.05 * (f / 80);
+    const render = () => {
+      draw();
+      phase += 0.05 * (freqRef.current / 80);
       raf = requestAnimationFrame(render);
     };
-    raf = requestAnimationFrame(render);
+
+    resize();
+    const ro = new ResizeObserver(() => {
+      resize();
+      if (reduced) draw();
+    });
+    ro.observe(canvas);
+
+    if (reduced) {
+      // Honor prefers-reduced-motion: paint one static frame (phase = 0) and
+      // never start the continuous rAF loop.
+      drawStaticRef.current = draw;
+      draw();
+    } else {
+      raf = requestAnimationFrame(render);
+    }
 
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      drawStaticRef.current = null;
     };
-  }, [height]);
+  }, [height, reduced]);
+
+  // Reduced motion only: repaint a single static frame when the frequency
+  // changes (the slider still updates the picture without animation).
+  useEffect(() => {
+    freqRef.current = freq;
+    drawStaticRef.current?.();
+  }, [freq]);
 
   return (
     <div className="flex flex-col gap-3">

@@ -44,6 +44,35 @@
         justify-content: center;
         background: #0b1220;
       }
+      /* CSS (not SMIL) wave pulse so reduced-motion can switch it off below. */
+      #boot-splash .wave {
+        opacity: 0.15;
+        animation: boot-wave 1.2s ease-in-out infinite;
+      }
+      #boot-splash .wave-2 {
+        animation-delay: 0.18s;
+      }
+      #boot-splash .wave-3 {
+        animation-delay: 0.36s;
+      }
+      @keyframes boot-wave {
+        0%,
+        100% {
+          opacity: 0.15;
+          transform: translateX(0);
+        }
+        50% {
+          opacity: 1;
+          transform: translateX(8px);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #boot-splash .wave {
+          animation: none;
+          opacity: 1;
+          transform: none;
+        }
+      }
     </style>
   </head>
   <body>
@@ -57,18 +86,9 @@
           <path d="M 46 58 L 78 46 L 78 94 L 46 82 Z" fill="rgba(14,165,233,0.25)" stroke="#38bdf8" stroke-width="3" />
           <rect x="30" y="88" width="10" height="3" fill="rgba(100,116,139,0.7)" />
           <rect x="58" y="88" width="10" height="3" fill="rgba(100,116,139,0.7)" />
-          <path d="M 92 44 C 107 49.3, 107 70.7, 92 76" fill="none" stroke="#38bdf8" stroke-width="4">
-            <animate attributeName="opacity" values="0.15;1;0.15" dur="1.2s" begin="0s" repeatCount="indefinite" />
-            <animateTransform attributeName="transform" type="translate" values="0 0; 8 0; 0 0" dur="1.2s" begin="0s" repeatCount="indefinite" />
-          </path>
-          <path d="M 113 38 C 128 45.3, 128 74.7, 113 82" fill="none" stroke="#38bdf8" stroke-width="4">
-            <animate attributeName="opacity" values="0.15;1;0.15" dur="1.2s" begin="0.18s" repeatCount="indefinite" />
-            <animateTransform attributeName="transform" type="translate" values="0 0; 8 0; 0 0" dur="1.2s" begin="0.18s" repeatCount="indefinite" />
-          </path>
-          <path d="M 134 32 C 149 41.3, 149 78.7, 134 88" fill="none" stroke="#38bdf8" stroke-width="4">
-            <animate attributeName="opacity" values="0.15;1;0.15" dur="1.2s" begin="0.36s" repeatCount="indefinite" />
-            <animateTransform attributeName="transform" type="translate" values="0 0; 8 0; 0 0" dur="1.2s" begin="0.36s" repeatCount="indefinite" />
-          </path>
+          <path class="wave wave-1" d="M 92 44 C 107 49.3, 107 70.7, 92 76" fill="none" stroke="#38bdf8" stroke-width="4" />
+          <path class="wave wave-2" d="M 113 38 C 128 45.3, 128 74.7, 113 82" fill="none" stroke="#38bdf8" stroke-width="4" />
+          <path class="wave wave-3" d="M 134 32 C 149 41.3, 149 78.7, 134 88" fill="none" stroke="#38bdf8" stroke-width="4" />
           <rect x="18" y="101" width="120" height="2" fill="rgba(255,255,255,0.1)" />
         </svg>
       </div>

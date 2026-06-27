@@ -1,4 +1,5 @@
 import { cn } from '@/lib/cn';
+import { prefersReducedMotion } from '@/lib/anim';
 
 export function Spinner({ className }: { className?: string }) {
   return (
@@ -24,6 +25,9 @@ export function Spinner({ className }: { className?: string }) {
 }
 
 function LoadingSubwoofer() {
+  // SMIL <animate>/<animateTransform> cannot be paused via CSS, so when the user
+  // prefers reduced motion we render the waves statically (no animate children).
+  const reduced = prefersReducedMotion();
   return (
     <svg
       viewBox="0 0 180 120"
@@ -50,15 +54,19 @@ function LoadingSubwoofer() {
             className="fill-none stroke-wave-400"
             strokeWidth="4"
           >
-            <animate attributeName="opacity" values="0.15;1;0.15" dur="1.2s" begin={`${delay}s`} repeatCount="indefinite" />
-            <animateTransform
-              attributeName="transform"
-              type="translate"
-              values="0 0; 8 0; 0 0"
-              dur="1.2s"
-              begin={`${delay}s`}
-              repeatCount="indefinite"
-            />
+            {reduced ? null : (
+              <>
+                <animate attributeName="opacity" values="0.15;1;0.15" dur="1.2s" begin={`${delay}s`} repeatCount="indefinite" />
+                <animateTransform
+                  attributeName="transform"
+                  type="translate"
+                  values="0 0; 8 0; 0 0"
+                  dur="1.2s"
+                  begin={`${delay}s`}
+                  repeatCount="indefinite"
+                />
+              </>
+            )}
           </path>
         );
       })}

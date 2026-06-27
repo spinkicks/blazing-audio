@@ -2,7 +2,6 @@ import {
   collection,
   deleteDoc,
   doc,
-  getDoc,
   getDocs,
   limit,
   orderBy,
@@ -35,9 +34,4 @@ export async function fetchTopLeaderboard(max = 100): Promise<LeaderboardEntry[]
   const q = query(collection(db, 'leaderboard'), orderBy('xp', 'desc'), limit(max));
   const snap = await getDocs(q);
   return snap.docs.map((d) => ({ uid: d.id, ...(d.data() as Omit<LeaderboardEntry, 'uid'>) }));
-}
-
-export async function fetchOwnEntry(uid: string): Promise<LeaderboardEntry | null> {
-  const snap = await getDoc(entryDoc(uid));
-  return snap.exists() ? { uid, ...(snap.data() as Omit<LeaderboardEntry, 'uid'>) } : null;
 }

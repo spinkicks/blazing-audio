@@ -59,13 +59,13 @@ export function AuthScreen() {
 
   return (
     <div ref={rootRef} className="flex min-h-screen flex-col justify-center px-6 py-10">
-      <div className="mx-auto w-full max-w-sm">
+      <main className="mx-auto w-full max-w-sm" aria-labelledby="auth-heading">
         {/* Brand */}
         <div data-anim="logo" className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center border border-white/10 bg-ink-800">
             <WaveMark className="h-9 w-9" />
           </div>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-white">Blazing Audio</h1>
+          <h1 id="auth-heading" className="font-display text-3xl font-bold tracking-tight text-white">Blazing Audio</h1>
           <p className="mt-1 text-sm text-slate-400">
             Learn how audio really works, one hands-on lesson at a time.
           </p>
@@ -102,7 +102,7 @@ export function AuthScreen() {
           />
 
           {error ? (
-            <p className="bg-clip-500/10 px-3 py-2 text-sm text-clip-300">{error}</p>
+            <p role="alert" className="bg-clip-500/10 px-3 py-2 text-sm text-clip-300">{error}</p>
           ) : null}
 
           <Button type="submit" fullWidth disabled={busy} className="mt-1">
@@ -110,7 +110,7 @@ export function AuthScreen() {
           </Button>
         </form>
 
-        <div className="my-5 flex items-center gap-3 text-xs text-slate-600">
+        <div className="my-5 flex items-center gap-3 text-xs text-slate-400">
           <span className="h-px flex-1 bg-white/10" />
           or
           <span className="h-px flex-1 bg-white/10" />
@@ -134,7 +134,7 @@ export function AuthScreen() {
             {isSignup ? 'Sign in' : 'Create one'}
           </button>
         </p>
-      </div>
+      </main>
     </div>
   );
 }
@@ -168,7 +168,7 @@ function Field({ label, value, onChange, type = 'text', ...rest }: FieldProps) {
 
 function WaveMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 64 64" className={className} fill="none">
+    <svg viewBox="0 0 64 64" className={className} fill="none" aria-hidden="true">
       <path
         d="M6 32c8 0 8-14 16-14s8 28 16 28 8-14 16-14"
         stroke="#38bdf8"

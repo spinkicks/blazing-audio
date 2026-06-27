@@ -21,7 +21,7 @@ export function Sidebar() {
         <span className="font-display text-lg font-bold tracking-tight text-white">Blazing Audio</span>
       </div>
 
-      <nav className="flex flex-1 flex-col gap-1 p-3">
+      <nav aria-label="Main navigation" className="flex flex-1 flex-col gap-1 p-3">
         {items.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import type { GradeResult } from '@/content/grading';
 import {
   gradeMatching,
@@ -42,12 +42,16 @@ export function ReviewPractice({
   concepts,
 }: ReviewPracticeProps) {
   const uid = useAuthStore((s) => s.user?.uid ?? null);
+  // The cached fetch is deferred until the learner opens this block, so a Review
+  // page with many missed topics does not fire N Firestore reads on mount.
+  const [started, setStarted] = useState(false);
   const [phase, setPhase] = useState<Phase>('loading');
   const [topicId, setTopicId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<GeneratedQuestion[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!started) return;
     let active = true;
     if (!uid) {
       setPhase('empty');
@@ -70,7 +74,7 @@ export function ReviewPractice({
     return () => {
       active = false;
     };
-  }, [uid, lessonId, stepId]);
+  }, [started, uid, lessonId, stepId]);
 
   async function generate(regenerate: boolean) {
     setError(null);
@@ -106,7 +110,16 @@ export function ReviewPractice({
             Similar questions on nearby ideas, generated for you.
           </p>
         </div>
-        {phase !== 'loading' ? (
+        {!started ? (
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={() => setStarted(true)}
+            className="shrink-0 whitespace-nowrap"
+          >
+            Show practice
+          </Button>
+        ) : phase !== 'loading' ? (
           <Button
             variant={phase === 'ready' ? 'secondary' : 'primary'}
             size="md"
@@ -127,9 +140,9 @@ export function ReviewPractice({
         ) : null}
       </div>
 
-      {error ? <p className="mt-3 text-sm text-clip-300">{error}</p> : null}
+      {started && error ? <p className="mt-3 text-sm text-clip-300">{error}</p> : null}
 
-      {phase === 'ready' && topicId ? (
+      {started && phase === 'ready' && topicId ? (
         <div className="mt-4 flex flex-col gap-4">
           {questions.map((question, index) => (
             <QuestionItem
@@ -161,6 +174,44 @@ function QuestionItem({ topicId, index, question }: QuestionItemProps) {
 
   const locked = result?.correct ?? false;
   const revealed = result !== null;
+
+  const mcGroupRef = useRef<HTMLDivElement | null>(null);
+
+  function focusOption(idx: number) {
+    const radios = mcGroupRef.current?.querySelectorAll<HTMLButtonElement>('[role="radio"]');
+    radios?.[idx]?.focus();
+  }
+
+  // Arrow-key roving for the MC radio group: move (and select) with the arrows,
+  // confirm with Space/Enter. Disabled once an answer has been revealed.
+  function handleOptionKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (question.kind !== 'mc' || revealed) return;
+    const opts = question.options;
+    const count = opts.length;
+    if (count === 0) return;
+    const currentIndex = optionId ? opts.findIndex((o) => o.id === optionId) : -1;
+    const base = currentIndex >= 0 ? currentIndex : 0;
+    let next = base;
+    switch (event.key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+        next = (base + 1) % count;
+        break;
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        next = (base - 1 + count) % count;
+        break;
+      case ' ':
+      case 'Enter':
+        next = base;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    setOptionId(opts[next].id);
+    focusOption(next);
+  }
 
   function toResult(correct: boolean, explanation: string, wrongText: string): GradeResult {
     return {
@@ -218,8 +269,14 @@ function QuestionItem({ topicId, index, question }: QuestionItemProps) {
 
       <div className="mt-3">
         {question.kind === 'mc' ? (
-          <div className="flex flex-col gap-2" role="radiogroup" aria-label="Answer choices">
-            {question.options.map((option) => {
+          <div
+            ref={mcGroupRef}
+            className="flex flex-col gap-2"
+            role="radiogroup"
+            aria-label="Answer choices"
+            onKeyDown={handleOptionKeyDown}
+          >
+            {question.options.map((option, optionIndex) => {
               const isSelected = optionId === option.id;
               const isCorrect = option.id === question.correctOptionId;
               let tone = 'border-white/10 bg-ink-700/60 hover:border-wave-400/40';
@@ -236,6 +293,7 @@ function QuestionItem({ topicId, index, question }: QuestionItemProps) {
                   type="button"
                   role="radio"
                   aria-checked={isSelected}
+                  tabIndex={(optionId ? isSelected : optionIndex === 0) ? 0 : -1}
                   disabled={revealed}
                   onClick={() => setOptionId(option.id)}
                   className={cn(
@@ -270,7 +328,12 @@ function QuestionItem({ topicId, index, question }: QuestionItemProps) {
         ) : null}
 
         {question.kind === 'fillBlank' ? (
-          <FillBlank value={text} onChange={setText} disabled={revealed} />
+          <FillBlank
+            value={text}
+            onChange={setText}
+            disabled={revealed}
+            ariaLabel={`Your answer to question ${index}`}
+          />
         ) : null}
       </div>
 

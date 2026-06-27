@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, type KeyboardEvent } from 'react';
 import type { MultipleChoiceInteraction } from '@/content/types';
 import { cn } from '@/lib/cn';
 import type { InteractionProps } from './types';
@@ -26,9 +26,52 @@ export function MultipleChoice({ interaction, value, onChange, locked, result }:
     [mc.options, mc.shuffle, mc.correctOptionId],
   );
 
+  const groupRef = useRef<HTMLDivElement | null>(null);
+
+  function focusOption(index: number) {
+    const radios = groupRef.current?.querySelectorAll<HTMLButtonElement>('[role="radio"]');
+    radios?.[index]?.focus();
+  }
+
+  // Arrow-key roving for the radio group: move (and select) with the arrows,
+  // confirm with Space/Enter. Disabled once the group is locked/revealed.
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (locked || revealed) return;
+    const count = options.length;
+    if (count === 0) return;
+    const currentIndex = selected ? options.findIndex((o) => o.id === selected) : -1;
+    const base = currentIndex >= 0 ? currentIndex : 0;
+    let next = base;
+    switch (event.key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+        next = (base + 1) % count;
+        break;
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        next = (base - 1 + count) % count;
+        break;
+      case ' ':
+      case 'Enter':
+        next = base;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    onChange(options[next].id);
+    focusOption(next);
+  }
+
   return (
-    <div className="flex flex-col gap-3" role="radiogroup" aria-label="Answer choices">
-      {options.map((option) => {
+    <div
+      ref={groupRef}
+      className="flex flex-col gap-3"
+      role="radiogroup"
+      aria-label="Answer choices"
+      onKeyDown={handleKeyDown}
+    >
+      {options.map((option, index) => {
         const isSelected = selected === option.id;
         const isCorrect = option.id === mc.correctOptionId;
 
@@ -49,6 +92,7 @@ export function MultipleChoice({ interaction, value, onChange, locked, result }:
             type="button"
             role="radio"
             aria-checked={isSelected}
+            tabIndex={(selected ? isSelected : index === 0) ? 0 : -1}
             disabled={locked || revealed}
             onClick={() => onChange(option.id)}
             className={cn(

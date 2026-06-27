@@ -31,12 +31,23 @@ export async function flushConceptMemory(): Promise<void> {
   if (!uid) return;
   const ids = [...dirty];
   dirty.clear();
-  await Promise.allSettled(
+  const results = await Promise.allSettled(
     ids.map((id) => {
       const m = memory[id];
-      return m ? saveConceptMemory(uid, m).catch((e) => console.error('saveConceptMemory', e)) : Promise.resolve();
+      return m ? saveConceptMemory(uid, m) : Promise.resolve();
     }),
   );
+  // Re-mark any id whose save failed so it retries on the next sync, instead of
+  // dropping the review.
+  let failed = false;
+  results.forEach((result, i) => {
+    if (result.status === 'rejected') {
+      console.error('saveConceptMemory', result.reason);
+      dirty.add(ids[i]);
+      failed = true;
+    }
+  });
+  if (failed) scheduleSync();
 }
 
 export const useConceptMemoryStore = create<ConceptMemoryState>()((set) => ({
@@ -45,7 +56,9 @@ export const useConceptMemoryStore = create<ConceptMemoryState>()((set) => ({
   loaded: false,
 
   load: async (uid) => {
-    set({ uid, loaded: false });
+    // Clear any prior user's memory up front so a slow/failed fetch can never
+    // leave another account's data visible (fail-safe user isolation).
+    set({ uid, memory: {}, loaded: false });
     try {
       const fetched = await fetchAllConceptMemory(uid);
       // Preserve any review recorded locally while the fetch was in flight: a

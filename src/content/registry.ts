@@ -59,7 +59,3 @@ export function toSummary(lesson: Lesson): LessonSummary {
     problemCount: problemCount(lesson),
   };
 }
-
-export function courseSummaries(): LessonSummary[] {
-  return allLessons.map(toSummary);
-}

@@ -43,10 +43,26 @@ export function RetrievalCard({
   // scaffold and require free recall (graded by AI). Other interaction kinds keep
   // their native recognition UI.
   const mc = step.interaction.kind === 'multipleChoice' ? step.interaction : null;
-  const referenceAnswer = mc
+  const optionLabel = mc
     ? mc.options.find((o) => o.id === mc.correctOptionId)?.label ?? ''
     : '';
-  const recallMode = !!mem && strength(mem) >= RECALL_STRENGTH && mc !== null && referenceAnswer.length > 0;
+  // Give the AI grader the step's insight as extra rubric context, not just the
+  // bare correct-option label.
+  const referenceAnswer = optionLabel
+    ? step.feedback.insight
+      ? `${optionLabel} - ${step.feedback.insight}`
+      : optionLabel
+    : '';
+
+  // When recall grading fails (AI down/quota), let the learner fall back to the
+  // multiple-choice view so the card is still completable.
+  const [forceRecognition, setForceRecognition] = useState(false);
+  const recallMode =
+    !forceRecognition &&
+    !!mem &&
+    strength(mem) >= RECALL_STRENGTH &&
+    mc !== null &&
+    optionLabel.length > 0;
 
   const [answer, setAnswer] = useState<AnswerValue | null>(null);
   const [text, setText] = useState('');
@@ -54,14 +70,27 @@ export function RetrievalCard({
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const recordedRef = useRef(false);
+  // True once a 'pass' has been logged (clean first try OR recovery after misses),
+  // so a recovered card never double-counts a pass.
+  const passedRef = useRef(false);
 
   const locked = result?.correct ?? false;
 
   function record(correct: boolean) {
-    if (recordedRef.current) return;
-    recordedRef.current = true;
-    recordConceptReview([conceptId], correct ? 'pass' : 'fail');
-    onResult?.(correct);
+    if (!recordedRef.current) {
+      // First attempt: drives scheduling and the one-shot onResult callback.
+      recordedRef.current = true;
+      if (correct) passedRef.current = true;
+      recordConceptReview([conceptId], correct ? 'pass' : 'fail');
+      onResult?.(correct);
+      return;
+    }
+    // Eventually correct after a miss: record a recovery 'pass' so the final
+    // memory state reflects success instead of the earlier lapse.
+    if (correct && !passedRef.current) {
+      passedRef.current = true;
+      recordConceptReview([conceptId], 'pass');
+    }
   }
 
   async function handleCheck() {
@@ -130,7 +159,23 @@ export function RetrievalCard({
         )}
       </div>
 
-      {error ? <p className="mt-3 text-sm text-clip-300">{error}</p> : null}
+      {error ? (
+        <div className="mt-3">
+          <p className="text-sm text-clip-300">{error}</p>
+          {recallMode ? (
+            <button
+              type="button"
+              onClick={() => {
+                setForceRecognition(true);
+                setError(null);
+              }}
+              className="mt-2 text-sm font-semibold text-wave-400 underline-offset-4 hover:underline"
+            >
+              Answer with multiple choice instead
+            </button>
+          ) : null}
+        </div>
+      ) : null}
 
       {result ? (
         <div className="mt-4">

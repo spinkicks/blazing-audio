@@ -146,9 +146,15 @@ export function SubPlacement({ interaction, onChange, locked }: InteractionProps
 
   return (
     <div className="flex flex-col gap-4">
+      <p className="text-xs leading-relaxed text-slate-400">
+        Drag the subwoofer to place it in the room. Walls and corners increase bass output; open
+        space gives the least.
+      </p>
       <div
         ref={roomRef}
-        className="relative h-[430px] touch-none border border-white/10 bg-ink-950"
+        role="group"
+        aria-label="Subwoofer placement room. Drag the subwoofer to a spot; walls and corners increase bass output, open space gives the least."
+        className="relative h-[430px] max-h-[50vh] touch-none border border-white/10 bg-ink-950"
         onPointerDown={(e) => {
           if (locked) return;
           e.currentTarget.setPointerCapture(e.pointerId);

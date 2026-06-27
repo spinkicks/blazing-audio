@@ -3,16 +3,18 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { openAiApiKey, askModel, parseJson, OPENAI_MODEL, type JsonSchemaSpec } from './openai';
 import { SYSTEM_VOICE, JSON_ONLY } from './prompts';
-import { requireAuth, enforceDailyQuota, parseInput, guardErrors } from './guardrails';
+import { requireAuth, enforceDailyQuota, parseInput, guardErrors, DAILY_LIMIT } from './guardrails';
 
-const DAILY_LIMIT = 40;
 const QUESTION_COUNT = 3;
 
 /* --------------------------------- schemas --------------------------------- */
 
+// lessonId/stepId become Firestore doc-path segments (topicId = `${lessonId}__${stepId}`),
+// so they are restricted to a safe id alphabet - a '/' or '.' could otherwise traverse
+// into an unintended path.
 const generateInput = z.object({
-  lessonId: z.string().min(1).max(120),
-  stepId: z.string().min(1).max(120),
+  lessonId: z.string().min(1).max(120).regex(/^[a-zA-Z0-9_-]+$/),
+  stepId: z.string().min(1).max(120).regex(/^[a-zA-Z0-9_-]+$/),
   lessonTitle: z.string().min(1).max(200),
   concepts: z.array(z.string().max(120)).max(20).default([]),
   missedPrompt: z.string().min(1).max(2000),
@@ -120,8 +122,10 @@ const rawItemSchema = z.object({
 });
 const rawOutputSchema = z.object({ questions: z.array(z.unknown()).min(1) });
 
+// topicId is `${lessonId}__${stepId}` and is used directly as a Firestore doc id,
+// so it must match that exact shape (both halves restricted to the safe id alphabet).
 const verifyInput = z.object({
-  topicId: z.string().min(1).max(260),
+  topicId: z.string().min(1).max(260).regex(/^[a-zA-Z0-9_-]+__[a-zA-Z0-9_-]+$/),
   questionId: z.string().min(1).max(40),
   userAnswer: z.string().min(1).max(1000),
 });

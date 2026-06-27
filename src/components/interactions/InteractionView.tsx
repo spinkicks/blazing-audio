@@ -79,6 +79,15 @@ export function InteractionView(props: InteractionProps) {
     case 'ampApplicationMatch':
       return <AmpApplicationMatch {...props} />;
     default:
-      return null;
+      // A content misconfiguration (unknown interaction kind) should surface a
+      // visible notice rather than rendering an empty area.
+      return (
+        <div
+          role="status"
+          className="border border-white/10 bg-ink-800/60 p-4 text-sm text-slate-400"
+        >
+          Unsupported interaction.
+        </div>
+      );
   }
 }

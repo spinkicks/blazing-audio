@@ -2,6 +2,9 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { HttpsError } from 'firebase-functions/v2/https';
 import type { z } from 'zod';
 
+/** Per-user daily cap on model calls, shared across every AI callable. */
+export const DAILY_LIMIT = 40;
+
 /** Ensures the caller is signed in and returns their uid. */
 export function requireAuth(uid: string | undefined): string {
   if (!uid) {
@@ -29,9 +32,11 @@ export function parseInput<T>(schema: z.ZodType<T>, data: unknown): T {
 
 /**
  * Runs a callable's body and guarantees the client never receives a bare,
- * opaque "INTERNAL". Our own `HttpsError`s (auth, quota, validation, model
- * issues) pass through unchanged; any other unexpected error is logged in full
- * and surfaced with a readable message so failures are diagnosable.
+ * opaque "INTERNAL" - nor any raw internal error text. Our own `HttpsError`s
+ * (auth, quota, validation, model issues) carry learner-safe messages and pass
+ * through unchanged; any other unexpected error is logged in full server-side
+ * for diagnosis but surfaced to the client as a fixed, generic message so we
+ * never leak stack traces, provider errors, or other internals.
  */
 export async function guardErrors<T>(label: string, fn: () => Promise<T>): Promise<T> {
   try {
@@ -39,8 +44,10 @@ export async function guardErrors<T>(label: string, fn: () => Promise<T>): Promi
   } catch (err) {
     if (err instanceof HttpsError) throw err;
     console.error(`${label} failed`, err);
-    const detail = err instanceof Error && err.message ? err.message : 'Unexpected error';
-    throw new HttpsError('internal', `The AI assistant hit an error: ${detail}`);
+    throw new HttpsError(
+      'internal',
+      'The AI assistant hit an unexpected error. Please try again.',
+    );
   }
 }
 

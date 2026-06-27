@@ -422,8 +422,6 @@ export type Interaction =
   | ClassDSignalPathInteraction
   | AmpApplicationMatchInteraction;
 
-export type InteractionKind = Interaction['kind'];
-
 /* ---------------------------------- Feedback ---------------------------------- */
 
 /** Hand-written feedback matched to a specific wrong answer. */
@@ -460,8 +458,6 @@ export interface ProblemStep {
   interaction: Interaction;
   feedback: Feedback;
   visual?: VisualSpec;
-  /** Concept ids this problem exercises (see src/content/concepts.ts). */
-  conceptIds?: string[];
   /**
    * Optional progressive hints (scaffolding). One more is revealed per wrong
    * attempt, fading the support without giving the answer. When absent, the AI

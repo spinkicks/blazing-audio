@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { ExcursionInteraction } from '@/content/types';
+import { prefersReducedMotion } from '@/lib/anim';
 import { cn } from '@/lib/cn';
 import type { InteractionProps } from './types';
 
@@ -9,6 +10,10 @@ export function Excursion({ interaction, onChange, locked }: InteractionProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const live = useRef({ watts });
   live.current = { watts };
+  const reduced = prefersReducedMotion();
+  // In reduced-motion mode no idle loop runs, so keep a handle to the static
+  // draw to repaint a single frame when the power changes.
+  const drawStaticRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     onChange(watts);
@@ -32,10 +37,6 @@ export function Excursion({ interaction, onChange, locked }: InteractionProps) {
       canvas.height = Math.round(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
-
     const drawDriver = ({
       cx,
       cy,
@@ -120,7 +121,7 @@ export function Excursion({ interaction, onChange, locked }: InteractionProps) {
       ctx.fillText(`${Math.round(ratio * 100)}% Xmax`, cx, cy + 82);
     };
 
-    const render = () => {
+    const draw = () => {
       const w = live.current.watts;
       const freeRatio = w / ex.xmaxAtW;
       const boxedRatio = freeRatio * 0.58;
@@ -142,17 +143,43 @@ export function Excursion({ interaction, onChange, locked }: InteractionProps) {
         ratio: boxedRatio,
         color: '#38bdf8',
       });
+    };
 
+    const render = () => {
+      draw();
       phase += 0.06 * (ex.frequency / 40);
       raf = requestAnimationFrame(render);
     };
-    raf = requestAnimationFrame(render);
+
+    resize();
+    const ro = new ResizeObserver(() => {
+      resize();
+      if (reduced) draw();
+    });
+    ro.observe(canvas);
+
+    if (reduced) {
+      // Honor prefers-reduced-motion: paint one static frame (phase = 0, cones
+      // at rest) and never start the continuous rAF loop.
+      drawStaticRef.current = draw;
+      draw();
+    } else {
+      raf = requestAnimationFrame(render);
+    }
 
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      drawStaticRef.current = null;
     };
-  }, [ex.frequency, ex.xmaxAtW]);
+  }, [ex.frequency, ex.xmaxAtW, reduced]);
+
+  // Reduced motion only: repaint a single static frame when the power changes
+  // (the slider still updates the picture without animation).
+  useEffect(() => {
+    live.current = { watts };
+    drawStaticRef.current?.();
+  }, [watts]);
 
   const freeRatio = watts / ex.xmaxAtW;
   const boxedRatio = freeRatio * 0.58;

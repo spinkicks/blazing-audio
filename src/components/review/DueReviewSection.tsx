@@ -20,9 +20,12 @@ function buildQueue(memory: Record<string, ConceptMemory>): QueueItem[] {
       return found && concept ? { conceptId, conceptName: concept.name, found } : null;
     })
     .filter((x): x is QueueItem => x !== null);
-  // Interleave by interaction kind so the learner mixes approaches instead of
-  // answering several of the same problem type in a row.
-  return interleaveByKey(items, (item) => item.found.step.interaction.kind);
+  // Interleave by lesson AND interaction kind so consecutive cards avoid sharing
+  // both the same source lesson and the same problem type.
+  return interleaveByKey(
+    items,
+    (item) => `${item.found.lessonId}:${item.found.step.interaction.kind}`,
+  );
 }
 
 export function DueReviewSection() {

@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { prefersReducedMotion } from '@/lib/anim';
 
 /**
  * A clipped sine drives a cone that slams to its extremes and HOLDS there (flat
@@ -7,6 +8,7 @@ import { useEffect, useRef } from 'react';
  */
 export function ClipCoil({ height = 280 }: { height?: number }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const reduced = prefersReducedMotion();
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -27,12 +29,15 @@ export function ClipCoil({ height = 280 }: { height?: number }) {
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     resize();
-    const ro = new ResizeObserver(resize);
+    const ro = new ResizeObserver(() => {
+      resize();
+      if (reduced) draw();
+    });
     ro.observe(canvas);
 
     const DRIVE = 1.7; // overdriven so the sine clips
 
-    const render = () => {
+    const draw = () => {
       const yC = height * 0.42;
       const amp = height * 0.18;
       const scopeL = 14;
@@ -110,17 +115,27 @@ export function ClipCoil({ height = 280 }: { height?: number }) {
       ctx.textAlign = 'center';
       ctx.fillStyle = heat > 0.55 ? '#f87171' : 'rgba(148,163,184,0.9)';
       ctx.fillText(heat > 0.85 ? 'voice coil frying' : 'voice coil heating', apexX, height - 6);
+    };
 
+    const render = () => {
+      draw();
       phase += 0.05;
       raf = requestAnimationFrame(render);
     };
-    raf = requestAnimationFrame(render);
+
+    if (reduced) {
+      // Honor prefers-reduced-motion: paint one static frame (no heat build-up,
+      // no smoke) and never start the continuous rAF loop.
+      draw();
+    } else {
+      raf = requestAnimationFrame(render);
+    }
 
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
     };
-  }, [height]);
+  }, [height, reduced]);
 
   return (
     <div className="border border-white/5 bg-ink-950/60 p-2">

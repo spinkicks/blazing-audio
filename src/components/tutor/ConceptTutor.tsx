@@ -74,6 +74,7 @@ export function ConceptTutor({ prompt, insight, lessonTitle, className, autoOpen
       <button
         type="button"
         onClick={handleOpen}
+        aria-expanded={open}
         className={cn(
           'text-sm font-semibold text-wave-400 underline-offset-4 hover:underline',
           className,
@@ -91,13 +92,14 @@ export function ConceptTutor({ prompt, insight, lessonTitle, className, autoOpen
         <button
           type="button"
           onClick={() => setOpen(false)}
+          aria-expanded={open}
           className="text-xs text-slate-400 hover:text-slate-200"
         >
           Hide
         </button>
       </div>
 
-      <div className="mt-3 flex flex-col gap-3">
+      <div className="mt-3 flex flex-col gap-3" aria-live="polite">
         {turns.map((turn, index) => (
           <p
             key={index}

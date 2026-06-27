@@ -1,6 +1,7 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
 import type { CurvePoint } from '@/content/types';
 import { dbAtFreq, freqToT, tToFreq } from '@/lib/freqMath';
+import { prefersReducedMotion } from '@/lib/anim';
 
 const DB_MIN = -24;
 const DB_MAX = 8;
@@ -28,6 +29,10 @@ export function ResponseCurve({ points, probeFreq = null, height = 200, classNam
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const live = useRef({ points, probeFreq });
   live.current = { points, probeFreq };
+  const reduced = prefersReducedMotion();
+  // In reduced-motion mode no idle loop runs, so keep a handle to the static
+  // draw to repaint a single frame when an input changes.
+  const drawStaticRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -47,11 +52,8 @@ export function ResponseCurve({ points, probeFreq = null, height = 200, classNam
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
 
-    const render = () => {
+    const draw = () => {
       const { points: pts, probeFreq: probe } = live.current;
       ctx.clearRect(0, 0, width, h);
 
@@ -104,16 +106,42 @@ export function ResponseCurve({ points, probeFreq = null, height = 200, classNam
         ctx.arc(x, y, 6, 0, Math.PI * 2);
         ctx.fill();
       }
+    };
 
+    const render = () => {
+      draw();
       raf = requestAnimationFrame(render);
     };
-    raf = requestAnimationFrame(render);
+
+    resize();
+    const ro = new ResizeObserver(() => {
+      resize();
+      if (reduced) draw();
+    });
+    ro.observe(canvas);
+
+    if (reduced) {
+      // Honor prefers-reduced-motion: paint one static frame and never start the
+      // continuous rAF loop (the curve has no idle animation to lose).
+      drawStaticRef.current = draw;
+      draw();
+    } else {
+      raf = requestAnimationFrame(render);
+    }
 
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      drawStaticRef.current = null;
     };
-  }, [height]);
+  }, [height, reduced]);
+
+  // Reduced motion only: repaint a single static frame when the curve or probe
+  // changes (probing still updates the picture without animation).
+  useEffect(() => {
+    live.current = { points, probeFreq };
+    drawStaticRef.current?.();
+  }, [points, probeFreq]);
 
   return (
     <canvas

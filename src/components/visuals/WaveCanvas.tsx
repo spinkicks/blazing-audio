@@ -1,4 +1,5 @@
 import { useEffect, useRef, type CSSProperties } from 'react';
+import { prefersReducedMotion } from '@/lib/anim';
 
 interface WaveTarget {
   amplitude: number;
@@ -43,6 +44,10 @@ export function WaveCanvas({
     clip: boolean;
   }>({ amplitude, frequency, target, clip });
   live.current = { amplitude, frequency, target, clip };
+  const reduced = prefersReducedMotion();
+  // In reduced-motion mode no idle loop runs, so we keep a handle to the static
+  // draw to repaint a single frame when an input changes.
+  const drawStaticRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -64,9 +69,6 @@ export function WaveCanvas({
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
-    resize();
-    const ro = new ResizeObserver(resize);
-    ro.observe(canvas);
 
     const drawWave = (
       amp: number,
@@ -98,7 +100,7 @@ export function WaveCanvas({
       ctx.setLineDash([]);
     };
 
-    const render = () => {
+    const draw = () => {
       ctx.clearRect(0, 0, width, h);
       // baseline
       ctx.strokeStyle = 'rgba(255,255,255,0.08)';
@@ -112,17 +114,43 @@ export function WaveCanvas({
       const isClipping = clipOn && a >= 1;
       if (tgt) drawWave(tgt.amplitude, tgt.frequency, '#94a3b8', 2.5, true, false);
       drawWave(a, f, isClipping ? '#f87171' : '#38bdf8', 3, false, clipOn);
+    };
 
+    const render = () => {
+      draw();
       if (animate) phase += 0.045;
       raf = requestAnimationFrame(render);
     };
-    raf = requestAnimationFrame(render);
+
+    resize();
+    const ro = new ResizeObserver(() => {
+      resize();
+      if (reduced) draw();
+    });
+    ro.observe(canvas);
+
+    if (reduced) {
+      // Honor prefers-reduced-motion: paint one static frame (phase = 0) and
+      // never start the continuous rAF loop.
+      drawStaticRef.current = draw;
+      draw();
+    } else {
+      raf = requestAnimationFrame(render);
+    }
 
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      drawStaticRef.current = null;
     };
-  }, [height, animate]);
+  }, [height, animate, reduced]);
+
+  // Reduced motion only: repaint a single static frame when a drawing input
+  // changes (slider scrubbing still updates the picture without animation).
+  useEffect(() => {
+    live.current = { amplitude, frequency, target, clip };
+    drawStaticRef.current?.();
+  }, [amplitude, frequency, target, clip]);
 
   return (
     <canvas

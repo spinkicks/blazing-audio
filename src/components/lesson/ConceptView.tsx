@@ -47,7 +47,7 @@ export function ConceptView({ step }: { step: ConceptStep }) {
             {step.title}
           </h2>
           {canSpeak ? (
-            <Button variant="secondary" size="md" onClick={toggleSpeech} className="shrink-0">
+            <Button variant="secondary" size="md" onClick={toggleSpeech} aria-pressed={speaking} className="shrink-0">
               {speaking ? 'Stop audio' : 'Read aloud'}
             </Button>
           ) : null}
