@@ -46,9 +46,7 @@ export function CapstoneHero({ unlocked, completed, total }: CapstoneHeroProps) 
       aria-labelledby="capstone-hero-title"
       className={cn(
         'relative overflow-hidden border bg-gradient-to-br from-ink-800 to-ink-950 p-6 md:p-8',
-        unlocked
-          ? 'border-amp-400/60 shadow-[0_0_55px_-16px_rgba(249,83,30,0.6)]'
-          : 'border-amp-500/25',
+        unlocked ? 'border-amp-400/60' : 'border-amp-500/25',
       )}
     >
       {/* Top accent rail: signals "this is the prize". */}
