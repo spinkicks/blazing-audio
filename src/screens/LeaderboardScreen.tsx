@@ -6,13 +6,12 @@ import { fetchTopLeaderboard, type LeaderboardEntry } from '@/features/leaderboa
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
-import { useEntrance } from '@/lib/useEntrance';
+import { useTimeline, countUp } from '@/lib/anim';
 import { cn } from '@/lib/cn';
 
 export function LeaderboardScreen() {
   const navigate = useNavigate();
   const rootRef = useRef<HTMLDivElement>(null);
-  useEntrance(rootRef);
   const uid = useAuthStore((s) => s.user?.uid ?? null);
   const optedIn = useProgressStore((s) => Boolean(s.profile?.leaderboardOptIn && s.profile?.alias));
   const [entries, setEntries] = useState<LeaderboardEntry[] | null>(null);
@@ -30,9 +29,18 @@ export function LeaderboardScreen() {
 
   const ownIndex = entries && uid ? entries.findIndex((e) => e.uid === uid) : -1;
 
+  useTimeline(rootRef, (tl) => {
+    const root = rootRef.current;
+    if (!root) return;
+    tl.from('[data-anim="head"]', { opacity: 0, y: 12, ease: 'power2.out' }, 0);
+    tl.from('[data-anim="card"]', { opacity: 0, y: 16, ease: 'power3.out', stagger: 0.1 }, 0.12);
+    tl.from('[data-anim="row"]', { opacity: 0, x: -28, ease: 'power3.out', stagger: 0.05 }, 0.3);
+    countUp(tl, root.querySelectorAll('[data-count]'), 0.35, 0.9);
+  });
+
   return (
     <div ref={rootRef} className="flex flex-col gap-6">
-      <header data-entrance>
+      <header data-anim="head">
         <p className="text-sm font-semibold uppercase tracking-wide text-amp-400">Ranks</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-white">Leaderboard</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
@@ -41,7 +49,7 @@ export function LeaderboardScreen() {
       </header>
 
       {!optedIn ? (
-        <Card data-entrance className="border-amp-500/30 bg-ink-800">
+        <Card data-anim="card" className="border-amp-500/30 bg-ink-800">
           <h2 className="font-display text-lg font-bold text-white">You are not on the board yet</h2>
           <p className="mt-1 text-sm text-slate-400">
             Pick a display alias and opt in from your Profile to join the rankings.
@@ -61,13 +69,14 @@ export function LeaderboardScreen() {
       ) : null}
 
       {entries && entries.length > 0 ? (
-        <Card data-entrance>
+        <Card data-anim="card">
           <ul className="flex flex-col">
             {entries.map((entry, i) => {
               const isOwn = entry.uid === uid;
               return (
                 <li
                   key={entry.uid}
+                  data-anim="row"
                   className={cn(
                     // Full-bleed within the Card's p-5 so the highlight band spans
                     // edge to edge and the XP stays padded from the card border.
@@ -82,7 +91,9 @@ export function LeaderboardScreen() {
                     {entry.alias}
                     {isOwn ? <span className="ml-2 text-xs text-wave-400">you</span> : null}
                   </span>
-                  <span className="shrink-0 font-mono text-sm font-bold tabular-nums text-amp-400">{entry.xp} XP</span>
+                  <span className="shrink-0 font-mono text-sm font-bold tabular-nums text-amp-400">
+                    <span data-count={entry.xp}>{entry.xp}</span> XP
+                  </span>
                 </li>
               );
             })}

@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { Button } from '@/components/ui/Button';
-import { prefersReducedMotion } from '@/lib/useEntrance';
+import { prefersReducedMotion } from '@/lib/anim';
 import { cn } from '@/lib/cn';
 
 interface CapstoneHeroProps {
@@ -42,7 +42,7 @@ export function CapstoneHero({ unlocked, completed, total }: CapstoneHeroProps) 
 
   return (
     <section
-      data-entrance
+      data-anim="hero"
       aria-labelledby="capstone-hero-title"
       className={cn(
         'relative overflow-hidden border bg-gradient-to-br from-ink-800 to-ink-950 p-6 md:p-8',

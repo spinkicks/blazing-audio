@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useProgressStore } from '@/features/progress/progressStore';
 import { useAuthStore } from '@/features/auth/authStore';
@@ -15,7 +15,8 @@ import { fetchCapstone, saveCapstone } from '@/features/capstone/capstoneService
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
-import { useEntrance } from '@/lib/useEntrance';
+import { useTimeline, prefersReducedMotion } from '@/lib/anim';
+import gsap from 'gsap';
 import { cn } from '@/lib/cn';
 
 const FORMATS: SurroundFormat[] = ['unsure', '2.0', '2.1', '5.1', '7.1', '5.1.2', '5.1.4', '7.1.4'];
@@ -49,7 +50,21 @@ export function CapstoneScreen() {
   const [result, setResult] = useState<EvaluateCapstoneResponse | null>(null);
 
   const rootRef = useRef<HTMLDivElement>(null);
-  useEntrance(rootRef);
+
+  useTimeline(rootRef, (tl) => {
+    tl.from('[data-anim="head"]', { opacity: 0, y: 12, ease: 'power2.out' }, 0);
+    tl.from('[data-anim="form"]', { opacity: 0, y: 18, ease: 'power3.out' }, 0.12);
+  });
+
+  useLayoutEffect(() => {
+    const root = rootRef.current;
+    if (!root || !result || prefersReducedMotion()) return;
+    const ctx = gsap.context(() => {
+      gsap.from('[data-anim="verdict"]', { opacity: 0, scale: 0.7, duration: 0.4, ease: 'back.out(2)' });
+      gsap.from('[data-anim="aspect"]', { opacity: 0, y: 16, duration: 0.45, ease: 'power3.out', stagger: 0.08, delay: 0.1 });
+    }, root);
+    return () => ctx.revert();
+  }, [result]);
 
   useEffect(() => {
     if (!uid || !unlocked) return;
@@ -97,7 +112,7 @@ export function CapstoneScreen() {
 
   return (
     <div ref={rootRef} className="flex flex-col gap-6">
-      <header data-entrance>
+      <header data-anim="head">
         <p className="text-sm font-semibold uppercase tracking-wide text-amp-400">Final project</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-white">Plan your system</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
@@ -107,7 +122,7 @@ export function CapstoneScreen() {
         </p>
       </header>
 
-      <Card data-entrance>
+      <Card data-anim="form">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -155,7 +170,7 @@ export function CapstoneScreen() {
       </Card>
 
       {result ? (
-        <div data-entrance>
+        <div>
           <CapstoneReport result={result} />
         </div>
       ) : null}
@@ -165,10 +180,11 @@ export function CapstoneScreen() {
 
 function CapstoneReport({ result }: { result: EvaluateCapstoneResponse }) {
   return (
-    <div className="flex flex-col gap-3 animate-fade-in">
+    <div className="flex flex-col gap-3">
       <Card>
         <div className="flex items-center gap-3">
           <span
+            data-anim="verdict"
             className={cn(
               'px-2.5 py-1 text-xs font-bold uppercase tracking-wide',
               VERDICT_STYLES[result.overall].badge,
@@ -186,7 +202,7 @@ function CapstoneReport({ result }: { result: EvaluateCapstoneResponse }) {
       {result.aspects.map((aspect, i) => {
         const style = STATUS_STYLES[aspect.status];
         return (
-          <div key={i} className={cn('border p-4', style.box)}>
+          <div key={i} data-anim="aspect" className={cn('border p-4', style.box)}>
             <div className="flex items-center justify-between gap-3">
               <p className="font-bold text-white">{aspect.name}</p>
               <span className="text-xs font-bold uppercase tracking-wide text-slate-300">{style.label}</span>
@@ -196,7 +212,7 @@ function CapstoneReport({ result }: { result: EvaluateCapstoneResponse }) {
         );
       })}
 
-      <Card>
+      <Card data-anim="aspect">
         <p className="text-[11px] font-semibold uppercase tracking-wide text-wave-400">Next steps</p>
         <p className="mt-1 text-sm leading-relaxed text-slate-300">{result.nextSteps}</p>
       </Card>

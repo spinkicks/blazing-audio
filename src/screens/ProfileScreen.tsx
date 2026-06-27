@@ -7,11 +7,10 @@ import { StreakBadge } from '@/components/ui/StreakBadge';
 import { CONCEPTS } from '@/content/concepts';
 import { useConceptMemoryStore } from '@/features/memory/conceptMemoryStore';
 import { isMastered, strength } from '@/features/memory/scheduler';
-import { useEntrance } from '@/lib/useEntrance';
+import { useTimeline, countUp } from '@/lib/anim';
 
 export function ProfileScreen() {
   const rootRef = useRef<HTMLDivElement>(null);
-  useEntrance(rootRef);
   const profile = useProgressStore((s) => s.profile);
   const reset = useProgressStore((s) => s.reset);
   const setLeaderboard = useProgressStore((s) => s.setLeaderboard);
@@ -24,6 +23,16 @@ export function ProfileScreen() {
   const [alias, setAlias] = useState(profile?.alias ?? '');
   const [optIn, setOptIn] = useState(Boolean(profile?.leaderboardOptIn));
 
+  useTimeline(rootRef, (tl) => {
+    const root = rootRef.current;
+    if (!root) return;
+    tl.from('[data-anim="head"]', { opacity: 0, y: 12, ease: 'power2.out' }, 0);
+    tl.from('[data-anim="stat"]', { opacity: 0, y: 14, scale: 0.92, ease: 'back.out(1.5)', stagger: { each: 0.07, from: 'center' } }, 0.15);
+    countUp(tl, root.querySelectorAll('[data-count]'), 0.2, 1.0);
+    tl.from('[data-anim="card"]', { opacity: 0, y: 16, ease: 'power3.out', stagger: 0.08 }, 0.3);
+    tl.from('[data-anim="bar"]', { scaleX: 0, transformOrigin: 'left center', duration: 0.7, ease: 'power2.out', stagger: 0.03 }, 0.55);
+  });
+
   async function handleSignOut() {
     setBusy(true);
     await flushNow(); // make sure nothing pending is lost
@@ -33,7 +42,7 @@ export function ProfileScreen() {
 
   return (
     <div ref={rootRef} className="flex flex-col gap-6">
-      <header data-entrance className="flex items-center gap-4">
+      <header data-anim="head" className="flex items-center gap-4">
         <div className="flex h-14 w-14 items-center justify-center bg-ink-700 text-xl font-bold text-wave-400">
           {(profile?.displayName ?? '?').charAt(0).toUpperCase()}
         </div>
@@ -45,12 +54,12 @@ export function ProfileScreen() {
         </div>
       </header>
 
-      <Card data-entrance>
+      <Card data-anim="card">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-500">Current streak</p>
             <p className="font-mono text-2xl font-bold tabular-nums text-white">
-              {profile?.streak.current ?? 0} days
+              <span data-count={profile?.streak.current ?? 0}>{profile?.streak.current ?? 0}</span> days
             </p>
           </div>
           <StreakBadge count={profile?.streak.current ?? 0} />
@@ -60,7 +69,7 @@ export function ProfileScreen() {
         </p>
       </Card>
 
-      <div data-entrance className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Stat label="Lessons" value={profile?.stats.lessonsCompleted ?? 0} />
         <Stat label="Problems" value={profile?.stats.problemsSolved ?? 0} />
         <Stat
@@ -70,7 +79,7 @@ export function ProfileScreen() {
         />
       </div>
 
-      <Card data-entrance>
+      <Card data-anim="card">
         <div className="flex items-baseline justify-between">
           <h2 className="font-display text-lg font-bold text-white">Concept mastery</h2>
           <span className="font-mono text-sm tabular-nums text-slate-400">
@@ -85,7 +94,7 @@ export function ProfileScreen() {
               <li key={concept.id} className="flex items-center gap-3">
                 <span className="w-40 shrink-0 truncate text-sm text-slate-300">{concept.name}</span>
                 <span className="h-2 flex-1 bg-ink-700">
-                  <span className="block h-full bg-wave-400" style={{ width: `${pct}%` }} />
+                  <span data-anim="bar" className="block h-full bg-wave-400" style={{ width: `${pct}%` }} />
                 </span>
                 <span className="w-10 shrink-0 text-right font-mono text-xs tabular-nums text-slate-500">{pct}%</span>
               </li>
@@ -94,7 +103,7 @@ export function ProfileScreen() {
         </ul>
       </Card>
 
-      <Card data-entrance>
+      <Card data-anim="card">
         <h2 className="font-display text-lg font-bold text-white">Leaderboard</h2>
         <p className="mt-1 text-sm text-slate-400">
           Opt in to appear on the public XP leaderboard under an alias (not your name or email).
@@ -123,7 +132,7 @@ export function ProfileScreen() {
         </Button>
       </Card>
 
-      <Button data-entrance variant="danger" fullWidth disabled={busy} onClick={handleSignOut}>
+      <Button data-anim="card" variant="danger" fullWidth disabled={busy} onClick={handleSignOut}>
         Sign out
       </Button>
     </div>
@@ -132,8 +141,8 @@ export function ProfileScreen() {
 
 function Stat({ label, value, help }: { label: string; value: number; help?: string }) {
   return (
-    <div className="group relative bg-ink-800 p-4 text-center" tabIndex={help ? 0 : undefined}>
-      <div className="font-mono text-2xl font-bold tabular-nums text-white">{value}</div>
+    <div data-anim="stat" className="group relative bg-ink-800 p-4 text-center" tabIndex={help ? 0 : undefined}>
+      <div data-count={value} className="font-mono text-2xl font-bold tabular-nums text-white">{value}</div>
       <div className="mt-1 text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
       {help ? (
         <div className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-72 -translate-x-1/2 border border-white/10 bg-ink-950 p-3 text-left text-xs leading-relaxed text-slate-300 shadow-lg group-hover:block group-focus:block">

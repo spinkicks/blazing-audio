@@ -7,7 +7,7 @@ import {
 } from '@/features/auth/authService';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
-import { useEntrance } from '@/lib/useEntrance';
+import { useTimeline } from '@/lib/anim';
 
 type Mode = 'signin' | 'signup';
 
@@ -19,9 +19,15 @@ export function AuthScreen() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
-  useEntrance(rootRef);
 
   const isSignup = mode === 'signup';
+
+  useTimeline(rootRef, (tl) => {
+    tl.from('[data-anim="logo"]', { opacity: 0, scale: 0.8, y: 8, duration: 0.6, ease: 'back.out(1.6)' }, 0);
+    tl.from('[data-anim="form"]', { opacity: 0, y: 18, duration: 0.6, ease: 'power3.out' }, 0.2);
+    tl.from('[data-anim="alt"]', { opacity: 0, y: 12, ease: 'power2.out' }, 0.4);
+    tl.from('[data-anim="foot"]', { opacity: 0, ease: 'power2.out' }, 0.5);
+  });
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -55,7 +61,7 @@ export function AuthScreen() {
     <div ref={rootRef} className="flex min-h-screen flex-col justify-center px-6 py-10">
       <div className="mx-auto w-full max-w-sm">
         {/* Brand */}
-        <div data-entrance className="mb-8 text-center">
+        <div data-anim="logo" className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center border border-white/10 bg-ink-800">
             <WaveMark className="h-9 w-9" />
           </div>
@@ -65,7 +71,7 @@ export function AuthScreen() {
           </p>
         </div>
 
-        <form data-entrance onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <form data-anim="form" onSubmit={handleSubmit} className="flex flex-col gap-3">
           {isSignup ? (
             <Field
               label="Name"
@@ -110,12 +116,12 @@ export function AuthScreen() {
           <span className="h-px flex-1 bg-white/10" />
         </div>
 
-        <Button data-entrance variant="secondary" fullWidth disabled={busy} onClick={handleGoogle}>
+        <Button data-anim="alt" variant="secondary" fullWidth disabled={busy} onClick={handleGoogle}>
           <GoogleMark className="h-5 w-5" />
           Continue with Google
         </Button>
 
-        <p data-entrance className="mt-6 text-center text-sm text-slate-400">
+        <p data-anim="foot" className="mt-6 text-center text-sm text-slate-400">
           {isSignup ? 'Already have an account?' : "New here?"}{' '}
           <button
             type="button"

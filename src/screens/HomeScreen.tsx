@@ -9,13 +9,12 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StreakBadge } from '@/components/ui/StreakBadge';
 import { CapstoneHero } from '@/components/home/CapstoneHero';
-import { useEntrance } from '@/lib/useEntrance';
+import { useTimeline, countUp, drawPath } from '@/lib/anim';
 import { cn } from '@/lib/cn';
 
 export function HomeScreen() {
   const navigate = useNavigate();
   const rootRef = useRef<HTMLDivElement>(null);
-  useEntrance(rootRef);
   const profile = useProgressStore((s) => s.profile);
   const progress = useProgressStore((s) => s.progress);
 
@@ -28,12 +27,33 @@ export function HomeScreen() {
   const dueCount = dueConceptIds(conceptMemory, Date.now()).length;
   const firstName = profile?.displayName?.split(' ')[0] ?? 'there';
 
+  // Content-true entrance: hero settles (its meter charges separately), the stat
+  // tiles pop while their numbers count up, cards slide in, then the course path
+  // draws itself and the lesson rows cascade. Varied eases keep it from reading
+  // as one uniform slide.
+  useTimeline(rootRef, (tl) => {
+    const root = rootRef.current;
+    if (!root) return;
+    tl.from('[data-anim="hero"]', { opacity: 0, y: 24, duration: 0.7, ease: 'expo.out' }, 0);
+    tl.from('[data-anim="greeting"]', { opacity: 0, y: 12, ease: 'power2.out' }, 0.15);
+    tl.from(
+      '[data-anim="stat"]',
+      { opacity: 0, y: 14, scale: 0.92, ease: 'back.out(1.5)', stagger: { each: 0.07, from: 'center' } },
+      0.25,
+    );
+    countUp(tl, root.querySelectorAll('[data-count]'), 0.3, 1.0);
+    tl.from('[data-anim="card"]', { opacity: 0, x: -24, ease: 'power3.out', stagger: 0.1 }, 0.4);
+    tl.from('[data-anim="course"]', { opacity: 0, y: 16, ease: 'power2.out' }, 0.5);
+    drawPath(tl, root.querySelector<SVGPathElement>('[data-anim="rail-path"]'), 0.6, 1.0);
+    tl.from('[data-anim="lesson"]', { opacity: 0, y: 14, ease: 'power2.out', stagger: 0.05 }, 0.7);
+  });
+
   return (
     <div ref={rootRef} className="flex flex-col gap-6">
       <CapstoneHero unlocked={courseComplete} completed={completedLessons} total={nodes.length} />
 
       {/* Greeting + streak */}
-      <header data-entrance className="flex items-center justify-between">
+      <header data-anim="greeting" className="flex items-center justify-between">
         <div>
           <p className="text-sm text-slate-400">Welcome back,</p>
           <h1 className="font-display text-2xl font-bold tracking-tight text-white">{firstName}</h1>
@@ -42,7 +62,7 @@ export function HomeScreen() {
       </header>
 
       {/* Stats */}
-      <div data-entrance className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <MiniStat label="Lessons" value={profile?.stats.lessonsCompleted ?? 0} />
         <MiniStat label="Solved" value={profile?.stats.problemsSolved ?? 0} />
         <MiniStat label="XP" value={profile?.stats.xp ?? 0} />
@@ -51,7 +71,7 @@ export function HomeScreen() {
       {/* Continue CTA - the main learning action (ember primary button). */}
       {recommended ? (
         <Card
-          data-entrance
+          data-anim="card"
           className="border-l-2 border-l-wave-400 border-white/10 bg-ink-800"
         >
           <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
@@ -68,7 +88,7 @@ export function HomeScreen() {
           </Button>
         </Card>
       ) : (
-        <Card data-entrance>
+        <Card data-anim="card">
           <p className="text-sm text-slate-300">
             You have finished every lesson available. More are on the way.
           </p>
@@ -76,7 +96,7 @@ export function HomeScreen() {
       )}
 
       {reviewTopics.length > 0 ? (
-        <Card data-entrance className="border-l-2 border-l-wave-400 border-white/10 bg-ink-800">
+        <Card data-anim="card" className="border-l-2 border-l-wave-400 border-white/10 bg-ink-800">
           <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
             Focused practice
           </p>
@@ -92,7 +112,7 @@ export function HomeScreen() {
       ) : null}
 
       {dueCount > 0 ? (
-        <Card data-entrance className="border-l-2 border-l-wave-400 border-white/10 bg-ink-800">
+        <Card data-anim="card" className="border-l-2 border-l-wave-400 border-white/10 bg-ink-800">
           <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">Daily goal</p>
           <h2 className="mt-1 font-display text-lg font-bold text-white">
             {dueCount} concept{dueCount === 1 ? '' : 's'} due for review
@@ -107,7 +127,7 @@ export function HomeScreen() {
       ) : null}
 
       {/* Course path */}
-      <section data-entrance>
+      <section data-anim="course">
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
           Your course
         </h3>
@@ -146,7 +166,7 @@ function CoursePathRail({ nodes }: { nodes: CourseNode[] }) {
   return (
     <div className="no-scrollbar mb-4 overflow-x-auto border border-white/5 bg-ink-950/40 p-3">
       <svg viewBox={`0 0 ${width} 112`} className="min-w-full" style={{ width }}>
-        <path d={path} fill="none" stroke="rgba(56,189,248,0.45)" strokeWidth="3" />
+        <path data-anim="rail-path" d={path} fill="none" stroke="rgba(56,189,248,0.45)" strokeWidth="3" />
         {points.map((point, i) => {
           const node = nodes[i];
           const active = !node.locked && node.status !== 'notStarted';
@@ -188,8 +208,10 @@ function CoursePathRail({ nodes }: { nodes: CourseNode[] }) {
 
 function MiniStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="border border-white/5 bg-ink-800 p-3 text-center">
-      <div className="font-mono text-xl font-bold tabular-nums text-white">{value}</div>
+    <div data-anim="stat" className="border border-white/5 bg-ink-800 p-3 text-center">
+      <div data-count={value} className="font-mono text-xl font-bold tabular-nums text-white">
+        {value}
+      </div>
       <div className="mt-0.5 text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
     </div>
   );
@@ -198,7 +220,7 @@ function MiniStat({ label, value }: { label: string; value: number }) {
 function LessonRow({ node, onClick }: { node: CourseNode; onClick: () => void }) {
   const { summary, locked, status, needsReview } = node;
   return (
-    <li>
+    <li data-anim="lesson">
       <button
         type="button"
         disabled={locked}
