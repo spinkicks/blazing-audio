@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StreakBadge } from '@/components/ui/StreakBadge';
 import { CapstoneHero } from '@/components/home/CapstoneHero';
+import { lessonMasterySignal } from '@/features/memory/mastery';
 import { useTimeline, countUp, drawPath } from '@/lib/anim';
 import { cn } from '@/lib/cn';
 
@@ -137,6 +138,7 @@ export function HomeScreen() {
             <LessonRow
               key={node.summary.id}
               node={node}
+              mastered={lessonMasterySignal(node.summary.id, progress, conceptMemory) === 'mastered'}
               onClick={() => !node.locked && navigate(`/lesson/${node.summary.id}`)}
             />
           ))}
@@ -217,7 +219,15 @@ function MiniStat({ label, value }: { label: string; value: number }) {
   );
 }
 
-function LessonRow({ node, onClick }: { node: CourseNode; onClick: () => void }) {
+function LessonRow({
+  node,
+  onClick,
+  mastered,
+}: {
+  node: CourseNode;
+  onClick: () => void;
+  mastered?: boolean;
+}) {
   const { summary, locked, status, needsReview } = node;
   return (
     <li data-anim="lesson">
@@ -239,7 +249,11 @@ function LessonRow({ node, onClick }: { node: CourseNode; onClick: () => void })
             {summary.estimatedMinutes} min · {summary.stepCount} steps
           </p>
         </div>
-        {needsReview ? (
+        {mastered ? (
+          <span className="bg-emerald-400/15 px-2 py-1 text-[11px] font-bold text-emerald-300">
+            Mastered
+          </span>
+        ) : needsReview ? (
           <span className="bg-amp-500/15 px-2 py-1 text-[11px] font-bold text-amp-400">
             Review
           </span>

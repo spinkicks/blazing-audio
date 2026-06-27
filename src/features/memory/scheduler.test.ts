@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   BOX_INTERVALS_MS,
+  LEARNING_STEP_MS,
   MAX_BOX,
   MASTERY_BOX,
   isDue,
@@ -31,15 +32,26 @@ describe('scheduler', () => {
     expect(isDue(m, NOW + BOX_INTERVALS_MS[1] - 1)).toBe(false);
   });
 
-  it('demotes to box 1 on fail and counts a lapse', () => {
+  it('drops to a same-session learning step on fail and counts a lapse', () => {
     let m = newConceptMemory('sine-wave', NOW);
     m = review(m, 'pass', NOW); // box 1
     m = review(m, 'pass', NOW); // box 2
     m = review(m, 'pass', NOW); // box 3
     const failed = review(m, 'fail', NOW + 10 * DAY);
-    expect(failed.box).toBe(1);
+    expect(failed.box).toBe(0);
     expect(failed.lapses).toBe(1);
-    expect(failed.dueAt).toBe(NOW + 10 * DAY + BOX_INTERVALS_MS[1]);
+    expect(failed.dueAt).toBe(NOW + 10 * DAY + LEARNING_STEP_MS);
+  });
+
+  it('graduates from a learning step back up on the next pass', () => {
+    let m = newConceptMemory('sine-wave', NOW);
+    m = review(m, 'pass', NOW); // box 1
+    m = review(m, 'fail', NOW); // lapse -> box 0, learning step
+    expect(m.box).toBe(0);
+    const passed = review(m, 'pass', NOW + LEARNING_STEP_MS);
+    expect(passed.box).toBe(1);
+    expect(passed.dueAt).toBe(NOW + LEARNING_STEP_MS + BOX_INTERVALS_MS[1]);
+    expect(passed.lapses).toBe(1); // lapse count is retained
   });
 
   it('caps promotion at MAX_BOX', () => {

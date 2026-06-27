@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { newConceptMemory, review } from './scheduler';
-import { dueConceptIds, findProblemForConcept, problemsByConcept } from './dueReview';
+import {
+  dueConceptIds,
+  findProblemForConcept,
+  interleaveByKey,
+  problemsByConcept,
+} from './dueReview';
 
 const NOW = 1_000_000_000_000;
 const LATER = NOW + 40 * 86_400_000;
@@ -40,5 +45,42 @@ describe('dueReview selectors', () => {
 
   it('returns null when a concept has no authored problem', () => {
     expect(findProblemForConcept('does-not-exist')).toBeNull();
+  });
+});
+
+describe('interleaveByKey', () => {
+  const keyOf = (s: string) => s[0]; // group by first char
+
+  it('keeps all items and is a permutation of the input', () => {
+    const input = ['a1', 'a2', 'a3', 'b1', 'b2', 'c1'];
+    const out = interleaveByKey(input, keyOf);
+    expect(out.length).toBe(input.length);
+    expect([...out].sort()).toEqual([...input].sort());
+  });
+
+  it('avoids adjacent same-key items when the distribution allows it', () => {
+    const input = ['a1', 'a2', 'a3', 'b1', 'b2', 'c1'];
+    const out = interleaveByKey(input, keyOf);
+    let adjacentSameKey = 0;
+    for (let i = 1; i < out.length; i += 1) {
+      if (keyOf(out[i]) === keyOf(out[i - 1])) adjacentSameKey += 1;
+    }
+    expect(adjacentSameKey).toBe(0);
+  });
+
+  it('preserves within-group order', () => {
+    const input = ['a1', 'b1', 'a2', 'b2', 'a3'];
+    const out = interleaveByKey(input, keyOf);
+    expect(out.filter((s) => s.startsWith('a'))).toEqual(['a1', 'a2', 'a3']);
+    expect(out.filter((s) => s.startsWith('b'))).toEqual(['b1', 'b2']);
+  });
+
+  it('handles a single group (cannot interleave) without dropping items', () => {
+    const input = ['a1', 'a2', 'a3'];
+    expect(interleaveByKey(input, keyOf)).toEqual(['a1', 'a2', 'a3']);
+  });
+
+  it('handles empty input', () => {
+    expect(interleaveByKey([] as string[], keyOf)).toEqual([]);
   });
 });

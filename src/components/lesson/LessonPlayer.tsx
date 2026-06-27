@@ -61,6 +61,8 @@ export function LessonPlayer({
   const [result, setResult] = useState<GradeResult | null>(null);
   const [completion, setCompletion] = useState<CompletionSummary | null>(null);
   const [warmupDone, setWarmupDone] = useState<boolean>(Boolean(initialStepId || reviewStepId));
+  // Consecutive wrong attempts on the current step (drives fading hints + tutor).
+  const [missCount, setMissCount] = useState(0);
 
   const step = lesson.steps[index];
   const isLast = index === lesson.steps.length - 1;
@@ -77,6 +79,7 @@ export function LessonPlayer({
     if (step.type !== 'problem' || answer === null) return;
     const graded = grade(step.interaction, step.feedback, answer);
     setResult(graded); // synchronous -> instant feedback
+    if (!graded.correct) setMissCount((n) => n + 1);
     recordAnswer(lesson.id, step.id, graded.correct, { reviewing: step.id === reviewStepId });
     if (!conceptRecordedRef.current.has(step.id)) {
       conceptRecordedRef.current.add(step.id);
@@ -94,6 +97,7 @@ export function LessonPlayer({
       const next = index + 1;
       setAnswer(null);
       setResult(null);
+      setMissCount(0);
       setIndex(next);
       setCurrentStep(lesson.id, next);
       return;
@@ -170,11 +174,24 @@ export function LessonPlayer({
               {result ? (
                 <div className="mt-5 lg:col-start-2 lg:row-start-2 lg:mt-4">
                   <FeedbackPanel result={result} />
+                  {!result.correct && step.hints && step.hints.length > 0 ? (
+                    <div className="mt-3 border border-amp-400/30 bg-amp-500/5 p-3">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-amp-400">
+                        {missCount > 1 ? 'Hints' : 'Hint'}
+                      </p>
+                      {step.hints.slice(0, missCount).map((hint, i) => (
+                        <p key={i} className="mt-1 text-sm leading-relaxed text-slate-300">
+                          {hint}
+                        </p>
+                      ))}
+                    </div>
+                  ) : null}
                   <div className="mt-3">
                     <ConceptTutor
                       prompt={step.prompt}
                       insight={step.feedback.insight}
                       lessonTitle={lesson.title}
+                      autoOpen={missCount >= 2}
                     />
                   </div>
                 </div>

@@ -70,6 +70,17 @@ export interface ExplainConceptResponse {
   explanation: string;
 }
 
+export interface GradeRecallRequest {
+  prompt: string;
+  referenceAnswer: string;
+  userAnswer: string;
+}
+
+export interface GradeRecallResponse {
+  correct: boolean;
+  feedback: string;
+}
+
 export type CompatStatus = 'ok' | 'caution' | 'mismatch';
 export type CapstoneVerdict = 'compatible' | 'caution' | 'mismatch';
 
@@ -142,5 +153,10 @@ export function explainConcept(req: ExplainConceptRequest): Promise<ExplainConce
 
 export function evaluateCapstone(req: EvaluateCapstoneRequest): Promise<EvaluateCapstoneResponse> {
   const call = makeCallable<EvaluateCapstoneRequest, EvaluateCapstoneResponse>('evaluateCapstone');
+  return unwrap(call(req));
+}
+
+export function gradeRecall(req: GradeRecallRequest): Promise<GradeRecallResponse> {
+  const call = makeCallable<GradeRecallRequest, GradeRecallResponse>('gradeRecall');
   return unwrap(call(req));
 }

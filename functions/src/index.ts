@@ -6,3 +6,4 @@ initializeApp();
 export { generateReviewQuestions, verifyFillBlankAnswer } from './review';
 export { explainConcept } from './tutor';
 export { evaluateCapstone } from './capstone';
+export { gradeRecall } from './recall';

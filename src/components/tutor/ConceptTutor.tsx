@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { aiErrorMessage, explainConcept } from '@/features/ai/aiClient';
 import { Spinner } from '@/components/ui/Spinner';
 import { cn } from '@/lib/cn';
@@ -10,6 +10,8 @@ interface ConceptTutorProps {
   insight?: string;
   lessonTitle?: string;
   className?: string;
+  /** When this becomes true, auto-open and fetch the first explanation (e.g. after repeated misses). */
+  autoOpen?: boolean;
 }
 
 interface Turn {
@@ -22,31 +24,43 @@ interface Turn {
  * concept: it re-explains the idea and answers short follow-ups. Nothing is
  * persisted, and it never gives away a multiple-choice answer outright.
  */
-export function ConceptTutor({ prompt, insight, lessonTitle, className }: ConceptTutorProps) {
+export function ConceptTutor({ prompt, insight, lessonTitle, className, autoOpen }: ConceptTutorProps) {
   const [open, setOpen] = useState(false);
   const [turns, setTurns] = useState<Turn[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [followUp, setFollowUp] = useState('');
 
-  async function ask(userQuestion?: string) {
-    setError(null);
-    setLoading(true);
-    if (userQuestion) setTurns((prev) => [...prev, { role: 'user', text: userQuestion }]);
-    try {
-      const res = await explainConcept({ prompt, insight, lessonTitle, userQuestion });
-      setTurns((prev) => [...prev, { role: 'assistant', text: res.explanation }]);
-    } catch (err) {
-      setError(aiErrorMessage(err));
-    } finally {
-      setLoading(false);
-    }
-  }
+  const ask = useCallback(
+    async (userQuestion?: string) => {
+      setError(null);
+      setLoading(true);
+      if (userQuestion) setTurns((prev) => [...prev, { role: 'user', text: userQuestion }]);
+      try {
+        const res = await explainConcept({ prompt, insight, lessonTitle, userQuestion });
+        setTurns((prev) => [...prev, { role: 'assistant', text: res.explanation }]);
+      } catch (err) {
+        setError(aiErrorMessage(err));
+      } finally {
+        setLoading(false);
+      }
+    },
+    [prompt, insight, lessonTitle],
+  );
 
   function handleOpen() {
     setOpen(true);
     if (turns.length === 0 && !loading) void ask();
   }
+
+  // Pop open automatically (once) when the caller signals the learner is stuck.
+  const autoOpenedRef = useRef(false);
+  useEffect(() => {
+    if (!autoOpen || autoOpenedRef.current) return;
+    autoOpenedRef.current = true;
+    setOpen(true);
+    if (turns.length === 0 && !loading) void ask();
+  }, [autoOpen, turns.length, loading, ask]);
 
   function handleFollowUp() {
     const question = followUp.trim();

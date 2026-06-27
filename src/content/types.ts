@@ -462,6 +462,12 @@ export interface ProblemStep {
   visual?: VisualSpec;
   /** Concept ids this problem exercises (see src/content/concepts.ts). */
   conceptIds?: string[];
+  /**
+   * Optional progressive hints (scaffolding). One more is revealed per wrong
+   * attempt, fading the support without giving the answer. When absent, the AI
+   * Concept Tutor serves as the on-demand hint instead.
+   */
+  hints?: string[];
 }
 
 export type Step = ConceptStep | ProblemStep;

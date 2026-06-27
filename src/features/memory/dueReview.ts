@@ -37,6 +37,50 @@ export function dueConceptIds(memory: Record<string, ConceptMemory>, now: number
     .map((m) => m.conceptId);
 }
 
+/**
+ * Reorders items so adjacent ones avoid sharing a key where possible (interleaving
+ * instead of blocking - e.g. mix interaction kinds so the learner must choose the
+ * approach, not repeat the last one). Greedy: each step takes the largest remaining
+ * group whose key differs from the previous pick; falls back to the only group left.
+ * Pure and order-preserving within a group.
+ */
+export function interleaveByKey<T>(items: T[], keyOf: (item: T) => string): T[] {
+  const groups = new Map<string, T[]>();
+  for (const item of items) {
+    const key = keyOf(item);
+    const bucket = groups.get(key);
+    if (bucket) bucket.push(item);
+    else groups.set(key, [item]);
+  }
+
+  const out: T[] = [];
+  let lastKey: string | null = null;
+  while (out.length < items.length) {
+    let bestKey: string | null = null;
+    let bestLen = 0;
+    for (const [key, bucket] of groups) {
+      if (bucket.length === 0 || key === lastKey) continue;
+      if (bucket.length > bestLen) {
+        bestLen = bucket.length;
+        bestKey = key;
+      }
+    }
+    // Only the previous key's group remains: we have to place it.
+    if (bestKey === null) {
+      for (const [key, bucket] of groups) {
+        if (bucket.length > 0) {
+          bestKey = key;
+          break;
+        }
+      }
+    }
+    if (bestKey === null) break;
+    out.push(groups.get(bestKey)!.shift()!);
+    lastKey = bestKey;
+  }
+  return out;
+}
+
 export interface FoundProblem {
   lessonId: string;
   lessonTitle: string;

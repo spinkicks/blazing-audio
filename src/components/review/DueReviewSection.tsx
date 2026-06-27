@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useConceptMemoryStore } from '@/features/memory/conceptMemoryStore';
-import { dueConceptIds, findProblemForConcept } from '@/features/memory/dueReview';
+import { dueConceptIds, findProblemForConcept, interleaveByKey } from '@/features/memory/dueReview';
 import { getConcept } from '@/content/concepts';
 import type { ConceptMemory } from '@/features/memory/scheduler';
 import { Card } from '@/components/ui/Card';
@@ -13,27 +13,30 @@ interface QueueItem {
 }
 
 function buildQueue(memory: Record<string, ConceptMemory>): QueueItem[] {
-  return dueConceptIds(memory, Date.now())
+  const items = dueConceptIds(memory, Date.now())
     .map((conceptId) => {
       const found = findProblemForConcept(conceptId);
       const concept = getConcept(conceptId);
       return found && concept ? { conceptId, conceptName: concept.name, found } : null;
     })
     .filter((x): x is QueueItem => x !== null);
+  // Interleave by interaction kind so the learner mixes approaches instead of
+  // answering several of the same problem type in a row.
+  return interleaveByKey(items, (item) => item.found.step.interaction.kind);
 }
 
 export function DueReviewSection() {
   const memory = useConceptMemoryStore((s) => s.memory);
   const loaded = useConceptMemoryStore((s) => s.loaded);
 
-  // Snapshot once, on the first render after the store has loaded: a late
+  // Seed the queue once, on the first render after the store has loaded: a late
   // Firestore resolve can't leave a permanently-empty queue, and answering
-  // (which pushes dueAt out) still can't reshuffle the list mid-session.
-  const snapshotRef = useRef<QueueItem[] | null>(null);
-  if (loaded && snapshotRef.current === null) {
-    snapshotRef.current = buildQueue(memory);
-  }
-  const queue = snapshotRef.current;
+  // (which pushes dueAt out) can't reshuffle the list mid-session. After seeding
+  // we only mutate the queue explicitly (re-queueing a lapse to the end).
+  const [queue, setQueue] = useState<QueueItem[] | null>(null);
+  useEffect(() => {
+    if (loaded && queue === null) setQueue(buildQueue(memory));
+  }, [loaded, queue, memory]);
 
   const [index, setIndex] = useState(0);
 
@@ -65,12 +68,16 @@ export function DueReviewSection() {
         Quick retrieval practice on concepts it is time to refresh.
       </p>
       <RetrievalCard
-        key={current.conceptId}
+        key={`${index}-${current.conceptId}`}
         conceptId={current.conceptId}
         conceptName={current.conceptName}
         lessonTitle={current.found.lessonTitle}
         step={current.found.step}
         doneLabel={index + 1 === queue.length ? 'Finish' : 'Next'}
+        onResult={(correct) => {
+          // Spaced relearning: a missed concept comes back later this session.
+          if (!correct) setQueue((q) => (q ? [...q, current] : q));
+        }}
         onDone={() => setIndex((i) => i + 1)}
       />
     </Card>

@@ -5,13 +5,16 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StreakBadge } from '@/components/ui/StreakBadge';
 import { CONCEPTS } from '@/content/concepts';
+import { allLessons } from '@/content/registry';
 import { useConceptMemoryStore } from '@/features/memory/conceptMemoryStore';
 import { isMastered, strength } from '@/features/memory/scheduler';
+import { countMasteredLessons } from '@/features/memory/mastery';
 import { useTimeline, countUp } from '@/lib/anim';
 
 export function ProfileScreen() {
   const rootRef = useRef<HTMLDivElement>(null);
   const profile = useProgressStore((s) => s.profile);
+  const progress = useProgressStore((s) => s.progress);
   const reset = useProgressStore((s) => s.reset);
   const setLeaderboard = useProgressStore((s) => s.setLeaderboard);
   const conceptMemory = useConceptMemoryStore((s) => s.memory);
@@ -19,6 +22,7 @@ export function ProfileScreen() {
     const m = conceptMemory[c.id];
     return m ? isMastered(m) : false;
   }).length;
+  const lessonsMastered = countMasteredLessons(progress, conceptMemory);
   const [busy, setBusy] = useState(false);
   const [alias, setAlias] = useState(profile?.alias ?? '');
   const [optIn, setOptIn] = useState(Boolean(profile?.leaderboardOptIn));
@@ -86,6 +90,9 @@ export function ProfileScreen() {
             {masteredCount} / {CONCEPTS.length} mastered
           </span>
         </div>
+        <p className="mt-1 font-mono text-xs tabular-nums text-slate-500">
+          Lessons mastered: {lessonsMastered} / {allLessons.length}
+        </p>
         <ul className="mt-4 flex flex-col gap-2">
           {CONCEPTS.map((concept) => {
             const m = conceptMemory[concept.id];

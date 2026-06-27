@@ -17,6 +17,13 @@ const DAY = 86_400_000;
 export const BOX_INTERVALS_MS = [0, 1 * DAY, 3 * DAY, 7 * DAY, 16 * DAY, 35 * DAY];
 export const MAX_BOX = BOX_INTERVALS_MS.length - 1;
 
+/**
+ * After a lapse the concept drops to a short "learning step" so it resurfaces in
+ * the SAME session (effortful relearning) rather than waiting a full day. A later
+ * pass graduates it back up the boxes.
+ */
+export const LEARNING_STEP_MS = 10 * 60_000; // 10 minutes
+
 export function newConceptMemory(conceptId: string, now: number): ConceptMemory {
   return {
     conceptId,
@@ -31,14 +38,26 @@ export function newConceptMemory(conceptId: string, now: number): ConceptMemory 
 
 /** Apply a retrieval outcome and return the next memory state. */
 export function review(state: ConceptMemory, grade: 'pass' | 'fail', now: number): ConceptMemory {
-  const box = grade === 'pass' ? Math.min(state.box + 1, MAX_BOX) : 1;
+  if (grade === 'fail') {
+    // Lapse: drop to a same-session learning step (box 0, short interval).
+    return {
+      ...state,
+      box: 0,
+      lastReviewedAt: now,
+      dueAt: now + LEARNING_STEP_MS,
+      reps: state.reps + 1,
+      lapses: state.lapses + 1,
+      updatedAt: now,
+    };
+  }
+  const box = Math.min(state.box + 1, MAX_BOX);
   return {
     ...state,
     box,
     lastReviewedAt: now,
     dueAt: now + BOX_INTERVALS_MS[box],
     reps: state.reps + 1,
-    lapses: state.lapses + (grade === 'fail' ? 1 : 0),
+    lapses: state.lapses,
     updatedAt: now,
   };
 }
