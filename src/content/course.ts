@@ -11,14 +11,22 @@ export interface CourseNode {
   needsReview: boolean;
 }
 
-/** Below this first-try mastery, the path nudges a review before moving on. */
+/** Below this first-try mastery, a completed lesson reads as "not yet mastered". */
 export const REVIEW_THRESHOLD = 0.6;
 
 /**
  * Builds the ordered path. Sequential unlock: a lesson is unlocked once the
  * previous one is completed (the first lesson is always unlocked).
+ *
+ * `reviewLessonIds` is the set of completed lessons that currently have decayed
+ * concepts due for spaced review (computed by the caller from concept memory via
+ * `lessonsNeedingReview`). It drives `needsReview`, so the nudge clears as those
+ * concepts are reviewed rather than being a frozen first-try metric.
  */
-export function buildCoursePath(progress: Record<string, LessonProgress>): CourseNode[] {
+export function buildCoursePath(
+  progress: Record<string, LessonProgress>,
+  reviewLessonIds: Set<string> = new Set(),
+): CourseNode[] {
   const nodes: CourseNode[] = [];
   let previousCompleted = true;
 
@@ -32,7 +40,7 @@ export function buildCoursePath(progress: Record<string, LessonProgress>): Cours
       locked: !previousCompleted,
       status,
       masteryScore,
-      needsReview: status === 'completed' && masteryScore < REVIEW_THRESHOLD,
+      needsReview: status === 'completed' && reviewLessonIds.has(lesson.id),
     });
 
     previousCompleted = status === 'completed';

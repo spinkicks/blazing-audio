@@ -2,7 +2,7 @@ import type { LessonProgress } from '@/features/progress/types';
 import { conceptsForLesson } from '@/content/concepts';
 import { allLessons } from '@/content/registry';
 import { REVIEW_THRESHOLD } from '@/content/course';
-import { isMastered, type ConceptMemory } from './scheduler';
+import { isDue, isMastered, type ConceptMemory } from './scheduler';
 
 /** First-try ratio at/above which a completed lesson counts as mastered on its own. */
 export const MASTERY_FIRST_TRY = 0.8;
@@ -56,4 +56,27 @@ export function countMasteredLessons(
   memory: Record<string, ConceptMemory>,
 ): number {
   return allLessons.filter((l) => isLessonMastered(l.id, progress, memory)).length;
+}
+
+/**
+ * Completed lessons that have at least one concept currently DUE (decayed) for
+ * spaced review. This is what drives the Home "Recommended review" nudge - it
+ * clears automatically as the learner reviews those concepts (which pushes their
+ * dueAt out), and lessons with no tagged concepts (e.g. the intro) never appear.
+ */
+export function lessonsNeedingReview(
+  progress: Record<string, LessonProgress>,
+  memory: Record<string, ConceptMemory>,
+  now: number,
+): Set<string> {
+  const ids = new Set<string>();
+  for (const lesson of allLessons) {
+    if (progress[lesson.id]?.status !== 'completed') continue;
+    const hasDueConcept = conceptsForLesson(lesson.id).some((concept) => {
+      const m = memory[concept.id];
+      return m ? isDue(m, now) : false;
+    });
+    if (hasDueConcept) ids.add(lesson.id);
+  }
+  return ids;
 }

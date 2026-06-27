@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StreakBadge } from '@/components/ui/StreakBadge';
 import { CapstoneHero } from '@/components/home/CapstoneHero';
-import { lessonMasterySignal } from '@/features/memory/mastery';
+import { lessonMasterySignal, lessonsNeedingReview } from '@/features/memory/mastery';
 import { useTimeline, countUp, drawPath } from '@/lib/anim';
 import { cn } from '@/lib/cn';
 
@@ -18,14 +18,18 @@ export function HomeScreen() {
   const rootRef = useRef<HTMLDivElement>(null);
   const profile = useProgressStore((s) => s.profile);
   const progress = useProgressStore((s) => s.progress);
+  const conceptMemory = useConceptMemoryStore((s) => s.memory);
 
-  const nodes = buildCoursePath(progress);
+  const now = Date.now();
+  // "Recommended review" is driven by spaced repetition: a completed lesson only
+  // surfaces when one of its concepts has decayed (is due), so it clears as the
+  // learner reviews and never gets stuck on the concept-less intro.
+  const nodes = buildCoursePath(progress, lessonsNeedingReview(progress, conceptMemory, now));
   const courseComplete = isCourseComplete(progress);
   const completedLessons = nodes.filter((n) => n.status === 'completed').length;
   const recommended = recommendNext(nodes);
   const reviewTopics = collectReviewTopics(progress);
-  const conceptMemory = useConceptMemoryStore((s) => s.memory);
-  const dueCount = dueConceptIds(conceptMemory, Date.now()).length;
+  const dueCount = dueConceptIds(conceptMemory, now).length;
   const firstName = profile?.displayName?.split(' ')[0] ?? 'there';
 
   // Content-true entrance: hero settles (its meter charges separately), the stat
@@ -83,9 +87,22 @@ export function HomeScreen() {
                 : 'Up next'}
           </p>
           <h2 className="mt-1 font-display text-lg font-bold text-white">{recommended.summary.title}</h2>
-          <p className="mt-1 text-sm text-slate-400">{recommended.summary.subtitle}</p>
-          <Button className="mt-4" onClick={() => navigate(`/lesson/${recommended.summary.id}`)}>
-            {recommended.status === 'inProgress' ? 'Resume' : 'Start lesson'}
+          <p className="mt-1 text-sm text-slate-400">
+            {recommended.needsReview
+              ? 'Some concepts from this lesson are due for review - a quick refresh keeps them from fading.'
+              : recommended.summary.subtitle}
+          </p>
+          <Button
+            className="mt-4"
+            onClick={() =>
+              navigate(recommended.needsReview ? '/review' : `/lesson/${recommended.summary.id}`)
+            }
+          >
+            {recommended.needsReview
+              ? 'Review now'
+              : recommended.status === 'inProgress'
+                ? 'Resume'
+                : 'Start lesson'}
           </Button>
         </Card>
       ) : (
