@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { collectReviewTopics } from '@/content/review';
 import { getLesson } from '@/content/registry';
@@ -7,16 +8,21 @@ import { Card } from '@/components/ui/Card';
 import { ReviewPractice } from '@/components/review/ReviewPractice';
 import { DueReviewSection } from '@/components/review/DueReviewSection';
 import { ConceptTutor } from '@/components/tutor/ConceptTutor';
+import { useEntrance } from '@/lib/useEntrance';
 
 export function ReviewScreen() {
   const navigate = useNavigate();
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEntrance(rootRef);
   const progress = useProgressStore((s) => s.progress);
   const topics = collectReviewTopics(progress);
 
   return (
-    <div className="flex animate-fade-in flex-col gap-6">
-      <DueReviewSection />
-      <header>
+    <div ref={rootRef} className="flex flex-col gap-6">
+      <div data-entrance>
+        <DueReviewSection />
+      </div>
+      <header data-entrance>
         <p className="text-sm font-semibold uppercase tracking-wide text-wave-400">Review</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-white">Missed questions</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
@@ -26,7 +32,7 @@ export function ReviewScreen() {
       </header>
 
       {topics.length === 0 ? (
-        <Card>
+        <Card data-entrance>
           <h2 className="font-display text-xl font-bold text-white">Nothing to review</h2>
           <p className="mt-2 text-sm text-slate-400">
             Missed questions will show up here automatically after you get one wrong.
@@ -36,7 +42,7 @@ export function ReviewScreen() {
           </Button>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <div data-entrance className="grid grid-cols-1 gap-3 lg:grid-cols-2">
           {topics.map((topic) => {
             const lesson = getLesson(topic.lessonId);
             const step = lesson?.steps.find((s) => s.id === topic.stepId);

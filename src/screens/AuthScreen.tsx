@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import {
   authErrorMessage,
   signInWithEmail,
@@ -7,6 +7,7 @@ import {
 } from '@/features/auth/authService';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
+import { useEntrance } from '@/lib/useEntrance';
 
 type Mode = 'signin' | 'signup';
 
@@ -17,6 +18,8 @@ export function AuthScreen() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEntrance(rootRef);
 
   const isSignup = mode === 'signup';
 
@@ -49,10 +52,10 @@ export function AuthScreen() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col justify-center px-6 py-10">
-      <div className="mx-auto w-full max-w-sm animate-fade-in">
+    <div ref={rootRef} className="flex min-h-screen flex-col justify-center px-6 py-10">
+      <div className="mx-auto w-full max-w-sm">
         {/* Brand */}
-        <div className="mb-8 text-center">
+        <div data-entrance className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center border border-white/10 bg-ink-800">
             <WaveMark className="h-9 w-9" />
           </div>
@@ -62,7 +65,7 @@ export function AuthScreen() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <form data-entrance onSubmit={handleSubmit} className="flex flex-col gap-3">
           {isSignup ? (
             <Field
               label="Name"
@@ -107,12 +110,12 @@ export function AuthScreen() {
           <span className="h-px flex-1 bg-white/10" />
         </div>
 
-        <Button variant="secondary" fullWidth disabled={busy} onClick={handleGoogle}>
+        <Button data-entrance variant="secondary" fullWidth disabled={busy} onClick={handleGoogle}>
           <GoogleMark className="h-5 w-5" />
           Continue with Google
         </Button>
 
-        <p className="mt-6 text-center text-sm text-slate-400">
+        <p data-entrance className="mt-6 text-center text-sm text-slate-400">
           {isSignup ? 'Already have an account?' : "New here?"}{' '}
           <button
             type="button"

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProgressStore } from '@/features/progress/progressStore';
 import { buildCoursePath, recommendNext, isCourseComplete, type CourseNode } from '@/content/course';
@@ -9,10 +9,13 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StreakBadge } from '@/components/ui/StreakBadge';
 import { CapstoneHero } from '@/components/home/CapstoneHero';
+import { useEntrance } from '@/lib/useEntrance';
 import { cn } from '@/lib/cn';
 
 export function HomeScreen() {
   const navigate = useNavigate();
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEntrance(rootRef);
   const profile = useProgressStore((s) => s.profile);
   const progress = useProgressStore((s) => s.progress);
 
@@ -26,14 +29,11 @@ export function HomeScreen() {
   const firstName = profile?.displayName?.split(' ')[0] ?? 'there';
 
   return (
-    <div className="flex flex-col gap-6">
+    <div ref={rootRef} className="flex flex-col gap-6">
       <CapstoneHero unlocked={courseComplete} completed={completedLessons} total={nodes.length} />
 
       {/* Greeting + streak */}
-      <header
-        className="flex animate-fade-in items-center justify-between"
-        style={{ animationDelay: '70ms' }}
-      >
+      <header data-entrance className="flex items-center justify-between">
         <div>
           <p className="text-sm text-slate-400">Welcome back,</p>
           <h1 className="font-display text-2xl font-bold tracking-tight text-white">{firstName}</h1>
@@ -42,7 +42,7 @@ export function HomeScreen() {
       </header>
 
       {/* Stats */}
-      <div className="grid animate-fade-in grid-cols-3 gap-3" style={{ animationDelay: '140ms' }}>
+      <div data-entrance className="grid grid-cols-3 gap-3">
         <MiniStat label="Lessons" value={profile?.stats.lessonsCompleted ?? 0} />
         <MiniStat label="Solved" value={profile?.stats.problemsSolved ?? 0} />
         <MiniStat label="XP" value={profile?.stats.xp ?? 0} />
@@ -51,8 +51,8 @@ export function HomeScreen() {
       {/* Continue CTA - the main learning action (ember primary button). */}
       {recommended ? (
         <Card
-          className="animate-fade-in border-l-2 border-l-wave-400 border-white/10 bg-ink-800"
-          style={{ animationDelay: '210ms' }}
+          data-entrance
+          className="border-l-2 border-l-wave-400 border-white/10 bg-ink-800"
         >
           <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
             {recommended.needsReview
@@ -68,7 +68,7 @@ export function HomeScreen() {
           </Button>
         </Card>
       ) : (
-        <Card className="animate-fade-in" style={{ animationDelay: '210ms' }}>
+        <Card data-entrance>
           <p className="text-sm text-slate-300">
             You have finished every lesson available. More are on the way.
           </p>
@@ -76,7 +76,7 @@ export function HomeScreen() {
       )}
 
       {reviewTopics.length > 0 ? (
-        <Card className="animate-fade-in border-l-2 border-l-wave-400 border-white/10 bg-ink-800">
+        <Card data-entrance className="border-l-2 border-l-wave-400 border-white/10 bg-ink-800">
           <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
             Focused practice
           </p>
@@ -92,7 +92,7 @@ export function HomeScreen() {
       ) : null}
 
       {dueCount > 0 ? (
-        <Card className="animate-fade-in border-l-2 border-l-wave-400 border-white/10 bg-ink-800">
+        <Card data-entrance className="border-l-2 border-l-wave-400 border-white/10 bg-ink-800">
           <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">Daily goal</p>
           <h2 className="mt-1 font-display text-lg font-bold text-white">
             {dueCount} concept{dueCount === 1 ? '' : 's'} due for review
@@ -107,7 +107,7 @@ export function HomeScreen() {
       ) : null}
 
       {/* Course path */}
-      <section className="animate-fade-in" style={{ animationDelay: '280ms' }}>
+      <section data-entrance>
         <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
           Your course
         </h3>

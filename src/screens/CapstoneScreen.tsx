@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useProgressStore } from '@/features/progress/progressStore';
 import { useAuthStore } from '@/features/auth/authStore';
@@ -15,6 +15,7 @@ import { fetchCapstone, saveCapstone } from '@/features/capstone/capstoneService
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Spinner } from '@/components/ui/Spinner';
+import { useEntrance } from '@/lib/useEntrance';
 import { cn } from '@/lib/cn';
 
 const FORMATS: SurroundFormat[] = ['unsure', '2.0', '2.1', '5.1', '7.1', '5.1.2', '5.1.4', '7.1.4'];
@@ -46,6 +47,9 @@ export function CapstoneScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<EvaluateCapstoneResponse | null>(null);
+
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEntrance(rootRef);
 
   useEffect(() => {
     if (!uid || !unlocked) return;
@@ -92,8 +96,8 @@ export function CapstoneScreen() {
   }
 
   return (
-    <div className="flex animate-fade-in flex-col gap-6">
-      <header>
+    <div ref={rootRef} className="flex flex-col gap-6">
+      <header data-entrance>
         <p className="text-sm font-semibold uppercase tracking-wide text-amp-400">Final project</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-white">Plan your system</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
@@ -103,7 +107,7 @@ export function CapstoneScreen() {
         </p>
       </header>
 
-      <Card>
+      <Card data-entrance>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <label className="flex flex-col gap-1.5">
             <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
@@ -150,7 +154,11 @@ export function CapstoneScreen() {
         </form>
       </Card>
 
-      {result ? <CapstoneReport result={result} /> : null}
+      {result ? (
+        <div data-entrance>
+          <CapstoneReport result={result} />
+        </div>
+      ) : null}
     </div>
   );
 }

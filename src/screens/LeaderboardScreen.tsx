@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/features/auth/authStore';
 import { useProgressStore } from '@/features/progress/progressStore';
@@ -6,10 +6,13 @@ import { fetchTopLeaderboard, type LeaderboardEntry } from '@/features/leaderboa
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
+import { useEntrance } from '@/lib/useEntrance';
 import { cn } from '@/lib/cn';
 
 export function LeaderboardScreen() {
   const navigate = useNavigate();
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEntrance(rootRef);
   const uid = useAuthStore((s) => s.user?.uid ?? null);
   const optedIn = useProgressStore((s) => Boolean(s.profile?.leaderboardOptIn && s.profile?.alias));
   const [entries, setEntries] = useState<LeaderboardEntry[] | null>(null);
@@ -28,8 +31,8 @@ export function LeaderboardScreen() {
   const ownIndex = entries && uid ? entries.findIndex((e) => e.uid === uid) : -1;
 
   return (
-    <div className="flex flex-col gap-6">
-      <header className="animate-fade-in" style={{ animationDelay: '70ms' }}>
+    <div ref={rootRef} className="flex flex-col gap-6">
+      <header data-entrance>
         <p className="text-sm font-semibold uppercase tracking-wide text-amp-400">Ranks</p>
         <h1 className="mt-1 font-display text-3xl font-bold text-white">Leaderboard</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
@@ -38,7 +41,7 @@ export function LeaderboardScreen() {
       </header>
 
       {!optedIn ? (
-        <Card className="border-amp-500/30 bg-ink-800">
+        <Card data-entrance className="border-amp-500/30 bg-ink-800">
           <h2 className="font-display text-lg font-bold text-white">You are not on the board yet</h2>
           <p className="mt-1 text-sm text-slate-400">
             Pick a display alias and opt in from your Profile to join the rankings.
@@ -58,7 +61,7 @@ export function LeaderboardScreen() {
       ) : null}
 
       {entries && entries.length > 0 ? (
-        <Card className="animate-fade-in" style={{ animationDelay: '140ms' }}>
+        <Card data-entrance>
           <ul className="flex flex-col">
             {entries.map((entry, i) => {
               const isOwn = entry.uid === uid;

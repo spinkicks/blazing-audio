@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { logOut } from '@/features/auth/authService';
 import { flushNow, useProgressStore } from '@/features/progress/progressStore';
 import { Button } from '@/components/ui/Button';
@@ -7,8 +7,11 @@ import { StreakBadge } from '@/components/ui/StreakBadge';
 import { CONCEPTS } from '@/content/concepts';
 import { useConceptMemoryStore } from '@/features/memory/conceptMemoryStore';
 import { isMastered, strength } from '@/features/memory/scheduler';
+import { useEntrance } from '@/lib/useEntrance';
 
 export function ProfileScreen() {
+  const rootRef = useRef<HTMLDivElement>(null);
+  useEntrance(rootRef);
   const profile = useProgressStore((s) => s.profile);
   const reset = useProgressStore((s) => s.reset);
   const setLeaderboard = useProgressStore((s) => s.setLeaderboard);
@@ -29,11 +32,8 @@ export function ProfileScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <header
-        className="flex animate-fade-in items-center gap-4"
-        style={{ animationDelay: '70ms' }}
-      >
+    <div ref={rootRef} className="flex flex-col gap-6">
+      <header data-entrance className="flex items-center gap-4">
         <div className="flex h-14 w-14 items-center justify-center bg-ink-700 text-xl font-bold text-wave-400">
           {(profile?.displayName ?? '?').charAt(0).toUpperCase()}
         </div>
@@ -45,7 +45,7 @@ export function ProfileScreen() {
         </div>
       </header>
 
-      <Card className="animate-fade-in" style={{ animationDelay: '140ms' }}>
+      <Card data-entrance>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-500">Current streak</p>
@@ -60,7 +60,7 @@ export function ProfileScreen() {
         </p>
       </Card>
 
-      <div className="grid animate-fade-in grid-cols-3 gap-3" style={{ animationDelay: '210ms' }}>
+      <div data-entrance className="grid grid-cols-3 gap-3">
         <Stat label="Lessons" value={profile?.stats.lessonsCompleted ?? 0} />
         <Stat label="Problems" value={profile?.stats.problemsSolved ?? 0} />
         <Stat
@@ -70,7 +70,7 @@ export function ProfileScreen() {
         />
       </div>
 
-      <Card className="animate-fade-in" style={{ animationDelay: '280ms' }}>
+      <Card data-entrance>
         <div className="flex items-baseline justify-between">
           <h2 className="font-display text-lg font-bold text-white">Concept mastery</h2>
           <span className="font-mono text-sm tabular-nums text-slate-400">
@@ -94,7 +94,7 @@ export function ProfileScreen() {
         </ul>
       </Card>
 
-      <Card>
+      <Card data-entrance>
         <h2 className="font-display text-lg font-bold text-white">Leaderboard</h2>
         <p className="mt-1 text-sm text-slate-400">
           Opt in to appear on the public XP leaderboard under an alias (not your name or email).
@@ -123,7 +123,7 @@ export function ProfileScreen() {
         </Button>
       </Card>
 
-      <Button variant="danger" fullWidth disabled={busy} onClick={handleSignOut}>
+      <Button data-entrance variant="danger" fullWidth disabled={busy} onClick={handleSignOut}>
         Sign out
       </Button>
     </div>

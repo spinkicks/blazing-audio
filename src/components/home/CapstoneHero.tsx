@@ -1,5 +1,8 @@
+import { useLayoutEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import gsap from 'gsap';
 import { Button } from '@/components/ui/Button';
+import { prefersReducedMotion } from '@/lib/useEntrance';
 import { cn } from '@/lib/cn';
 
 interface CapstoneHeroProps {
@@ -18,12 +21,31 @@ export function CapstoneHero({ unlocked, completed, total }: CapstoneHeroProps) 
   const navigate = useNavigate();
   const remaining = Math.max(0, total - completed);
   const segments = Math.max(total, 1);
+  const meterRef = useRef<HTMLDivElement>(null);
+
+  // Signature flourish: the lit meter segments "power up" left-to-right after the
+  // hero settles, like a level meter charging toward the final project.
+  useLayoutEffect(() => {
+    const el = meterRef.current;
+    if (!el) return;
+    const lit = el.querySelectorAll<HTMLElement>('[data-lit]');
+    if (lit.length === 0 || prefersReducedMotion()) return;
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        lit,
+        { scaleY: 0 },
+        { scaleY: 1, transformOrigin: 'bottom', duration: 0.4, ease: 'power2.out', stagger: 0.035, delay: 0.18 },
+      );
+    }, el);
+    return () => ctx.revert();
+  }, [completed, unlocked]);
 
   return (
     <section
+      data-entrance
       aria-labelledby="capstone-hero-title"
       className={cn(
-        'animate-fade-in relative overflow-hidden border bg-gradient-to-br from-ink-800 to-ink-950 p-6 md:p-8',
+        'relative overflow-hidden border bg-gradient-to-br from-ink-800 to-ink-950 p-6 md:p-8',
         unlocked
           ? 'border-amp-400/60 shadow-[0_0_55px_-16px_rgba(249,83,30,0.6)]'
           : 'border-amp-500/25',
@@ -59,12 +81,13 @@ export function CapstoneHero({ unlocked, completed, total }: CapstoneHeroProps) 
 
       {/* Signature: a level meter that fills as the course progresses. */}
       <div className="mt-6">
-        <div className="flex items-stretch gap-1" aria-hidden="true">
+        <div ref={meterRef} className="flex items-stretch gap-1" aria-hidden="true">
           {Array.from({ length: segments }).map((_, i) => {
             const lit = i < completed;
             return (
               <span
                 key={i}
+                data-lit={lit ? '' : undefined}
                 className={cn(
                   'h-7 flex-1',
                   lit ? (unlocked ? 'bg-amp-400' : 'bg-wave-400') : 'bg-ink-700',
