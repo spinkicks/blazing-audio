@@ -98,7 +98,7 @@ export function ReviewPractice({
   return (
     <div className="mt-4 border-t border-white/5 pt-4">
       <div className="flex items-center justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
             AI practice
           </p>
@@ -112,6 +112,7 @@ export function ReviewPractice({
             size="md"
             disabled={generating}
             onClick={() => generate(phase === 'ready')}
+            className="shrink-0 whitespace-nowrap"
           >
             {generating ? (
               <>

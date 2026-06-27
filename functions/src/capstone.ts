@@ -2,7 +2,7 @@ import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { z } from 'zod';
 import { openAiApiKey, askModel, parseJson, type JsonSchemaSpec } from './openai';
 import { SYSTEM_VOICE, JSON_ONLY } from './prompts';
-import { requireAuth, enforceDailyQuota } from './guardrails';
+import { requireAuth, enforceDailyQuota, parseInput, guardErrors } from './guardrails';
 
 const DAILY_LIMIT = 40;
 
@@ -65,9 +65,10 @@ const CAPSTONE_SCHEMA: JsonSchemaSpec = {
  */
 export const evaluateCapstone = onCall(
   { secrets: [openAiApiKey], maxInstances: 10 },
-  async (request) => {
+  (request) =>
+    guardErrors('evaluateCapstone', async () => {
     const uid = requireAuth(request.auth?.uid);
-    const input = capstoneInput.parse(request.data);
+    const input = parseInput(capstoneInput, request.data);
     await enforceDailyQuota(uid, DAILY_LIMIT);
 
     const prompt = [
@@ -112,5 +113,5 @@ export const evaluateCapstone = onCall(
       throw new HttpsError('internal', 'We could not evaluate that system right now. Please try again.');
     }
     return parsed.data;
-  },
+    }),
 );

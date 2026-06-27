@@ -1,4 +1,5 @@
 import { type PointerEvent as ReactPointerEvent, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { GenOption } from '@/features/review/generatedQuestions';
 import { cn } from '@/lib/cn';
 
@@ -181,14 +182,20 @@ export function MatchPairs({ left, right, onChange, disabled, verdict }: MatchPa
         </div>
       ) : null}
 
-      {drag ? (
-        <div
-          className="pointer-events-none fixed z-50 border border-wave-400 bg-ink-700 px-3 py-2 text-sm font-medium text-wave-400 shadow-lg shadow-black/50"
-          style={{ left: drag.x, top: drag.y, transform: 'translate(-50%, -120%) scale(1.05)' }}
-        >
-          {drag.text}
-        </div>
-      ) : null}
+      {/* Rendered to <body> so the fixed-position ghost is always relative to the
+          viewport, not a transformed ancestor (e.g. a settled entrance animation
+          leaves a residual transform that would otherwise offset it). */}
+      {drag
+        ? createPortal(
+            <div
+              className="pointer-events-none fixed z-50 border border-wave-400 bg-ink-700 px-3 py-2 text-sm font-medium text-wave-400 shadow-lg shadow-black/50"
+              style={{ left: drag.x, top: drag.y, transform: 'translate(-50%, -120%) scale(1.05)' }}
+            >
+              {drag.text}
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

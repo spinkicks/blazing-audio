@@ -3,7 +3,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 import { z } from 'zod';
 import { openAiApiKey, askModel, parseJson, OPENAI_MODEL, type JsonSchemaSpec } from './openai';
 import { SYSTEM_VOICE, JSON_ONLY } from './prompts';
-import { requireAuth, enforceDailyQuota } from './guardrails';
+import { requireAuth, enforceDailyQuota, parseInput, guardErrors } from './guardrails';
 
 const DAILY_LIMIT = 40;
 const QUESTION_COUNT = 3;
@@ -248,9 +248,10 @@ function buildGeneratePrompt(input: z.infer<typeof generateInput>): string {
 
 export const generateReviewQuestions = onCall(
   { secrets: [openAiApiKey], maxInstances: 10 },
-  async (request) => {
+  (request) =>
+    guardErrors('generateReviewQuestions', async () => {
     const uid = requireAuth(request.auth?.uid);
-    const input = generateInput.parse(request.data);
+    const input = parseInput(generateInput, request.data);
     const topicId = topicDocId(input.lessonId, input.stepId);
     const ref = getFirestore().doc(`users/${uid}/reviewQuestions/${topicId}`);
 
@@ -327,14 +328,15 @@ export const generateReviewQuestions = onCall(
     await batch.commit();
 
     return { topicId, questions: clientQuestions, generatedAt, cached: false };
-  },
+    }),
 );
 
 export const verifyFillBlankAnswer = onCall(
   { secrets: [openAiApiKey], maxInstances: 10 },
-  async (request) => {
+  (request) =>
+    guardErrors('verifyFillBlankAnswer', async () => {
     const uid = requireAuth(request.auth?.uid);
-    const input = verifyInput.parse(request.data);
+    const input = parseInput(verifyInput, request.data);
 
     // Read the server-only rubric copy (clients cannot read this subcollection).
     const snap = await getFirestore().doc(`users/${uid}/reviewQuestionsKeys/${input.topicId}`).get();
@@ -380,5 +382,5 @@ export const verifyFillBlankAnswer = onCall(
     }
 
     return parsed.data;
-  },
+    }),
 );

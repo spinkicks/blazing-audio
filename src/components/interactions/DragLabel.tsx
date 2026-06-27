@@ -1,4 +1,5 @@
 import { type PointerEvent as ReactPointerEvent, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import type { DragLabelInteraction, DragLabelItem } from '@/content/types';
 import { SpeakerDiagram } from '@/components/visuals/SpeakerDiagram';
 import { cn } from '@/lib/cn';
@@ -138,14 +139,18 @@ export function DragLabel({ interaction, onChange, locked, result }: Interaction
         })}
       </div>
 
-      {drag && (
-        <div
-          className="pointer-events-none fixed z-50 border border-wave-400 bg-ink-700 px-3 py-2 text-sm font-semibold text-wave-400 shadow-lg shadow-black/50"
-          style={{ left: drag.x, top: drag.y, transform: 'translate(-50%, -120%) scale(1.05)' }}
-        >
-          {drag.text}
-        </div>
-      )}
+      {/* Portaled to <body> so the fixed ghost tracks the pointer relative to the
+          viewport, immune to any transformed ancestor. */}
+      {drag &&
+        createPortal(
+          <div
+            className="pointer-events-none fixed z-50 border border-wave-400 bg-ink-700 px-3 py-2 text-sm font-semibold text-wave-400 shadow-lg shadow-black/50"
+            style={{ left: drag.x, top: drag.y, transform: 'translate(-50%, -120%) scale(1.05)' }}
+          >
+            {drag.text}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
