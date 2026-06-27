@@ -42,7 +42,7 @@ export function DueReviewSection() {
   if (index >= queue.length) {
     return (
       <Card className="border-emerald-400/30 bg-ink-800">
-        <h2 className="text-lg font-bold text-white">Review complete</h2>
+        <h2 className="font-display text-lg font-bold text-white">Review complete</h2>
         <p className="mt-1 text-sm text-slate-400">
           You cleared every concept due for review today. Nice work.
         </p>
@@ -57,7 +57,7 @@ export function DueReviewSection() {
         <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
           Due today
         </p>
-        <span className="text-xs text-slate-500">
+        <span className="font-mono text-xs tabular-nums text-slate-500">
           {index + 1} / {queue.length}
         </span>
       </div>

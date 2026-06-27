@@ -18,7 +18,7 @@ export function StreakBadge({ count, className }: StreakBadgeProps) {
       aria-label={`${count} day streak`}
     >
       <FlameIcon className={cn('h-4 w-4', active ? 'text-amp-400' : 'text-slate-500')} />
-      {count}
+      <span className="font-mono tabular-nums">{count}</span>
     </span>
   );
 }

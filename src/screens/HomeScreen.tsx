@@ -8,6 +8,7 @@ import { dueConceptIds } from '@/features/memory/dueReview';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { StreakBadge } from '@/components/ui/StreakBadge';
+import { CapstoneHero } from '@/components/home/CapstoneHero';
 import { cn } from '@/lib/cn';
 
 export function HomeScreen() {
@@ -26,66 +27,48 @@ export function HomeScreen() {
 
   return (
     <div className="flex flex-col gap-6">
-      {courseComplete ? (
-        <Card className="border-amp-500/40 bg-ink-800">
-          <p className="text-xs font-semibold uppercase tracking-wide text-amp-400">Final project</p>
-          <h2 className="mt-1 text-lg font-bold text-white">Your course is complete - build your system</h2>
-          <p className="mt-1 text-sm text-slate-400">
-            Plan a real audio system and get an objective compatibility check.
-          </p>
-          <Button className="mt-4" onClick={() => navigate('/capstone')}>
-            Start your final project
-          </Button>
-        </Card>
-      ) : (
-        <Card className="border-white/10 bg-ink-800/60">
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-              Final project - locked
-            </p>
-            <LockIcon className="h-4 w-4 text-slate-500" />
-          </div>
-          <h2 className="mt-1 text-lg font-bold text-slate-300">Plan your real audio system</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Unlock by completing every lesson. {completedLessons}/{nodes.length} done.
-          </p>
-        </Card>
-      )}
+      <CapstoneHero unlocked={courseComplete} completed={completedLessons} total={nodes.length} />
 
       {/* Greeting + streak */}
-      <header className="flex items-center justify-between">
+      <header
+        className="flex animate-fade-in items-center justify-between"
+        style={{ animationDelay: '70ms' }}
+      >
         <div>
           <p className="text-sm text-slate-400">Welcome back,</p>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white">{firstName}</h1>
+          <h1 className="font-display text-2xl font-bold tracking-tight text-white">{firstName}</h1>
         </div>
         <StreakBadge count={profile?.streak.current ?? 0} />
       </header>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid animate-fade-in grid-cols-3 gap-3" style={{ animationDelay: '140ms' }}>
         <MiniStat label="Lessons" value={profile?.stats.lessonsCompleted ?? 0} />
         <MiniStat label="Solved" value={profile?.stats.problemsSolved ?? 0} />
         <MiniStat label="XP" value={profile?.stats.xp ?? 0} />
       </div>
 
-      {/* Continue CTA */}
+      {/* Continue CTA - the main learning action (ember primary button). */}
       {recommended ? (
-        <Card className="border-amp-500/30 bg-ink-800">
-          <p className="text-xs font-semibold uppercase tracking-wide text-amp-400">
+        <Card
+          className="animate-fade-in border-l-2 border-l-wave-400 border-white/10 bg-ink-800"
+          style={{ animationDelay: '210ms' }}
+        >
+          <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
             {recommended.needsReview
               ? 'Recommended review'
               : recommended.status === 'inProgress'
                 ? 'Pick up where you left off'
                 : 'Up next'}
           </p>
-          <h2 className="mt-1 text-lg font-bold text-white">{recommended.summary.title}</h2>
+          <h2 className="mt-1 font-display text-lg font-bold text-white">{recommended.summary.title}</h2>
           <p className="mt-1 text-sm text-slate-400">{recommended.summary.subtitle}</p>
           <Button className="mt-4" onClick={() => navigate(`/lesson/${recommended.summary.id}`)}>
             {recommended.status === 'inProgress' ? 'Resume' : 'Start lesson'}
           </Button>
         </Card>
       ) : (
-        <Card>
+        <Card className="animate-fade-in" style={{ animationDelay: '210ms' }}>
           <p className="text-sm text-slate-300">
             You have finished every lesson available. More are on the way.
           </p>
@@ -93,11 +76,11 @@ export function HomeScreen() {
       )}
 
       {reviewTopics.length > 0 ? (
-        <Card className="border-wave-400/30 bg-ink-800">
+        <Card className="animate-fade-in border-l-2 border-l-wave-400 border-white/10 bg-ink-800">
           <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
             Focused practice
           </p>
-          <h2 className="mt-1 text-lg font-bold text-white">Review difficult topics</h2>
+          <h2 className="mt-1 font-display text-lg font-bold text-white">Review difficult topics</h2>
           <p className="mt-1 text-sm text-slate-400">
             {reviewTopics.length} question{reviewTopics.length === 1 ? '' : 's'} to revisit from
             your wrong answers.
@@ -109,25 +92,23 @@ export function HomeScreen() {
       ) : null}
 
       {dueCount > 0 ? (
-        <Card className="border-amp-500/30 bg-ink-800">
-          <p className="text-xs font-semibold uppercase tracking-wide text-amp-400">
-            Daily goal
-          </p>
-          <h2 className="mt-1 text-lg font-bold text-white">
+        <Card className="animate-fade-in border-l-2 border-l-wave-400 border-white/10 bg-ink-800">
+          <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">Daily goal</p>
+          <h2 className="mt-1 font-display text-lg font-bold text-white">
             {dueCount} concept{dueCount === 1 ? '' : 's'} due for review
           </h2>
           <p className="mt-1 text-sm text-slate-400">
             A quick refresh keeps what you have learned from fading.
           </p>
-          <Button className="mt-4" onClick={() => navigate('/review')}>
+          <Button className="mt-4" variant="secondary" onClick={() => navigate('/review')}>
             Start today&apos;s review
           </Button>
         </Card>
       ) : null}
 
       {/* Course path */}
-      <section>
-        <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+      <section className="animate-fade-in" style={{ animationDelay: '280ms' }}>
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
           Your course
         </h3>
         <CoursePathRail nodes={nodes} />
@@ -207,8 +188,8 @@ function CoursePathRail({ nodes }: { nodes: CourseNode[] }) {
 
 function MiniStat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-ink-800 p-3 text-center">
-      <div className="text-xl font-extrabold text-white">{value}</div>
+    <div className="border border-white/5 bg-ink-800 p-3 text-center">
+      <div className="font-mono text-xl font-bold tabular-nums text-white">{value}</div>
       <div className="mt-0.5 text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
     </div>
   );
@@ -226,13 +207,13 @@ function LessonRow({ node, onClick }: { node: CourseNode; onClick: () => void })
           'flex w-full items-center gap-4 border p-4 text-left transition',
           locked
             ? 'cursor-not-allowed border-white/5 bg-ink-800/50 opacity-60'
-            : 'border-white/5 bg-ink-800 hover:border-wave-400/40 active:scale-[0.99]',
+            : 'border-white/5 bg-ink-800 hover:-translate-y-px hover:border-wave-400/40 active:scale-[0.99]',
         )}
       >
         <StatusBadge status={status} locked={locked} order={summary.order} />
         <div className="min-w-0 flex-1">
-          <p className="truncate font-semibold text-white">{summary.title}</p>
-          <p className="truncate text-sm text-slate-400">
+          <p className="truncate font-display font-semibold text-white">{summary.title}</p>
+          <p className="truncate font-mono text-xs tracking-tight text-slate-400">
             {summary.estimatedMinutes} min · {summary.stepCount} steps
           </p>
         </div>

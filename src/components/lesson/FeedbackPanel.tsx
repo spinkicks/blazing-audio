@@ -29,7 +29,7 @@ export function FeedbackPanel({ result }: FeedbackPanelProps) {
         >
           {correct ? '✓' : '!'}
         </span>
-        <p className={cn('font-bold', correct ? 'text-emerald-300' : 'text-clip-300')}>
+        <p className={cn('font-display font-bold', correct ? 'text-emerald-300' : 'text-clip-300')}>
           {correct ? 'Correct' : 'Not quite'}
         </p>
       </div>

@@ -50,13 +50,13 @@ export function AuthScreen() {
 
   return (
     <div className="flex min-h-screen flex-col justify-center px-6 py-10">
-      <div className="mx-auto w-full max-w-sm">
+      <div className="mx-auto w-full max-w-sm animate-fade-in">
         {/* Brand */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center border border-white/10 bg-ink-800">
             <WaveMark className="h-9 w-9" />
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white">Blazing Audio</h1>
+          <h1 className="font-display text-3xl font-bold tracking-tight text-white">Blazing Audio</h1>
           <p className="mt-1 text-sm text-slate-400">
             Learn how audio really works, one hands-on lesson at a time.
           </p>
@@ -166,7 +166,7 @@ function WaveMark({ className }: { className?: string }) {
         strokeWidth="5"
         strokeLinecap="round"
       />
-      <circle cx="52" cy="16" r="5" fill="#f59e0b" />
+      <circle cx="52" cy="16" r="5" fill="#f9531e" />
     </svg>
   );
 }

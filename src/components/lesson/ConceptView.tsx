@@ -43,7 +43,7 @@ export function ConceptView({ step }: { step: ConceptStep }) {
     >
       <div className={cn(!hasVisual && 'mx-auto max-w-3xl')}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <h2 className="text-2xl font-extrabold tracking-tight text-white lg:text-4xl">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-white lg:text-4xl">
             {step.title}
           </h2>
           {canSpeak ? (

@@ -99,7 +99,7 @@ export function ReviewPractice({
     <div className="mt-4 border-t border-white/5 pt-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-amp-400">
+          <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
             AI practice
           </p>
           <p className="mt-0.5 text-xs text-slate-400">
@@ -212,7 +212,7 @@ function QuestionItem({ topicId, index, question }: QuestionItemProps) {
   return (
     <div className="border border-white/5 bg-ink-900/40 p-4">
       <p className="text-sm font-semibold leading-snug text-white">
-        <span className="text-slate-500">{index}.</span> {question.prompt}
+        <span className="font-mono tabular-nums text-slate-500">{index}.</span> {question.prompt}
       </p>
 
       <div className="mt-3">

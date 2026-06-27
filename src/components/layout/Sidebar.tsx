@@ -18,7 +18,7 @@ export function Sidebar() {
     <aside className="hidden w-64 shrink-0 flex-col border-r border-white/10 bg-ink-950 md:flex">
       <div className="flex items-center gap-2 border-b border-white/10 px-5 py-5">
         <WaveMark className="h-7 w-7" />
-        <span className="text-lg font-extrabold tracking-tight text-white">Blazing Audio</span>
+        <span className="font-display text-lg font-bold tracking-tight text-white">Blazing Audio</span>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1 p-3">
@@ -47,7 +47,9 @@ export function Sidebar() {
             <p className="truncate text-sm font-semibold text-white">
               {profile?.displayName ?? 'Learner'}
             </p>
-            <p className="truncate text-xs text-slate-500">{profile?.stats.xp ?? 0} XP</p>
+            <p className="truncate font-mono text-xs tabular-nums text-slate-500">
+              {profile?.stats.xp ?? 0} XP
+            </p>
           </div>
           <StreakBadge count={profile?.streak.current ?? 0} />
         </div>
@@ -65,7 +67,7 @@ function WaveMark({ className }: { className?: string }) {
         strokeWidth="5"
         strokeLinecap="round"
       />
-      <circle cx="52" cy="16" r="5" fill="#f59e0b" />
+      <circle cx="52" cy="16" r="5" fill="#f9531e" />
     </svg>
   );
 }

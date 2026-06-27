@@ -138,8 +138,8 @@ export function LessonPlayer({
             >
               ✕
             </button>
-            <p className="truncate text-sm font-semibold text-slate-300">{lesson.title}</p>
-            <span className="ml-auto text-xs text-slate-500">
+            <p className="truncate font-display text-sm font-semibold text-slate-300">{lesson.title}</p>
+            <span className="ml-auto font-mono text-xs tabular-nums text-slate-500">
               {index + 1}/{lesson.steps.length}
             </span>
           </div>
@@ -154,7 +154,7 @@ export function LessonPlayer({
             <ConceptView step={step} />
           ) : (
             <div className="animate-fade-in lg:grid lg:grid-cols-2 lg:items-start lg:gap-14">
-              <h2 className="text-xl font-bold leading-snug text-white lg:col-start-2 lg:row-start-1 lg:text-3xl">
+              <h2 className="font-display text-xl font-bold leading-snug text-white lg:col-start-2 lg:row-start-1 lg:text-3xl">
                 {step.prompt}
               </h2>
               <div className="mt-5 lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:mt-0">

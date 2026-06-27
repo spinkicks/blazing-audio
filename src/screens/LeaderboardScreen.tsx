@@ -29,9 +29,9 @@ export function LeaderboardScreen() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header>
+      <header className="animate-fade-in" style={{ animationDelay: '70ms' }}>
         <p className="text-sm font-semibold uppercase tracking-wide text-amp-400">Ranks</p>
-        <h1 className="mt-1 text-3xl font-extrabold text-white">Leaderboard</h1>
+        <h1 className="mt-1 font-display text-3xl font-bold text-white">Leaderboard</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Top learners by XP. Appearing here is opt-in - set an alias and turn it on in your Profile.
         </p>
@@ -39,7 +39,7 @@ export function LeaderboardScreen() {
 
       {!optedIn ? (
         <Card className="border-amp-500/30 bg-ink-800">
-          <h2 className="text-lg font-bold text-white">You are not on the board yet</h2>
+          <h2 className="font-display text-lg font-bold text-white">You are not on the board yet</h2>
           <p className="mt-1 text-sm text-slate-400">
             Pick a display alias and opt in from your Profile to join the rankings.
           </p>
@@ -58,7 +58,7 @@ export function LeaderboardScreen() {
       ) : null}
 
       {entries && entries.length > 0 ? (
-        <Card>
+        <Card className="animate-fade-in" style={{ animationDelay: '140ms' }}>
           <ul className="flex flex-col">
             {entries.map((entry, i) => {
               const isOwn = entry.uid === uid;
@@ -66,18 +66,20 @@ export function LeaderboardScreen() {
                 <li
                   key={entry.uid}
                   className={cn(
-                    'flex items-center gap-3 border-b border-white/5 py-3 last:border-b-0',
+                    // Full-bleed within the Card's p-5 so the highlight band spans
+                    // edge to edge and the XP stays padded from the card border.
+                    '-mx-5 flex items-center gap-3 border-b border-white/5 px-5 py-3 last:border-b-0',
                     isOwn && 'bg-wave-400/10',
                   )}
                 >
-                  <span className="w-8 shrink-0 text-right text-sm font-bold text-slate-500">
+                  <span className="w-8 shrink-0 text-right font-mono text-sm font-bold tabular-nums text-slate-500">
                     {i + 1}
                   </span>
                   <span className="min-w-0 flex-1 truncate font-semibold text-white">
                     {entry.alias}
                     {isOwn ? <span className="ml-2 text-xs text-wave-400">you</span> : null}
                   </span>
-                  <span className="shrink-0 text-sm font-bold text-amp-400">{entry.xp} XP</span>
+                  <span className="shrink-0 font-mono text-sm font-bold tabular-nums text-amp-400">{entry.xp} XP</span>
                 </li>
               );
             })}

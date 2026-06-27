@@ -92,10 +92,10 @@ export function CapstoneScreen() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex animate-fade-in flex-col gap-6">
       <header>
         <p className="text-sm font-semibold uppercase tracking-wide text-amp-400">Final project</p>
-        <h1 className="mt-1 text-3xl font-extrabold text-white">Plan your system</h1>
+        <h1 className="mt-1 font-display text-3xl font-bold text-white">Plan your system</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           Pick a target format (or let the assistant suggest one) and describe your gear. You will
           get an objective compatibility report - channels, power, impedance, Atmos. It does not
@@ -172,7 +172,7 @@ function CapstoneReport({ result }: { result: EvaluateCapstoneResponse }) {
             {result.suggestedFormat ? `Suggested format: ${result.resolvedFormat}` : `Format: ${result.resolvedFormat}`}
           </p>
         </div>
-        <h2 className="mt-2 text-xl font-bold text-white">{result.headline}</h2>
+        <h2 className="mt-2 font-display text-xl font-bold text-white">{result.headline}</h2>
       </Card>
 
       {result.aspects.map((aspect, i) => {

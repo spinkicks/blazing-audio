@@ -30,23 +30,26 @@ export function ProfileScreen() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex items-center gap-4">
+      <header
+        className="flex animate-fade-in items-center gap-4"
+        style={{ animationDelay: '70ms' }}
+      >
         <div className="flex h-14 w-14 items-center justify-center bg-ink-700 text-xl font-bold text-wave-400">
           {(profile?.displayName ?? '?').charAt(0).toUpperCase()}
         </div>
         <div className="min-w-0">
-          <h1 className="truncate text-xl font-extrabold text-white">
+          <h1 className="truncate font-display text-xl font-bold text-white">
             {profile?.displayName ?? 'Learner'}
           </h1>
           <p className="truncate text-sm text-slate-400">{profile?.email}</p>
         </div>
       </header>
 
-      <Card>
+      <Card className="animate-fade-in" style={{ animationDelay: '140ms' }}>
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-500">Current streak</p>
-            <p className="text-2xl font-extrabold text-white">
+            <p className="font-mono text-2xl font-bold tabular-nums text-white">
               {profile?.streak.current ?? 0} days
             </p>
           </div>
@@ -57,7 +60,7 @@ export function ProfileScreen() {
         </p>
       </Card>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid animate-fade-in grid-cols-3 gap-3" style={{ animationDelay: '210ms' }}>
         <Stat label="Lessons" value={profile?.stats.lessonsCompleted ?? 0} />
         <Stat label="Problems" value={profile?.stats.problemsSolved ?? 0} />
         <Stat
@@ -67,10 +70,10 @@ export function ProfileScreen() {
         />
       </div>
 
-      <Card>
+      <Card className="animate-fade-in" style={{ animationDelay: '280ms' }}>
         <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-bold text-white">Concept mastery</h2>
-          <span className="text-sm text-slate-400">
+          <h2 className="font-display text-lg font-bold text-white">Concept mastery</h2>
+          <span className="font-mono text-sm tabular-nums text-slate-400">
             {masteredCount} / {CONCEPTS.length} mastered
           </span>
         </div>
@@ -84,7 +87,7 @@ export function ProfileScreen() {
                 <span className="h-2 flex-1 bg-ink-700">
                   <span className="block h-full bg-wave-400" style={{ width: `${pct}%` }} />
                 </span>
-                <span className="w-10 shrink-0 text-right text-xs text-slate-500">{pct}%</span>
+                <span className="w-10 shrink-0 text-right font-mono text-xs tabular-nums text-slate-500">{pct}%</span>
               </li>
             );
           })}
@@ -92,7 +95,7 @@ export function ProfileScreen() {
       </Card>
 
       <Card>
-        <h2 className="text-lg font-bold text-white">Leaderboard</h2>
+        <h2 className="font-display text-lg font-bold text-white">Leaderboard</h2>
         <p className="mt-1 text-sm text-slate-400">
           Opt in to appear on the public XP leaderboard under an alias (not your name or email).
         </p>
@@ -130,7 +133,7 @@ export function ProfileScreen() {
 function Stat({ label, value, help }: { label: string; value: number; help?: string }) {
   return (
     <div className="group relative bg-ink-800 p-4 text-center" tabIndex={help ? 0 : undefined}>
-      <div className="text-2xl font-extrabold text-white">{value}</div>
+      <div className="font-mono text-2xl font-bold tabular-nums text-white">{value}</div>
       <div className="mt-1 text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
       {help ? (
         <div className="pointer-events-none absolute left-1/2 top-full z-20 mt-2 hidden w-72 -translate-x-1/2 border border-white/10 bg-ink-950 p-3 text-left text-xs leading-relaxed text-slate-300 shadow-lg group-hover:block group-focus:block">

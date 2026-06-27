@@ -14,11 +14,11 @@ export function ReviewScreen() {
   const topics = collectReviewTopics(progress);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex animate-fade-in flex-col gap-6">
       <DueReviewSection />
       <header>
-        <p className="text-sm font-semibold uppercase tracking-wide text-amp-400">Review</p>
-        <h1 className="mt-1 text-3xl font-extrabold text-white">Missed questions</h1>
+        <p className="text-sm font-semibold uppercase tracking-wide text-wave-400">Review</p>
+        <h1 className="mt-1 font-display text-3xl font-bold text-white">Missed questions</h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
           This page only counts wrong answers. A question appears here after a miss, and it
           disappears once you open it from Review and answer it correctly.
@@ -27,7 +27,7 @@ export function ReviewScreen() {
 
       {topics.length === 0 ? (
         <Card>
-          <h2 className="text-xl font-bold text-white">Nothing to review</h2>
+          <h2 className="font-display text-xl font-bold text-white">Nothing to review</h2>
           <p className="mt-2 text-sm text-slate-400">
             Missed questions will show up here automatically after you get one wrong.
           </p>
@@ -47,10 +47,12 @@ export function ReviewScreen() {
                 <p className="text-xs font-semibold uppercase tracking-wide text-wave-400">
                   {topic.lessonTitle}
                 </p>
-                <h2 className="mt-2 text-lg font-bold leading-snug text-white">{topic.prompt}</h2>
+                <h2 className="mt-2 font-display text-lg font-bold leading-snug text-white">
+                  {topic.prompt}
+                </h2>
                 <p className="mt-2 text-sm text-slate-400">
-                  Wrong attempts: {topic.wrongAttempts}. Answer this exact question correctly to
-                  remove it from review.
+                  Wrong attempts: <span className="font-mono tabular-nums">{topic.wrongAttempts}</span>.
+                  Answer this exact question correctly to remove it from review.
                 </p>
                 <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
                   <Button

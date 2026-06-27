@@ -28,7 +28,7 @@ export function LessonComplete({
       <div className="flex h-16 w-16 items-center justify-center bg-emerald-400 text-3xl font-black text-ink-950">
         ✓
       </div>
-      <h1 className="mt-5 text-3xl font-extrabold tracking-tight text-white">Lesson complete</h1>
+      <h1 className="mt-5 font-display text-3xl font-bold tracking-tight text-white">Lesson complete</h1>
       <p className="mt-1 text-slate-400">{lessonTitle}</p>
 
       {milestone ? (
@@ -75,7 +75,7 @@ function streakMilestone(streak: number): string | null {
 function Stat({ label, value }: { label: string; value: ReactNode }) {
   return (
     <div className="bg-ink-800 p-3">
-      <div className="flex h-7 items-center justify-center text-lg font-bold text-white">{value}</div>
+      <div className="flex h-7 items-center justify-center font-mono text-lg font-bold tabular-nums text-white">{value}</div>
       <div className="mt-1 text-[11px] uppercase tracking-wide text-slate-500">{label}</div>
     </div>
   );

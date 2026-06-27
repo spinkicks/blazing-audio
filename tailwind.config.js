@@ -30,11 +30,11 @@ export default {
           500: '#0ea5e9',
           600: '#0284c7',
         },
-        // Amp / tube glow - primary accent
+        // Ember - the "blazing" accent: the goal (capstone) + primary actions
         amp: {
-          400: '#fbbf24',
-          500: '#f59e0b',
-          600: '#d97706',
+          400: '#fb7a4a',
+          500: '#f9531e',
+          600: '#d83c0a',
         },
         // Clip / danger
         clip: {
@@ -54,6 +54,9 @@ export default {
           'Arial',
           'sans-serif',
         ],
+        // Display face for headings - technical, slightly mechanical "instrument" feel.
+        display: ['"Space Grotesk"', 'Inter', 'system-ui', 'sans-serif'],
+        // Numeric readouts (XP, stats, meter counts) - instrument-panel digits.
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       keyframes: {
@@ -67,7 +70,9 @@ export default {
         },
       },
       animation: {
-        'fade-in': 'fade-in 0.25s ease-out',
+        // `backwards` holds the 0% state during any animation-delay (enables a
+        // clean staggered load with no pre-animation flash).
+        'fade-in': 'fade-in 0.3s ease-out backwards',
         'pop-in': 'pop-in 0.2s ease-out',
       },
     },
