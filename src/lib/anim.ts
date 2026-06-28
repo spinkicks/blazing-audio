@@ -26,9 +26,14 @@ export function useTimeline(
     if (!el) return;
     const reduced = prefersReducedMotion();
     const ctx = gsap.context(() => {
+      // StrictMode remounts can leave mid-tween inline styles (e.g. opacity: 0) on
+      // [data-anim] nodes. `.from()` treats the current value as the end state, so a
+      // stale opacity: 0 makes the tween animate 0→0 and the element stays hidden.
+      gsap.set(el.querySelectorAll('[data-anim]'), { clearProps: 'opacity,transform' });
+
       const tl = gsap.timeline({
         paused: true,
-        defaults: { duration: 0.55, ease: 'power3.out' },
+        defaults: { duration: 0.55, ease: 'power3.out', immediateRender: false },
       });
       buildRef.current(tl);
       if (reduced) tl.progress(1);
